@@ -1,0 +1,247 @@
+"use client";
+
+import { useState, useEffect, useRef, Suspense } from "react";
+import { QRCodeCanvas } from "qrcode.react";
+import PaymentsList from "./PaymentsList";
+
+
+export default function Home() {
+  const [amountInput, setAmountInput] = useState("0.00");
+  const [amount, setAmount] = useState(0);
+  const [loading, setLoading] = useState(false);
+  const [link, setLink] = useState<string | null>(null);
+  const [showModal, setShowModal] = useState(false);
+  const [nfcSupported, setNfcSupported] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
+  const inputRef = useRef<HTMLInputElement | null>(null);
+
+  // Detect NFC support
+  if (typeof window !== "undefined" && "NDEFReader" in window && !nfcSupported) {
+    setNfcSupported(true);
+  }
+
+  // Format with commas, preserving decimals
+  const formatWithCommas = (value: string) => {
+    if (!value) return "";
+    const [intPart, decPart] = value.split(".");
+    const intDigits = intPart.replace(/\D/g, "");
+    const withCommas = intDigits.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+    return decPart !== undefined ? `${withCommas}.${decPart}` : withCommas;
+  };
+
+  const handleInput = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const el = e.target;
+    const raw = el.value.replace(/,/g, "");
+    const cursorPos = el.selectionStart || 0;
+
+    let clean = raw.replace(/[^\d.]/g, "");
+    const firstDot = clean.indexOf(".");
+    if (firstDot !== -1) {
+      clean =
+        clean.slice(0, firstDot + 1) +
+        clean.slice(firstDot + 1).replace(/\./g, "");
+    }
+
+    clean = clean.replace(/^(\d+)(\.\d{0,2}).*$/, (_, a, b) => a + b);
+
+    const formatted = formatWithCommas(clean);
+    setAmountInput(formatted);
+
+    const numeric = parseFloat(clean);
+    if (!isNaN(numeric)) setAmount(numeric);
+
+    requestAnimationFrame(() => {
+nano ~/everpay-frontend/src/app/page.tsx      if (inputRef.current) {
+        const leftOfCaretRaw = raw.slice(0, cursorPos);
+        const leftOfCaretFormatted = formatWithCommas(leftOfCaretRaw);
+        const newPos = leftOfCaretFormatted.length;
+        inputRef.current.setSelectionRange(newPos, newPos);
+      }
+    });
+  };
+
+    const formatDisplay = (value: number) =>
+    value.toLocaleString("en-UK", { minimumFractionDigits: 2 });
+
+  // ✅ Stripe Checkout (card payments)
+  const handlePay = async () => {
+    if (isNaN(amount) || amount <= 0) return alert("Enter a valid amount");
+    setLoading(true);
+
+    try {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+      const res = await fetch(`${apiUrl}/pay?amount=${amount}`);
+      const data = await res.json();
+
+      if (data?.url) {
+        // Redirect to Stripe checkout
+        window.location.href = data.url;
+        // 💡 Reset amount ONLY after success redirect
+        const checkSuccess = () => {
+          if (window.location.search.includes("success=true")) {
+            setAmountInput("0.00");
+            setAmount(0);
+          }
+        };
+        window.addEventListener("load", checkSuccess);
+      } else {
+        alert("Payment engine error. Try again.");
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Payment failed. Try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // ✅ Pay-by-Bank (Generate Link)
+  const handleGenerate = async () => {
+    if (isNaN(amount) || amount <= 0) return alert("Enter a valid amount");
+    setLoading(true);
+
+    try {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+      const res = await fetch(`${apiUrl}/pay?amount=${amount}`);
+      const data = await res.json();
+
+      if (data?.url) {
+        setLink(data.url);
+        setShowModal(true);
+        console.log("✅ Pay-by-Bank link generated:", data.url);
+      } else {
+        alert("Failed to generate link");
+      }
+    } catch (err) {
+      console.error(err);
+      alert("Something went wrong. Try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // ✅ NFC Write Handler
+  const handleNfcWrite = async () => {
+    if (!link) return alert("No link to write");
+    try {
+      const ndef = new (window as any).NDEFReader();
+      await ndef.write(link);
+      alert("✅ Payment link written to NFC tag!");
+    } catch (err: any) {
+      console.error(err);
+      alert("⚠️ NFC write failed or was cancelled.");
+    }
+  };
+
+  return (
+    <main className="min-h-screen bg-gradient-to-br from-[#0B1623] via-[#0E1B2A] to-[#090E14] text-white p-8">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        {/* 💳 Accept Payment Card */}
+        <div className="bg-white/5 backdrop-blur-lg border border-white/10 rounded-2xl p-8 shadow-xl">
+          <h2 className="text-2xl font-bold mb-4 text-white">Accept Payment</h2>
+          <p className="text-gray-400 mb-6 text-sm">
+            Enter an amount in pounds (£) to generate or process a secure payment.
+          </p>
+
+          <label className="text-sm text-gray-300 mb-2 block">Amount (£)</label>
+          <input
+            ref={inputRef}
+            type="text"
+            value={amountInput}
+            onChange={handleInput}
+            inputMode="decimal"
+            placeholder="0.00"
+            className="w-full px-4 py-3 rounded-xl bg-slate-900 border border-white/10 text-white focus:outline-none focus:border-cyan-400"
+          />
+
+          {/* 🔗 Generate + Pay Buttons */}
+          <div className="flex flex-col gap-3 mt-4">
+            <button
+              onClick={handleGenerate}
+              disabled={loading}
+              className="py-3 rounded-xl bg-gradient-to-r from-indigo-500 to-cyan-500 font-semibold hover:opacity-90 transition disabled:opacity-50"
+            >
+              {loading ? "Generating…" : `Generate £${formatDisplay(amount)} Link`}
+            </button>
+
+            <button
+              onClick={handlePay}
+              disabled={loading}
+              className="py-3 rounded-xl bg-gradient-to-r from-cyan-500 to-emerald-400 font-semibold hover:opacity-90 transition disabled:opacity-50"
+            >
+              {loading ? "Processing…" : `Pay £${formatDisplay(amount)}`}
+            </button>
+          </div>
+
+          <p className="text-xs text-gray-500 text-center mt-6">
+            Secure payments powered by Stripe ✅
+          </p>
+        </div>
+
+        {/* 🧾 Recent Payments */}
+        <div className="bg-white/5 backdrop-blur-lg border border-white/10 rounded-2xl p-8 shadow-xl">
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-2xl font-bold text-white">Recent Payments</h2>
+            <a href="/payments" className="text-cyan-400 text-sm hover:underline">
+              View All →
+            </a>
+          </div>
+          <Suspense fallback={<p className="text-gray-400 text-sm">Loading…</p>}>
+            <PaymentsList limit={10} />
+          </Suspense>
+        </div>
+      </div>
+
+      {/* 🔳 QR + NFC Modal */}
+      {showModal && link && (
+        <dialog
+          open
+          className="fixed inset-0 flex items-center justify-center bg-black/60 backdrop-blur-sm"
+        >
+          <div className="bg-[#111827] border border-white/10 rounded-xl p-6 w-[360px] shadow-xl text-center">
+            <h3 className="text-xl font-semibold mb-4 text-white">Payment Link</h3>
+
+            <QRCodeCanvas value={link} size={180} className="mx-auto mb-4" />
+
+            <p className="text-sm text-gray-400 break-all mb-4">{link}</p>
+
+            <div className="flex flex-col gap-3">
+              <button
+                onClick={() => navigator.clipboard.writeText(link)}
+                className="w-full py-2 rounded-lg bg-white/10 hover:bg-white/20 border border-white/20 transition text-sm"
+              >
+                📋 Copy Link
+              </button>
+
+              {nfcSupported ? (
+                <button
+                  onClick={handleNfcWrite}
+                  className="w-full py-2 rounded-lg bg-gradient-to-r from-emerald-500 to-cyan-500 hover:opacity-90 transition text-sm"
+                >
+                  📱 Write to NFC Tag
+                </button>
+              ) : (
+                <p className="text-xs text-gray-500 italic">
+                  ⚠️ NFC writing not supported on this device.
+                </p>
+              )}
+
+              <button
+                onClick={() => setShowModal(false)}
+                className="w-full py-2 rounded-lg bg-white/10 hover:bg-white/20 border border-white/20 transition text-sm"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </dialog>
+      )}
+{showSuccess && (
+  <div className="fixed top-5 left-1/2 transform -translate-x-1/2 bg-emerald-500 text-white px-6 py-3 rounded-lg shadow-lg z-50 transition-all duration-500 toast-hide">
+    ✅ Payment complete — funds received instantly!
+  </div>
+)}
+
+    </main>
+  );
+}
