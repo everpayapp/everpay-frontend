@@ -4,13 +4,6 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { signOut, useSession } from "next-auth/react";
 
-type SessionUser = {
-  username?: string | null;
-  email?: string | null;
-  name?: string | null;
-  image?: string | null;
-};
-
 export default function NavBar() {
   const pathname = usePathname();
   const { status, data: session } = useSession();
@@ -35,12 +28,8 @@ export default function NavBar() {
       ? "text-white font-semibold border-b-2 border-cyan-400 pb-1"
       : "text-white/70 hover:text-white transition";
 
-  const user = session?.user as SessionUser | undefined;
-
-  const username =
-    user?.username ||
-    (user?.email ? user.email.split("@")[0] : null) ||
-    "creator";
+  // ✅ Safe for NextAuth default types
+  const username = session?.user?.email?.split("@")[0] ?? "creator";
 
   return (
     <nav className="w-full flex justify-center items-center gap-8 py-6 border-b border-white/10 bg-black/30 backdrop-blur-xl">
@@ -77,4 +66,3 @@ export default function NavBar() {
     </nav>
   );
 }
-
