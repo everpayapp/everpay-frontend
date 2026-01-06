@@ -4,6 +4,13 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { signOut, useSession } from "next-auth/react";
 
+type SessionUser = {
+  username?: string | null;
+  email?: string | null;
+  name?: string | null;
+  image?: string | null;
+};
+
 export default function NavBar() {
   const pathname = usePathname();
   const { status, data: session } = useSession();
@@ -28,30 +35,24 @@ export default function NavBar() {
       ? "text-white font-semibold border-b-2 border-cyan-400 pb-1"
       : "text-white/70 hover:text-white transition";
 
+  const user = session?.user as SessionUser | undefined;
+
   const username =
-    session?.user?.username ||
-    session?.user?.email?.split("@")[0];
+    user?.username ||
+    (user?.email ? user.email.split("@")[0] : null) ||
+    "creator";
 
   return (
     <nav className="w-full flex justify-center items-center gap-8 py-6 border-b border-white/10 bg-black/30 backdrop-blur-xl">
-      <Link
-        href="/creator/dashboard"
-        className={linkClass("/creator/dashboard")}
-      >
+      <Link href="/creator/dashboard" className={linkClass("/creator/dashboard")}>
         Dashboard
       </Link>
 
-      <Link
-        href="/creator/payments"
-        className={linkClass("/creator/payments")}
-      >
+      <Link href="/creator/payments" className={linkClass("/creator/payments")}>
         Payments
       </Link>
 
-      <Link
-        href="/creator/settings"
-        className={linkClass("/creator/settings")}
-      >
+      <Link href="/creator/settings" className={linkClass("/creator/settings")}>
         Settings
       </Link>
 
