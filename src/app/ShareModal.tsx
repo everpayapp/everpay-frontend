@@ -1,58 +1,63 @@
 "use client";
 
 import { useState } from "react";
-import QRCode from "qrcode.react";
+import { QRCodeCanvas } from "qrcode.react";
 
 export default function ShareModal({ link }: { link: string }) {
   const [open, setOpen] = useState(false);
 
-  if (!link) return null;
-
   return (
-    <div>
+    <>
       <button
         onClick={() => setOpen(true)}
-        className="w-full mt-4 py-3 rounded-xl bg-gradient-to-r from-cyan-500 to-emerald-400 font-semibold hover:opacity-90 transition"
+        className="px-4 py-2 rounded-xl bg-white/10 border border-white/15 text-white hover:bg-white/15 transition"
       >
-        Share Payment
+        Share
       </button>
 
       {open && (
-        <div className="fixed inset-0 flex items-center justify-center bg-black/70 z-50">
-          <div className="bg-slate-900 border border-white/10 rounded-2xl p-8 shadow-xl max-w-sm w-full text-center">
-            <h2 className="text-xl font-semibold mb-4 text-white">Share Payment</h2>
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4">
+          <div className="w-full max-w-md rounded-3xl bg-black/70 border border-white/15 backdrop-blur-xl p-6 text-white shadow-2xl">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-lg font-semibold">Share your link</h3>
+              <button
+                onClick={() => setOpen(false)}
+                className="text-white/70 hover:text-white transition"
+              >
+                ✕
+              </button>
+            </div>
 
-            <QRCode value={link} size={180} className="mx-auto mb-4" />
+            <div className="rounded-2xl bg-white/5 border border-white/10 p-3 break-all text-sm mb-4">
+              {link}
+            </div>
 
-            <input
-              type="text"
-              readOnly
-              value={link}
-              className="w-full bg-slate-800 border border-white/10 rounded-lg px-3 py-2 text-xs text-gray-300 mb-3"
-              onFocus={(e) => e.target.select()}
-            />
+            <div className="flex items-center justify-center mb-4">
+              <div className="bg-white p-3 rounded-2xl shadow-xl">
+                <QRCodeCanvas value={link} size={220} />
+              </div>
+            </div>
 
-            <button
-              onClick={() => {
-                navigator.clipboard.writeText(link);
-                alert("Payment link copied!");
-              }}
-              className="w-full py-2 rounded-lg bg-gradient-to-r from-cyan-500 to-emerald-400 font-semibold hover:opacity-90 mb-3"
-            >
-              Copy Link
-            </button>
+            <div className="flex gap-3">
+              <button
+                onClick={async () => {
+                  await navigator.clipboard.writeText(link);
+                }}
+                className="flex-1 py-2.5 rounded-xl bg-white text-black font-semibold hover:bg-white/90 transition"
+              >
+                Copy Link
+              </button>
 
-            <p className="text-gray-400 text-xs mb-4">or scan QR to pay instantly</p>
-
-            <button
-              onClick={() => setOpen(false)}
-              className="text-gray-400 hover:text-white text-sm"
-            >
-              Close
-            </button>
+              <button
+                onClick={() => setOpen(false)}
+                className="flex-1 py-2.5 rounded-xl bg-white/10 border border-white/15 text-white hover:bg-white/15 transition"
+              >
+                Close
+              </button>
+            </div>
           </div>
         </div>
       )}
-    </div>
+    </>
   );
 }

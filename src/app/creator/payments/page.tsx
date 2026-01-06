@@ -29,9 +29,9 @@ export default function CreatorPaymentsPage() {
 
   // ✅ SESSION-BASED USERNAME
   const username =
-    session?.user?.username ||
-    session?.user?.email?.split("@")[0] ||
-    "lee";
+  session?.user?.email?.split("@")[0] ||
+  "lee";
+
 
   // STATE
   const [payments, setPayments] = useState<Payment[]>([]);

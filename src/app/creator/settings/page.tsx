@@ -28,9 +28,9 @@ export default function CreatorSettingsPage() {
 
   // ✅ SESSION-BASED USERNAME (SAFE FALLBACK)
   const username =
-    session?.user?.username ||
-    session?.user?.email?.split("@")[0] ||
-    "lee";
+  session?.user?.email?.split("@")[0] ||
+  "lee";
+
 
   // ✅ STATE HOOKS (unchanged order)
   const [profile, setProfile] = useState<CreatorProfile | null>(null);

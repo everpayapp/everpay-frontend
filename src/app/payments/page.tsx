@@ -1,3 +1,4 @@
+export const dynamic = "force-dynamic";
 import PaymentsTable from "./PaymentsTable";
 import { Suspense } from "react";
 
