@@ -1,7 +1,9 @@
 // ~/everpay-frontend/src/app/creator/(public)/[username]/CreatorClient.tsx
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
+import QRCode from "react-qr-code";
+
 
 type Payment = {
   id: string;
@@ -68,8 +70,6 @@ export default function CreatorClient({ username }: { username: string }) {
   } | null>(null);
   const [showCelebration, setShowCelebration] = useState(false);
 
-  const qrRef = useRef<HTMLDivElement | null>(null);
-  const qr = useRef<any | null>(null);
 
   // Load creator profile (+ milestone)
   useEffect(() => {
@@ -171,33 +171,6 @@ export default function CreatorClient({ username }: { username: string }) {
     return () => clearInterval(interval);
   }, [apiUrl, username]);
 
-  // Init QR (dynamic import to avoid SSR issues)
-  useEffect(() => {
-    if (!pageUrl) return;
-
-    async function initQR() {
-      const QRCodeStyling = (await import("qr-code-styling")).default;
-
-      if (!qr.current) {
-        qr.current = new QRCodeStyling({
-          width: 220,
-          height: 220,
-          type: "svg",
-          data: pageUrl,
-          dotsOptions: { type: "rounded", color: "#000" },
-          backgroundOptions: { color: "#fff" },
-          imageOptions: { crossOrigin: "anonymous", margin: 4 },
-        });
-      }
-
-      if (qrRef.current) {
-        qrRef.current.innerHTML = "";
-        qr.current.append(qrRef.current);
-      }
-    }
-
-    initQR();
-  }, [pageUrl]);
 
   // Handle send gift
   async function handlePay() {
@@ -470,10 +443,13 @@ const res = await fetch(`${apiUrl}/creator/pay/${encodeURIComponent(username)}`,
             </button>
 
             <div className="mt-auto flex flex-col items-center gap-3">
-              <div
-                ref={qrRef}
-                className="w-[220px] h-[220px] bg-white rounded-2xl shadow-xl"
-              />
+            <div className="w-[220px] h-[220px] bg-white rounded-2xl shadow-xl flex items-center justify-center">
+  {pageUrl ? (
+    <QRCode value={pageUrl} size={200} />
+  ) : (
+    <span className="text-black/70 text-xs">QR unavailable</span>
+  )}
+</div>
               <p className="text-xs text-white/80">Scan to support me</p>
             </div>
           </section>
