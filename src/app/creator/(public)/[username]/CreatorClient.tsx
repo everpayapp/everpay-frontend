@@ -39,9 +39,15 @@ function getSocialMeta(url: string) {
 }
 
 export default function CreatorClient({ username }: { username: string }) {
-  const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL;
   const baseUrl = process.env.NEXT_PUBLIC_PUBLIC_BASE_URL;
-  const pageUrl = `${baseUrl}/creator/${username}`;
+
+  // Always resolve a valid public URL (works on Vercel + locally)
+  const origin =
+    typeof window !== "undefined" ? window.location.origin : baseUrl || "";
+
+  const pageUrl = origin ? `${origin}/creator/${username}` : "";
+
 
   const [amount, setAmount] = useState("");
   const [supporterName, setSupporterName] = useState("");
