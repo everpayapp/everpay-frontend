@@ -19,7 +19,12 @@ export default function RecentGifts({ username }: RecentGiftsProps) {
 
   const load = async () => {
     try {
-      const res = await fetch(`/api/creator/${encodeURIComponent(username)}/gifts`);
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+      if (!apiUrl || !username) return;
+
+      const res = await fetch(
+        `${apiUrl}/api/payments/${encodeURIComponent(username)}`
+      );
       if (!res.ok) return;
 
       const data = await res.json();
