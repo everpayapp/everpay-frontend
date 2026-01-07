@@ -51,7 +51,7 @@ export default function CreatorPaymentsPage() {
     async function load() {
       try {
         const res = await fetch(
-          `${API_URL}/api/payments/creator/${username}`
+          `${API_URL}/api/payments/${encodeURIComponent(username)}`
         );
         const data = await res.json();
         setPayments(Array.isArray(data) ? data : []);

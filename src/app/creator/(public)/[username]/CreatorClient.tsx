@@ -69,9 +69,9 @@ export default function CreatorClient({ username }: { username: string }) {
   useEffect(() => {
     async function load() {
       try {
-        const res = await fetch(
-          `${apiUrl}/api/creator/profile?username=${username}`
-        );
+        if (!apiUrl) return;
+
+        const res = await fetch(`${apiUrl}/api/creator/profile?username=${username}`);
         const data = await res.json();
 
         const socialLinks = Array.isArray(data.social_links)
@@ -104,7 +104,7 @@ export default function CreatorClient({ username }: { username: string }) {
       }
     }
 
-    if (apiUrl) load();
+    load();
   }, [apiUrl, username]);
 
   // Refresh colours & milestone every 3 seconds
@@ -113,9 +113,7 @@ export default function CreatorClient({ username }: { username: string }) {
 
     const interval = setInterval(async () => {
       try {
-        const res = await fetch(
-          `${apiUrl}/api/creator/profile?username=${username}`
-        );
+        const res = await fetch(`${apiUrl}/api/creator/profile?username=${username}`);
         const data = await res.json();
 
         setProfile((prev) =>
@@ -151,7 +149,9 @@ export default function CreatorClient({ username }: { username: string }) {
 
     async function loadPayments() {
       try {
-        const res = await fetch(`${apiUrl}/api/payments/creator/${username}`);
+        const res = await fetch(
+          `${apiUrl}/api/payments/${encodeURIComponent(username)}`
+        );
         const data = await res.json();
         setPayments(Array.isArray(data) ? data : []);
       } catch {
@@ -195,38 +195,43 @@ export default function CreatorClient({ username }: { username: string }) {
 
   // Handle send gift
   async function handlePay() {
+    if (!apiUrl) {
+      alert("Missing API URL");
+      return;
+    }
+
     if (!amount || Number(amount) <= 0) {
       alert("Enter an amount");
+      return;
+    }
+
+    const amountPence = Math.round(Number(amount) * 100);
+    if (!Number.isFinite(amountPence) || amountPence < 50) {
+      alert("Minimum gift is £0.50");
       return;
     }
 
     setLoading(true);
     try {
       if (typeof window !== "undefined") {
-        window.localStorage.setItem(
-          `everpay_pending_gift_${username}`,
-          "1"
-        );
+        window.localStorage.setItem(`everpay_pending_gift_${username}`, "1");
       }
 
-      const res = await fetch(`${apiUrl}/creator/pay/${username}`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          amount: Math.round(Number(amount) * 100),
-          supporterName,
-          anonymous,
-          gift_message: message,
-          isUK: true,
-        }),
-      });
-      const data = await res.json();
-      if (data.url) {
+      // Backend expects GET /pay?amount=...&creator=...
+      const res = await fetch(
+        `${apiUrl}/pay?amount=${amountPence}&creator=${encodeURIComponent(username)}`
+      );
+
+      const data = await res.json().catch(() => ({} as any));
+
+      if (res.ok && data?.url) {
         window.location.href = data.url;
-      } else {
-        alert("Error creating payment session");
-        setLoading(false);
+        return;
       }
+
+      console.error("Payment create failed:", data);
+      alert(data?.error || "Payment failed");
+      setLoading(false);
     } catch {
       alert("Payment failed");
       setLoading(false);
@@ -284,8 +289,7 @@ export default function CreatorClient({ username }: { username: string }) {
   const totalEarned = payments.reduce((sum, p) => sum + p.amount, 0) / 100;
   const milestoneEnabled =
     profile &&
-    (profile.milestone_enabled === 1 ||
-      profile.milestone_enabled === true) &&
+    (profile.milestone_enabled === 1 || profile.milestone_enabled === true) &&
     (profile.milestone_amount || 0) > 0;
 
   const milestoneTarget = profile?.milestone_amount || 0;
@@ -325,8 +329,7 @@ export default function CreatorClient({ username }: { username: string }) {
               Thank you! 💖
             </div>
             <div className="text-2xl sm:text-3xl font-bold">
-              £{(celebration.amount / 100).toFixed(2)} from{" "}
-              {celebration.name}!
+              £{(celebration.amount / 100).toFixed(2)} from {celebration.name}!
             </div>
             {celebration.message && (
               <div className="mt-2 text-sm sm:text-base opacity-95 italic">
@@ -444,7 +447,7 @@ export default function CreatorClient({ username }: { username: string }) {
             </label>
 
             <button
-              className="w-full py-3 rounded-xl bg-white text-black font-semibold hover:bg白/90 active:scale-[0.98] transition mb-6"
+              className="w-full py-3 rounded-xl bg-white text-black font-semibold hover:bg-white/90 active:scale-[0.98] transition mb-6"
               onClick={handlePay}
               disabled={loading}
             >
