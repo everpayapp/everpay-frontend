@@ -26,11 +26,22 @@ const statusStyles: Record<string, string> = {
   default: "bg-gray-500/10 text-gray-300 border border-gray-400/20",
 };
 
+function safeStatusLabel(status: unknown) {
+  const s = String(status ?? "unknown").trim().toLowerCase();
+  if (!s) return "Unknown";
+  return s.charAt(0).toUpperCase() + s.slice(1);
+}
+
+function safeStatusKey(status: unknown) {
+  const s = String(status ?? "").trim().toLowerCase();
+  return s || "default";
+}
+
 export default function PaymentsList({ limit }: { limit?: number }) {
   const apiUrl = process.env.NEXT_PUBLIC_API_URL;
 
   const { data: payments = [] } = useSWR(
-    `${apiUrl}/api/payments`,
+    apiUrl ? `${apiUrl}/api/payments` : null,
     fetcher,
     { refreshInterval: 4000 }
   );
@@ -49,7 +60,7 @@ export default function PaymentsList({ limit }: { limit?: number }) {
 
   // slice only once when data changes
   const visiblePayments = useMemo(() => {
-    return payments.slice(0, limit ?? payments.length);
+    return Array.isArray(payments) ? payments.slice(0, limit ?? payments.length) : [];
   }, [payments, limit]);
 
   return (
@@ -73,37 +84,43 @@ export default function PaymentsList({ limit }: { limit?: number }) {
       {/* Payments */}
       <div className="space-y-2">
         {visiblePayments.length === 0 ? (
-          <p className="text-gray-400 text-sm italic py-4 text-center">No payments yet</p>
+          <p className="text-gray-400 text-sm italic py-4 text-center">
+            No payments yet
+          </p>
         ) : (
-          visiblePayments.map((p: any) => (
-            <div
-              key={p.id}
-              onClick={() => setSelected(p)}
-              className="flex justify-between items-center bg-white/5 border border-white/10 p-3 rounded-lg cursor-pointer hover:bg-white/10 transition"
-            >
-              <div>
-                <div className="flex items-center gap-2">
-                  <span className="text-sm font-medium text-white">
-                    {p.email || "Unknown"}
-                  </span>
-                  <span
-                    className={`px-2 py-0.5 text-[10px] rounded font-medium ${
-                      statusStyles[p.status] || statusStyles.default
-                    }`}
-                  >
-                    {p.status 
-  ? p.status.charAt(0).toUpperCase() + p.status.slice(1) 
-  : "Succeeded"}
+          visiblePayments.map((p: any) => {
+            const statusKey = safeStatusKey(p?.status);
+            const statusClass = statusStyles[statusKey] || statusStyles.default;
+            const statusLabel = safeStatusLabel(p?.status);
 
-                  </span>
+            return (
+              <div
+                key={p.id}
+                onClick={() => setSelected(p)}
+                className="flex justify-between items-center bg-white/5 border border-white/10 p-3 rounded-lg cursor-pointer hover:bg-white/10 transition"
+              >
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="text-sm font-medium text-white">
+                      {p.email || "Unknown"}
+                    </span>
+
+                    <span
+                      className={`px-2 py-0.5 text-[10px] rounded font-medium ${statusClass}`}
+                    >
+                      {statusLabel}
+                    </span>
+                  </div>
+
+                  <p className="text-xs text-gray-400">{formatGBP(p.amount)}</p>
                 </div>
-                <p className="text-xs text-gray-400">{formatGBP(p.amount)}</p>
+
+                <p className="text-xs text-gray-500">
+                  {new Date(p.created_at).toLocaleDateString()}
+                </p>
               </div>
-              <p className="text-xs text-gray-500">
-                {new Date(p.created_at).toLocaleDateString()}
-              </p>
-            </div>
-          ))
+            );
+          })
         )}
       </div>
 
@@ -133,15 +150,16 @@ export default function PaymentsList({ limit }: { limit?: number }) {
               <strong>Status:</strong>{" "}
               <span
                 className={`px-2 py-0.5 text-xs rounded font-medium ${
-                  statusStyles[selected.status] || statusStyles.default
+                  statusStyles[safeStatusKey(selected?.status)] || statusStyles.default
                 }`}
               >
-                {selected.status.charAt(0).toUpperCase() + selected.status.slice(1)}
+                {safeStatusLabel(selected?.status)}
               </span>
             </p>
 
             <p className="text-gray-300 text-xs mb-3">
-              <strong>Date:</strong> {new Date(selected.created_at).toLocaleString()}
+              <strong>Date:</strong>{" "}
+              {new Date(selected.created_at).toLocaleString()}
             </p>
 
             <p className="text-gray-200 mb-2 text-sm break-all">
