@@ -41,9 +41,20 @@ export default function GiftForm({ onGift }: GiftFormProps) {
 
       setLoading(true);
 
+      // ✅ Bank-only creator gifts: POST /creator/pay/:username
       // Backend creates a Stripe Checkout session and returns { url }
       const res = await fetch(
-        `${apiUrl}/pay?amount=${amountPence}&creator=${encodeURIComponent(username)}`
+        `${apiUrl}/creator/pay/${encodeURIComponent(username)}`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            amount: amountPence, // already in pence
+            supporterName: name,
+            anonymous: false,
+            gift_message: message,
+          }),
+        }
       );
 
       const data = await res.json().catch(() => ({} as any));
@@ -97,9 +108,8 @@ export default function GiftForm({ onGift }: GiftFormProps) {
       </button>
 
       {/* NOTE:
-          Your current backend /pay route only sends { creator } as metadata.
-          The name/message fields are kept for UI but are not stored yet.
-          We can extend the backend later to include gift_name/message/anonymous. */}
+          Creator gifts now use POST /creator/pay/:username (Pay by Bank only).
+          Name/message are sent to backend metadata in that route. */}
     </form>
   );
 }
