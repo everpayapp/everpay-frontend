@@ -217,10 +217,19 @@ export default function CreatorClient({ username }: { username: string }) {
         window.localStorage.setItem(`everpay_pending_gift_${username}`, "1");
       }
 
-      // Backend expects GET /pay?amount=...&creator=...
-      const res = await fetch(
-        `${apiUrl}/pay?amount=${amountPence}&creator=${encodeURIComponent(username)}`
-      );
+      // Creator gifts: POST /creator/pay/:username (Pay by Bank)
+const res = await fetch(`${apiUrl}/creator/pay/${encodeURIComponent(username)}`, {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({
+    amount: amountPence,
+    supporterName,
+    anonymous,
+    gift_message: message,
+    isUK: true,
+  }),
+});
+
 
       const data = await res.json().catch(() => ({} as any));
 
