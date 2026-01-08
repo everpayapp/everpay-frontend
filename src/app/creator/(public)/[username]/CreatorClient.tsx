@@ -426,12 +426,17 @@ const res = await fetch(`${apiUrl}/creator/pay/${encodeURIComponent(username)}`,
             </label>
 
             <button
-              className="w-full py-3 rounded-xl bg-white text-black font-semibold hover:bg-white/90 active:scale-[0.98] transition mb-6"
-              onClick={handlePay}
-              disabled={loading}
-            >
-              {loading ? "Redirecting…" : "Send Gift 🎁"}
-            </button>
+  className="w-full py-3 rounded-xl bg-white text-black font-semibold hover:bg-white/90 active:scale-[0.98] transition mb-2"
+  onClick={handlePay}
+  disabled={loading}
+>
+  {loading ? "Redirecting…" : "Send Gift 🎁"}
+</button>
+
+<p className="text-center text-[11px] text-white/70">
+  Secure checkout powered by Stripe
+</p>
+
 
             <div className="mt-auto flex flex-col items-center gap-3">
             <div className="w-[220px] h-[220px] bg-white rounded-2xl shadow-xl flex items-center justify-center">
