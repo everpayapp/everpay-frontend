@@ -28,19 +28,22 @@
 
 .gift-celebration-bubble {
   max-width: 460px;
-  padding: 2rem 3rem;
+  padding: 1.6rem 2.2rem;
   border-radius: 999px;
 
-  border: 2px solid rgba(0, 0, 0, 0.85); /* ✅ black border */
+  /* Neutral */
+  background: rgba(255, 255, 255, 0.95);
+  color: #0b0b0f;
 
-  background:
-    radial-gradient(circle at 20% 0%, rgba(255, 255, 255, 0.9), transparent 55%),
-    linear-gradient(135deg, #f97316, #ec4899, #6366f1);
+  /* Black border */
+  border: 2px solid rgba(0, 0, 0, 0.9);
 
+  /* Premium shadow */
   box-shadow:
-    0 25px 90px rgba(0, 0, 0, 0.6);
+    0 20px 55px rgba(0, 0, 0, 0.22),
+    0 8px 18px rgba(0, 0, 0, 0.14);
 
-  color: #fdfdfd;
+  backdrop-filter: blur(12px);
   animation: gift-pop-scale 4.5s ease-in-out forwards;
 }
 
