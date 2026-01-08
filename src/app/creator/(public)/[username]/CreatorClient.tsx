@@ -310,24 +310,18 @@ const res = await fetch(`${apiUrl}/creator/pay/${encodeURIComponent(username)}`,
       }}
     >
       {/* Celebration bubble overlay */}
-      {showCelebration && celebration && (
-        <div className="fixed inset-0 z-40 flex items-center justify-center pointer-events-none">
-          <div className="gift-celebration-bubble text-center">
-            <div className="text-xs uppercase tracking-[0.18em] opacity-80 mb-1">
-              Thank you! 🎁
-            </div>
-            <div className="text-2xl sm:text-3xl font-bold">
-              £{(celebration.amount / 100).toFixed(2)} from {celebration.name}!
-            </div>
-            {celebration.message && (
-              <div className="mt-2 text-sm sm:text-base opacity-95 italic">
-                “{celebration.message}”
-              </div>
-            )}
-          </div>
-        </div>
-      )}
-
+{showCelebration && celebration && (
+  <div className="fixed inset-0 z-40 flex items-center justify-center pointer-events-none">
+    <div className="gift-celebration-bubble text-center">
+      <div className="text-xs uppercase tracking-[0.18em] opacity-80 mb-1">
+        Gift received
+      </div>
+      <div className="text-2xl sm:text-3xl font-bold">
+        Thank you for supporting {profile?.profile_name || username} 🎁
+      </div>
+    </div>
+  </div>
+)}
       <div className="w-full max-w-6xl space-y-8">
         {/* Header */}
         <section className="w-full bg-black/20 rounded-3xl border border-white/20 backdrop-blur-xl px-6 sm:px-10 py-6 sm:py-7 shadow-2xl flex items-center gap-5 sm:gap-8">
