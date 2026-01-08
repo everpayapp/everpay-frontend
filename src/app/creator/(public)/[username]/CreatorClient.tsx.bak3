@@ -1,9 +1,7 @@
 // ~/everpay-frontend/src/app/creator/(public)/[username]/CreatorClient.tsx
 "use client";
 
-import { useState, useEffect } from "react";
-import QRCode from "react-qr-code";
-
+import { useState, useEffect, useRef } from "react";
 
 type Payment = {
   id: string;
@@ -70,6 +68,8 @@ export default function CreatorClient({ username }: { username: string }) {
   } | null>(null);
   const [showCelebration, setShowCelebration] = useState(false);
 
+  const qrRef = useRef<HTMLDivElement | null>(null);
+  const qr = useRef<any | null>(null);
 
   // Load creator profile (+ milestone)
   useEffect(() => {
@@ -171,6 +171,33 @@ export default function CreatorClient({ username }: { username: string }) {
     return () => clearInterval(interval);
   }, [apiUrl, username]);
 
+  // Init QR (dynamic import to avoid SSR issues)
+  useEffect(() => {
+    if (!pageUrl) return;
+
+    async function initQR() {
+      const QRCodeStyling = (await import("qr-code-styling")).default;
+
+      if (!qr.current) {
+        qr.current = new QRCodeStyling({
+          width: 220,
+          height: 220,
+          type: "svg",
+          data: pageUrl,
+          dotsOptions: { type: "rounded", color: "#000" },
+          backgroundOptions: { color: "#fff" },
+          imageOptions: { crossOrigin: "anonymous", margin: 4 },
+        });
+      }
+
+      if (qrRef.current) {
+        qrRef.current.innerHTML = "";
+        qr.current.append(qrRef.current);
+      }
+    }
+
+    initQR();
+  }, [pageUrl]);
 
   // Handle send gift
   async function handlePay() {
@@ -310,15 +337,24 @@ const res = await fetch(`${apiUrl}/creator/pay/${encodeURIComponent(username)}`,
       }}
     >
       {/* Celebration bubble overlay */}
-{showCelebration && celebration && (
-  <div className="fixed inset-0 z-40 flex items-center justify-center pointer-events-none">
-    <div className="gift-celebration-bubble text-center">
-      <div className="text-2xl sm:text-3xl font-bold">
-        Thank you 🎁
-      </div>
-    </div>
-  </div>
-)}
+      {showCelebration && celebration && (
+        <div className="fixed inset-0 z-40 flex items-center justify-center pointer-events-none">
+          <div className="gift-celebration-bubble text-center">
+            <div className="text-xs uppercase tracking-[0.18em] opacity-80 mb-1">
+              Thank you! 💖
+            </div>
+            <div className="text-2xl sm:text-3xl font-bold">
+              £{(celebration.amount / 100).toFixed(2)} from {celebration.name}!
+            </div>
+            {celebration.message && (
+              <div className="mt-2 text-sm sm:text-base opacity-95 italic">
+                “{celebration.message}”
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
       <div className="w-full max-w-6xl space-y-8">
         {/* Header */}
         <section className="w-full bg-black/20 rounded-3xl border border-white/20 backdrop-blur-xl px-6 sm:px-10 py-6 sm:py-7 shadow-2xl flex items-center gap-5 sm:gap-8">
@@ -386,7 +422,7 @@ const res = await fetch(`${apiUrl}/creator/pay/${encodeURIComponent(username)}`,
           {/* Send a Gift */}
           <section className="bg-black/25 rounded-3xl border border-white/20 backdrop-blur-xl p-6 sm:p-8 shadow-2xl flex flex-col">
             <h2 className="text-lg sm:text-xl font-semibold mb-4 flex items-center gap-2">
-              Send a Gift 🎁
+              Send a Gift 💝
             </h2>
 
             <div className="flex items-center gap-3 mb-4">
@@ -430,17 +466,14 @@ const res = await fetch(`${apiUrl}/creator/pay/${encodeURIComponent(username)}`,
               onClick={handlePay}
               disabled={loading}
             >
-              {loading ? "Redirecting…" : "Send Gift 🎁"}
+              {loading ? "Redirecting…" : "Send Gift 💝"}
             </button>
 
             <div className="mt-auto flex flex-col items-center gap-3">
-            <div className="w-[220px] h-[220px] bg-white rounded-2xl shadow-xl flex items-center justify-center">
-  {pageUrl ? (
-    <QRCode value={pageUrl} size={200} />
-  ) : (
-    <span className="text-black/70 text-xs">QR unavailable</span>
-  )}
-</div>
+              <div
+                ref={qrRef}
+                className="w-[220px] h-[220px] bg-white rounded-2xl shadow-xl"
+              />
               <p className="text-xs text-white/80">Scan to support me</p>
             </div>
           </section>
@@ -448,7 +481,7 @@ const res = await fetch(`${apiUrl}/creator/pay/${encodeURIComponent(username)}`,
           {/* Recent Gifts */}
           <section className="bg-black/25 rounded-3xl border border-white/20 backdrop-blur-xl p-6 sm:p-8 shadow-2xl flex flex-col h-[560px]">
             <h2 className="text-lg sm:text-xl font-semibold mb-4 text-center">
-              Recent Gifts 🎁
+              Recent Gifts 💖
             </h2>
 
             {loadingPayments ? (

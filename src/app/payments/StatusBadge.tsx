@@ -10,19 +10,24 @@ type StatusType =
   | "unpaid"
   | "refunded"
   | "canceled"
-  | string;
+  | "unknown"
+  | string
+  | number
+  | null
+  | undefined;
 
 export default function StatusBadge({ status }: { status: StatusType }) {
-  const normalized = (status || "unknown").trim().toLowerCase();
+  // ✅ force to string so trim/slice can never crash
+  const normalized = String(status ?? "unknown").trim().toLowerCase();
 
-  const group: Record<string, StatusType> = {
+  const group: Record<string, string> = {
     succeeded: "paid",
     success: "paid",
     unpaid: "failed",
     processing: "pending",
   };
 
-  const canonical = group[normalized] || normalized;
+  const canonical = group[normalized] || normalized || "unknown";
 
   const style: Record<string, string> = {
     paid: "bg-emerald-500/10 text-emerald-400 border-emerald-400/20",
@@ -36,7 +41,9 @@ export default function StatusBadge({ status }: { status: StatusType }) {
   const colorClass = style[canonical] || style.unknown;
 
   const label =
-    canonical.charAt(0).toUpperCase() + canonical.slice(1);
+    canonical.length > 0
+      ? canonical.charAt(0).toUpperCase() + canonical.slice(1)
+      : "Unknown";
 
   return (
     <span
