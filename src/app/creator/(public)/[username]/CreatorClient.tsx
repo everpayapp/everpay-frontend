@@ -314,7 +314,7 @@ const res = await fetch(`${apiUrl}/creator/pay/${encodeURIComponent(username)}`,
         <div className="fixed inset-0 z-40 flex items-center justify-center pointer-events-none">
           <div className="gift-celebration-bubble text-center">
             <div className="text-xs uppercase tracking-[0.18em] opacity-80 mb-1">
-              Thank you! 💖
+              Thank you! 🎁
             </div>
             <div className="text-2xl sm:text-3xl font-bold">
               £{(celebration.amount / 100).toFixed(2)} from {celebration.name}!
