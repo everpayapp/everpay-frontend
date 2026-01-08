@@ -8,10 +8,11 @@ export default function NavBar() {
   const pathname = usePathname();
   const { status, data: session } = useSession();
 
-  // Hide navbar on login page
-  if (pathname === "/login") {
-    return null;
-  }
+  // Hide navbar on login & signup pages
+if (pathname === "/login" || pathname === "/signup") {
+  return null;
+}
+
 
   // Hide navbar on public creator pages (/creator/username)
   if (
