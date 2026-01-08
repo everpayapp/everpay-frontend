@@ -386,7 +386,7 @@ const res = await fetch(`${apiUrl}/creator/pay/${encodeURIComponent(username)}`,
           {/* Send a Gift */}
           <section className="bg-black/25 rounded-3xl border border-white/20 backdrop-blur-xl p-6 sm:p-8 shadow-2xl flex flex-col">
             <h2 className="text-lg sm:text-xl font-semibold mb-4 flex items-center gap-2">
-              Send a Gift 🎁
+              Send a Gift
             </h2>
 
             <div className="flex items-center gap-3 mb-4">
@@ -439,15 +439,18 @@ const res = await fetch(`${apiUrl}/creator/pay/${encodeURIComponent(username)}`,
 
 
             <div className="mt-auto flex flex-col items-center gap-3">
-            <div className="w-[220px] h-[220px] bg-white rounded-2xl shadow-xl flex items-center justify-center">
-  {pageUrl ? (
-    <QRCode value={pageUrl} size={200} />
-  ) : (
-    <span className="text-black/70 text-xs">QR unavailable</span>
-  )}
+  <div className="w-[220px] h-[220px] bg-white rounded-2xl p-3 border border-black/20 shadow-xl flex items-center justify-center">
+    {pageUrl ? (
+      <QRCode value={pageUrl} size={190} bgColor="#ffffff" fgColor="#000000" />
+    ) : (
+      <span className="text-black/70 text-xs">QR unavailable</span>
+    )}
+  </div>
+
+  <p className="text-xs text-white/80">Scan to support me</p>
+
+  <p className="text-[11px] text-white/50 tracking-wide">Powered by EverPay</p>
 </div>
-              <p className="text-xs text-white/80">Scan to support me</p>
-            </div>
           </section>
 
           {/* Recent Gifts */}
