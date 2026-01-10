@@ -8,7 +8,6 @@ import { HexColorPicker } from "react-colorful";
 type CreatorProfile = {
   username: string;
   profile_name: string;
-  bio: string;
   avatar_url: string;
   social_links: string[];
   theme_start?: string;
@@ -26,13 +25,13 @@ export default function CreatorSettingsPage() {
   const { status, data: session } = useSession();
   const router = useRouter();
 
-  // ✅ SESSION-BASED USERNAME (SAFE FALLBACK)
+  // ✅ SESSION-BASED USERNAME (safer: supports future session.user.username)
   const username =
-  session?.user?.email?.split("@")[0] ||
-  "lee";
+    (session?.user as any)?.username ||
+    session?.user?.email?.split("@")[0] ||
+    "lee";
 
-
-  // ✅ STATE HOOKS (unchanged order)
+  // ✅ STATE HOOKS
   const [profile, setProfile] = useState<CreatorProfile | null>(null);
   const [socialLinksText, setSocialLinksText] = useState("");
 
@@ -63,18 +62,15 @@ export default function CreatorSettingsPage() {
     const load = async () => {
       try {
         const res = await fetch(
-          `${API_URL}/api/creator/profile?username=${username}`
+          `${API_URL}/api/creator/profile?username=${encodeURIComponent(username)}`
         );
         const data = await res.json();
 
         const loadedProfile: CreatorProfile = {
-          username: data.username,
+          username: data.username || username,
           profile_name: data.profile_name || "",
-          bio: data.bio || "",
           avatar_url: data.avatar_url || "",
-          social_links: Array.isArray(data.social_links)
-            ? data.social_links
-            : [],
+          social_links: Array.isArray(data.social_links) ? data.social_links : [],
           theme_start: data.theme_start,
           theme_mid: data.theme_mid,
           theme_end: data.theme_end,
@@ -132,7 +128,6 @@ export default function CreatorSettingsPage() {
         body: JSON.stringify({
           username,
           profile_name: profile.profile_name,
-          bio: profile.bio,
           avatar_url: profile.avatar_url,
           social_links: socialLinksArray,
           theme_start: themeStart,
@@ -159,11 +154,7 @@ export default function CreatorSettingsPage() {
   }
 
   if (loading) {
-    return (
-      <main className="text-center text-slate-300 py-20">
-        Loading…
-      </main>
-    );
+    return <main className="text-center text-slate-300 py-20">Loading…</main>;
   }
 
   return (
@@ -180,19 +171,8 @@ export default function CreatorSettingsPage() {
             <label className="text-sm font-medium">Profile Name</label>
             <input
               className="w-full mt-1 bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-sm"
-              value={profile?.profile_name}
+              value={profile?.profile_name || ""}
               onChange={(e) => handleChange("profile_name", e.target.value)}
-            />
-          </div>
-
-          {/* Bio */}
-          <div>
-            <label className="text-sm font-medium">Bio</label>
-            <textarea
-              className="w-full mt-1 bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-sm resize-none"
-              rows={3}
-              value={profile?.bio}
-              onChange={(e) => handleChange("bio", e.target.value)}
             />
           </div>
 
@@ -201,8 +181,9 @@ export default function CreatorSettingsPage() {
             <label className="text-sm font-medium">Avatar URL</label>
             <input
               className="w-full mt-1 bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-sm"
-              value={profile?.avatar_url}
+              value={profile?.avatar_url || ""}
               onChange={(e) => handleChange("avatar_url", e.target.value)}
+              placeholder="https://..."
             />
           </div>
 
@@ -213,6 +194,7 @@ export default function CreatorSettingsPage() {
                 <img
                   src={profile.avatar_url}
                   className="w-full h-full object-cover"
+                  alt="Avatar preview"
                 />
               ) : null}
             </div>
@@ -220,13 +202,41 @@ export default function CreatorSettingsPage() {
 
           {/* Social Links */}
           <div>
-            <label className="text-sm font-medium">Social Links</label>
+            <label className="text-sm font-medium">
+              Social Links (one per line)
+            </label>
             <textarea
               className="w-full mt-1 bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-sm resize-none"
-              rows={3}
+              rows={4}
               value={socialLinksText}
               onChange={(e) => setSocialLinksText(e.target.value)}
+              placeholder={`https://instagram.com/yourname\nhttps://tiktok.com/@yourname`}
             />
+
+            {/* Clickable preview */}
+            {socialLinksText.trim().length > 0 && (
+              <div className="mt-3 flex flex-wrap gap-2">
+                {socialLinksText
+                  .split("\n")
+                  .map((l) => l.trim())
+                  .filter(Boolean)
+                  .map((url) => (
+                    <a
+                      key={url}
+                      href={url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="px-3 py-1 rounded-full bg-white/10 border border-white/20 text-xs text-white/85 hover:bg-white/15 transition"
+                      title={url}
+                    >
+                      {url
+                        .replace(/^https?:\/\//, "")
+                        .replace(/^www\./, "")
+                        .slice(0, 26)}
+                    </a>
+                  ))}
+              </div>
+            )}
           </div>
 
           {/* Theme Colours */}
@@ -312,3 +322,4 @@ export default function CreatorSettingsPage() {
     </main>
   );
 }
+
