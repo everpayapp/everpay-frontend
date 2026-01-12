@@ -65,16 +65,20 @@ export const authOptions: NextAuthOptions = {
     },
 
     async session({ session, token }) {
-      // Expose username + role on session.user
-      (session.user as any).username = token.username;
-      (session.user as any).role = token.role;
+  // Ensure session.user exists (TS strict safety)
+  if (!session.user) session.user = {} as any;
 
-      // keep these consistent too
-      if (token.name) session.user.name = token.name as string;
-      if (token.email) session.user.email = token.email as string;
+  // Expose username + role on session.user
+  (session.user as any).username = token.username;
+  (session.user as any).role = token.role;
 
-      return session;
-    },
+  // Keep these consistent too
+  if (token.name) (session.user as any).name = token.name as string;
+  if (token.email) (session.user as any).email = token.email as string;
+
+  return session;
+},
+
   },
 
   pages: {
