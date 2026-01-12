@@ -4,7 +4,6 @@
 import { useState, useEffect } from "react";
 import QRCode from "react-qr-code";
 
-
 type Payment = {
   id: string;
   amount: number;
@@ -40,8 +39,46 @@ function getSocialMeta(url: string) {
   return { label: "Website", short: "WWW" };
 }
 
+// Normalize social links from API into a clean clickable array
+function normalizeSocialLinks(input: unknown): string[] {
+  let arr: string[] = [];
+
+  if (Array.isArray(input)) {
+    arr = input.map((x) => String(x));
+  } else if (typeof input === "string") {
+    // could be JSON string or a single URL
+    const trimmed = input.trim();
+    if (!trimmed) return [];
+    try {
+      const parsed = JSON.parse(trimmed);
+      if (Array.isArray(parsed)) arr = parsed.map((x) => String(x));
+      else arr = [trimmed];
+    } catch {
+      arr = [trimmed];
+    }
+  } else if (input && typeof input === "object") {
+    // just in case it becomes an object later
+    try {
+      arr = Object.values(input as any).map((x) => String(x));
+    } catch {
+      arr = [];
+    }
+  }
+
+  // trim, remove empties, ensure https, dedupe
+  const cleaned = arr
+    .map((u) => (u ?? "").toString().trim())
+    .filter(Boolean)
+    .map((u) => {
+      const hasScheme = /^https?:\/\//i.test(u);
+      return hasScheme ? u : `https://${u}`;
+    });
+
+  return Array.from(new Set(cleaned));
+}
+
 export default function CreatorClient({ username }: { username: string }) {
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL;
   const baseUrl = process.env.NEXT_PUBLIC_PUBLIC_BASE_URL;
 
   // Always resolve a valid public URL (works on Vercel + locally)
@@ -49,7 +86,6 @@ export default function CreatorClient({ username }: { username: string }) {
     typeof window !== "undefined" ? window.location.origin : baseUrl || "";
 
   const pageUrl = origin ? `${origin}/creator/${username}` : "";
-
 
   const [amount, setAmount] = useState("");
   const [supporterName, setSupporterName] = useState("");
@@ -70,25 +106,18 @@ export default function CreatorClient({ username }: { username: string }) {
   } | null>(null);
   const [showCelebration, setShowCelebration] = useState(false);
 
-
   // Load creator profile (+ milestone)
   useEffect(() => {
     async function load() {
       try {
         if (!apiUrl) return;
 
-        const res = await fetch(`${apiUrl}/api/creator/profile?username=${username}`);
+        const res = await fetch(
+          `${apiUrl}/api/creator/profile?username=${username}`
+        );
         const data = await res.json();
 
-        const socialLinks = Array.isArray(data.social_links)
-          ? data.social_links
-          : (() => {
-              try {
-                return JSON.parse(data.social_links ?? "[]");
-              } catch {
-                return [];
-              }
-            })();
+        const socialLinks = normalizeSocialLinks(data.social_links);
 
         setProfile({
           username,
@@ -113,34 +142,51 @@ export default function CreatorClient({ username }: { username: string }) {
     load();
   }, [apiUrl, username]);
 
-  // Refresh colours & milestone every 3 seconds
+  // Refresh colours & milestone every 3 seconds (but never overwrite with undefined)
   useEffect(() => {
     if (!apiUrl) return;
 
     const interval = setInterval(async () => {
       try {
-        const res = await fetch(`${apiUrl}/api/creator/profile?username=${username}`);
+        const res = await fetch(
+          `${apiUrl}/api/creator/profile?username=${username}`
+        );
         const data = await res.json();
 
-        setProfile((prev) =>
-          prev &&
-          (prev.theme_start !== data.theme_start ||
-            prev.theme_mid !== data.theme_mid ||
-            prev.theme_end !== data.theme_end ||
-            prev.milestone_enabled !== data.milestone_enabled ||
-            prev.milestone_amount !== data.milestone_amount ||
-            prev.milestone_text !== data.milestone_text)
-            ? {
-                ...prev,
-                theme_start: data.theme_start,
-                theme_mid: data.theme_mid,
-                theme_end: data.theme_end,
-                milestone_enabled: data.milestone_enabled,
-                milestone_amount: Number(data.milestone_amount) || 0,
-                milestone_text: data.milestone_text || "",
-              }
-            : prev
-        );
+        setProfile((prev) => {
+          if (!prev) return prev;
+
+          const nextThemeStart = data.theme_start || prev.theme_start;
+          const nextThemeMid = data.theme_mid || prev.theme_mid;
+          const nextThemeEnd = data.theme_end || prev.theme_end;
+
+          const nextMilestoneEnabled =
+            data.milestone_enabled ?? prev.milestone_enabled;
+          const nextMilestoneAmount =
+            Number(data.milestone_amount) || prev.milestone_amount || 0;
+          const nextMilestoneText =
+            data.milestone_text ?? prev.milestone_text ?? "";
+
+          const changed =
+            prev.theme_start !== nextThemeStart ||
+            prev.theme_mid !== nextThemeMid ||
+            prev.theme_end !== nextThemeEnd ||
+            prev.milestone_enabled !== nextMilestoneEnabled ||
+            (prev.milestone_amount || 0) !== (nextMilestoneAmount || 0) ||
+            (prev.milestone_text || "") !== (nextMilestoneText || "");
+
+          if (!changed) return prev;
+
+          return {
+            ...prev,
+            theme_start: nextThemeStart,
+            theme_mid: nextThemeMid,
+            theme_end: nextThemeEnd,
+            milestone_enabled: nextMilestoneEnabled,
+            milestone_amount: nextMilestoneAmount,
+            milestone_text: nextMilestoneText,
+          };
+        });
       } catch {
         // ignore
       }
@@ -171,7 +217,6 @@ export default function CreatorClient({ username }: { username: string }) {
     return () => clearInterval(interval);
   }, [apiUrl, username]);
 
-
   // Handle send gift
   async function handlePay() {
     if (!apiUrl) {
@@ -197,18 +242,20 @@ export default function CreatorClient({ username }: { username: string }) {
       }
 
       // Creator gifts: POST /creator/pay/:username (Pay by Bank)
-const res = await fetch(`${apiUrl}/creator/pay/${encodeURIComponent(username)}`, {
-  method: "POST",
-  headers: { "Content-Type": "application/json" },
-  body: JSON.stringify({
-    amount: amountPence,
-    supporterName,
-    anonymous,
-    gift_message: message,
-    isUK: true,
-  }),
-});
-
+      const res = await fetch(
+        `${apiUrl}/creator/pay/${encodeURIComponent(username)}`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            amount: amountPence,
+            supporterName,
+            anonymous,
+            gift_message: message,
+            isUK: true,
+          }),
+        }
+      );
 
       const data = await res.json().catch(() => ({} as any));
 
@@ -246,12 +293,11 @@ const res = await fetch(`${apiUrl}/creator/pay/${encodeURIComponent(username)}`,
       return;
     }
 
-    const displayName =
-      latest.anonymous
-        ? "Someone"
-        : latest.gift_name && latest.gift_name.trim().length
-        ? latest.gift_name
-        : "Someone";
+    const displayName = latest.anonymous
+      ? "Someone"
+      : latest.gift_name && latest.gift_name.trim().length
+      ? latest.gift_name
+      : "Someone";
 
     setCelebration({
       amount: latest.amount,
@@ -310,15 +356,14 @@ const res = await fetch(`${apiUrl}/creator/pay/${encodeURIComponent(username)}`,
       }}
     >
       {/* Celebration bubble overlay */}
-{showCelebration && celebration && (
-  <div className="fixed inset-0 z-40 flex items-center justify-center pointer-events-none">
-    <div className="gift-celebration-bubble text-center">
-      <div className="text-2xl sm:text-3xl font-bold">
-        Thank you 🎁
-      </div>
-    </div>
-  </div>
-)}
+      {showCelebration && celebration && (
+        <div className="fixed inset-0 z-40 flex items-center justify-center pointer-events-none">
+          <div className="gift-celebration-bubble text-center">
+            <div className="text-2xl sm:text-3xl font-bold">Thank you 🎁</div>
+          </div>
+        </div>
+      )}
+
       <div className="w-full max-w-6xl space-y-8">
         {/* Header */}
         <section className="w-full bg-black/20 rounded-3xl border border-white/20 backdrop-blur-xl px-6 sm:px-10 py-6 sm:py-7 shadow-2xl flex items-center gap-5 sm:gap-8">
@@ -335,11 +380,33 @@ const res = await fetch(`${apiUrl}/creator/pay/${encodeURIComponent(username)}`,
               </span>
             )}
           </div>
+
           <div className="flex flex-col">
             <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">
               {profile.profile_name || "EVER PAY"}
             </h1>
             <p className="text-xs sm:text-sm text-white/70">@{username}</p>
+
+            {Array.isArray(profile.social_links) &&
+              profile.social_links.length > 0 && (
+                <div className="mt-3 flex flex-wrap gap-2">
+                  {profile.social_links.map((url) => {
+                    const meta = getSocialMeta(url);
+                    return (
+                      <a
+                        key={url}
+                        href={url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="px-3 py-1 rounded-full bg-white/10 border border-white/20 text-xs text-white/85 hover:bg-white/15 transition"
+                        title={url}
+                      >
+                        {meta.label}
+                      </a>
+                    );
+                  })}
+                </div>
+              )}
           </div>
         </section>
 
@@ -426,31 +493,36 @@ const res = await fetch(`${apiUrl}/creator/pay/${encodeURIComponent(username)}`,
             </label>
 
             <button
-  className="w-full py-3 rounded-xl bg-white text-black font-semibold hover:bg-white/90 active:scale-[0.98] transition mb-2"
-  onClick={handlePay}
-  disabled={loading}
->
-  {loading ? "Redirecting…" : "Send Gift 🎁"}
-</button>
+              className="w-full py-3 rounded-xl bg-white text-black font-semibold hover:bg-white/90 active:scale-[0.98] transition mb-2"
+              onClick={handlePay}
+              disabled={loading}
+            >
+              {loading ? "Redirecting…" : "Send Gift 🎁"}
+            </button>
 
-<p className="text-center text-[11px] text-white/70">
-  Secure checkout powered by Stripe
-</p>
-
+            <p className="text-center text-[11px] text-white/70">
+              Secure checkout powered by Stripe
+            </p>
 
             <div className="mt-auto flex flex-col items-center gap-3">
-  <div className="w-[220px] h-[220px] bg-white rounded-2xl p-3 border border-black/20 shadow-xl flex items-center justify-center">
-    {pageUrl ? (
-      <QRCode value={pageUrl} size={190} bgColor="#ffffff" fgColor="#000000" />
-    ) : (
-      <span className="text-black/70 text-xs">QR unavailable</span>
-    )}
-  </div>
+              <div className="w-[220px] h-[220px] bg-white rounded-2xl p-3 border border-black/20 shadow-xl flex items-center justify-center">
+                {pageUrl ? (
+                  <QRCode
+                    value={pageUrl}
+                    size={190}
+                    bgColor="#ffffff"
+                    fgColor="#000000"
+                  />
+                ) : (
+                  <span className="text-black/70 text-xs">QR unavailable</span>
+                )}
+              </div>
 
-  <p className="text-xs text-white/80">Scan to support me</p>
-
-  <p className="text-[11px] text-white/50 tracking-wide">Powered by EverPay</p>
-</div>
+              <p className="text-xs text-white/80">Scan to support me</p>
+              <p className="text-[11px] text-white/50 tracking-wide">
+                Powered by EverPay
+              </p>
+            </div>
           </section>
 
           {/* Recent Gifts */}

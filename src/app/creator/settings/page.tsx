@@ -25,11 +25,8 @@ export default function CreatorSettingsPage() {
   const { status, data: session } = useSession();
   const router = useRouter();
 
-  // ✅ SESSION-BASED USERNAME (safer: supports future session.user.username)
-  const username =
-    (session?.user as any)?.username ||
-    session?.user?.email?.split("@")[0] ||
-    "lee";
+  // ✅ ONLY use the session username (no fallback!)
+  const username = (session?.user as any)?.username as string | undefined;
 
   // ✅ STATE HOOKS
   const [profile, setProfile] = useState<CreatorProfile | null>(null);
@@ -55,11 +52,21 @@ export default function CreatorSettingsPage() {
     }
   }, [status, router]);
 
-  // Load profile (only when authenticated)
+  // Load profile (only when authenticated + username exists)
   useEffect(() => {
     if (status !== "authenticated") return;
 
+    // ✅ If session is authenticated but username missing, stop and show message
+    if (!username) {
+      setLoading(false);
+      setProfile(null);
+      return;
+    }
+
     const load = async () => {
+      setLoading(true);
+      setError(null);
+
       try {
         const res = await fetch(
           `${API_URL}/api/creator/profile?username=${encodeURIComponent(username)}`
@@ -112,6 +119,12 @@ export default function CreatorSettingsPage() {
     e.preventDefault();
     if (!profile) return;
 
+    // ✅ Prevent saving if username missing
+    if (!username) {
+      setError("Profile not linked (missing username in session).");
+      return;
+    }
+
     setSaving(true);
     setError(null);
     setSuccess(null);
@@ -126,7 +139,7 @@ export default function CreatorSettingsPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          username,
+          username, // ✅ must be session username
           profile_name: profile.profile_name,
           avatar_url: profile.avatar_url,
           social_links: socialLinksArray,
@@ -151,6 +164,27 @@ export default function CreatorSettingsPage() {
   // ⛔ Wait for auth resolution
   if (status === "loading") {
     return null;
+  }
+
+  // ✅ Authenticated but username missing
+  if (status === "authenticated" && !username) {
+    return (
+      <main className="min-h-screen bg-gradient-to-b from-slate-950 to-black text-slate-50 px-6 py-12 flex justify-center">
+        <div className="w-full max-w-2xl space-y-4">
+          <h1 className="text-2xl font-semibold">Creator Settings</h1>
+          <div className="rounded-2xl border border-white/10 bg-white/5 p-6">
+            <div className="text-lg font-semibold text-white">
+              Profile not linked
+            </div>
+            <p className="mt-2 text-sm text-white/70">
+              Your session does not include a creator username. Log out and log
+              back in, and make sure the backend login returns a creator with a
+              username.
+            </p>
+          </div>
+        </div>
+      </main>
+    );
   }
 
   if (loading) {
@@ -322,4 +356,3 @@ export default function CreatorSettingsPage() {
     </main>
   );
 }
-
