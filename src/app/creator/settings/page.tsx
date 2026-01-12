@@ -1,4 +1,4 @@
-s/page.tsx
+// ~/everpay-frontend/src/app/creator/settings/page.tsx
 "use client";
 
 import React, { useEffect, useState } from "react";
@@ -22,14 +22,12 @@ type CreatorProfile = {
 const API_URL = process.env.NEXT_PUBLIC_API_URL!;
 
 export default function CreatorSettingsPage() {
-  // 🔐 AUTH (hooks always run)
   const { status, data: session } = useSession();
   const router = useRouter();
 
   // ✅ ONLY use the session username (no fallback!)
   const username = (session?.user as any)?.username as string | undefined;
 
-  // ✅ STATE HOOKS
   const [profile, setProfile] = useState<CreatorProfile | null>(null);
   const [socialLinksText, setSocialLinksText] = useState("");
 
@@ -46,7 +44,7 @@ export default function CreatorSettingsPage() {
   const [milestoneAmount, setMilestoneAmount] = useState("");
   const [milestoneText, setMilestoneText] = useState("");
 
-  // 🔐 Redirect if logged out
+  // Redirect if logged out
   useEffect(() => {
     if (status === "unauthenticated") {
       router.replace("/login");
@@ -57,7 +55,6 @@ export default function CreatorSettingsPage() {
   useEffect(() => {
     if (status !== "authenticated") return;
 
-    // ✅ If session is authenticated but username missing, stop and show message
     if (!username) {
       setLoading(false);
       setProfile(null);
@@ -72,7 +69,7 @@ export default function CreatorSettingsPage() {
         const res = await fetch(
           `${API_URL}/api/creator/profile?username=${encodeURIComponent(username)}`
         );
-        const data = await res.json();
+        const data = await res.json().catch(() => ({} as any));
 
         const loadedProfile: CreatorProfile = {
           username: data.username || username,
@@ -88,7 +85,7 @@ export default function CreatorSettingsPage() {
         };
 
         setProfile(loadedProfile);
-        setSocialLinksText(loadedProfile.social_links.join("\n"));
+        setSocialLinksText((loadedProfile.social_links || []).join("\n"));
 
         setThemeStart(data.theme_start || "#ec4899");
         setThemeMid(data.theme_mid || "#8b5cf6");
@@ -109,18 +106,15 @@ export default function CreatorSettingsPage() {
     load();
   }, [status, username]);
 
-  // handleChange
   const handleChange = (field: keyof CreatorProfile, value: string) => {
     if (!profile) return;
     setProfile({ ...profile, [field]: value });
   };
 
-  // handleSubmit
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!profile) return;
 
-    // ✅ Prevent saving if username missing
     if (!username) {
       setError("Profile not linked (missing username in session).");
       return;
@@ -140,7 +134,7 @@ export default function CreatorSettingsPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          username, // ✅ must be session username
+          username,
           profile_name: profile.profile_name,
           avatar_url: profile.avatar_url,
           social_links: socialLinksArray,
@@ -153,21 +147,24 @@ export default function CreatorSettingsPage() {
         }),
       });
 
-      if (!res.ok) throw new Error();
+      const data = await res.json().catch(() => ({} as any));
+
+      if (!res.ok) {
+        throw new Error(data?.error || "Save failed");
+      }
+
       setSuccess("Saved successfully!");
-    } catch {
-      setError("Error saving profile");
+    } catch (err: any) {
+      setError(err?.message || "Error saving profile");
     } finally {
       setSaving(false);
     }
   };
 
-  // ⛔ Wait for auth resolution
-  if (status === "loading") {
-    return null;
-  }
+  // Wait for auth resolution
+  if (status === "loading") return null;
 
-  // ✅ Authenticated but username missing
+  // Authenticated but username missing
   if (status === "authenticated" && !username) {
     return (
       <main className="min-h-screen bg-gradient-to-b from-slate-950 to-black text-slate-50 px-6 py-12 flex justify-center">
@@ -195,13 +192,17 @@ export default function CreatorSettingsPage() {
   return (
     <main className="min-h-screen bg-gradient-to-b from-slate-950 to-black text-slate-50 px-6 py-12 flex justify-center">
       <div className="w-full max-w-3xl space-y-6">
-        <h1 className="text-2xl font-semibold">Creator Settings</h1>
+        <div className="space-y-1">
+          <h1 className="text-2xl font-semibold">Creator Settings</h1>
+          <p className="text-xs text-white/60">
+            Editing: <span className="text-white/90 font-medium">@{username}</span>
+          </p>
+        </div>
 
         <form
           className="space-y-6 bg-slate-900/60 border border-slate-800 rounded-2xl p-6"
           onSubmit={handleSubmit}
         >
-          {/* Profile name */}
           <div>
             <label className="text-sm font-medium">Profile Name</label>
             <input
@@ -211,7 +212,6 @@ export default function CreatorSettingsPage() {
             />
           </div>
 
-          {/* Avatar */}
           <div>
             <label className="text-sm font-medium">Avatar URL</label>
             <input
@@ -222,7 +222,6 @@ export default function CreatorSettingsPage() {
             />
           </div>
 
-          {/* Avatar Preview */}
           <div className="flex justify-center mt-3">
             <div className="w-36 h-36 rounded-full border border-white/20 overflow-hidden bg-white/10">
               {profile?.avatar_url ? (
@@ -235,7 +234,6 @@ export default function CreatorSettingsPage() {
             </div>
           </div>
 
-          {/* Social Links */}
           <div>
             <label className="text-sm font-medium">
               Social Links (one per line)
@@ -248,7 +246,6 @@ export default function CreatorSettingsPage() {
               placeholder={`https://instagram.com/yourname\nhttps://tiktok.com/@yourname`}
             />
 
-            {/* Clickable preview */}
             {socialLinksText.trim().length > 0 && (
               <div className="mt-3 flex flex-wrap gap-2">
                 {socialLinksText
@@ -274,7 +271,6 @@ export default function CreatorSettingsPage() {
             )}
           </div>
 
-          {/* Theme Colours */}
           <section className="border-t border-white/10 pt-6">
             <h2 className="text-lg font-semibold mb-1">Page Colours 🎨</h2>
 
@@ -296,7 +292,6 @@ export default function CreatorSettingsPage() {
             </div>
           </section>
 
-          {/* Milestone Settings */}
           <section className="border-t border-white/10 pt-6">
             <h2 className="text-lg font-semibold mb-2">Milestone Goal 🎯</h2>
 
@@ -357,3 +352,4 @@ export default function CreatorSettingsPage() {
     </main>
   );
 }
+
