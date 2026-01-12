@@ -387,26 +387,29 @@ export default function CreatorClient({ username }: { username: string }) {
             </h1>
             <p className="text-xs sm:text-sm text-white/70">@{username}</p>
 
-            {Array.isArray(profile.social_links) &&
-              profile.social_links.length > 0 && (
-                <div className="mt-3 flex flex-wrap gap-2">
-                  {profile.social_links.map((url) => {
-                    const meta = getSocialMeta(url);
-                    return (
-                      <a
-                        key={url}
-                        href={url}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="px-3 py-1 rounded-full bg-white/10 border border-white/20 text-xs text-white/85 hover:bg-white/15 transition"
-                        title={url}
-                      >
-                        {meta.label}
-                      </a>
-                    );
-                  })}
-                </div>
-              )}
+{Array.isArray(profile.social_links) && profile.social_links.length > 0 && (
+  <div className="mt-3 flex flex-wrap gap-2">
+    {profile.social_links.map((url) => {
+      const meta = getSocialMeta(url);
+      return (
+        <a
+          key={url}
+          href={url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 border border-white/20 text-xs text-white/90 hover:bg-white/15 transition"
+          title={url}
+        >
+          <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-white/15 border border-white/20 text-[10px] font-semibold">
+            {meta.short}
+          </span>
+          <span>{meta.label}</span>
+        </a>
+      );
+    })}
+  </div>
+)}
+
           </div>
         </section>
 
