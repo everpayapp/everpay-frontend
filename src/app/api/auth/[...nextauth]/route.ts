@@ -1,102 +1,85 @@
-// ~/everpay-frontend/src/app/api/auth/[...nextauth]/route.ts
 import NextAuth, { type NextAuthOptions } from "next-auth";
 import CredentialsProvider from "next-auth/providers/credentials";
-import type { JWT } from "next-auth/jwt";
 
-const backendUrl = process.env.NEXT_PUBLIC_API_URL!;
-const ADMIN_EMAIL = "lee@everpayapp.co.uk";
-
-type AppRole = "admin" | "creator";
-
-type BackendCreator = {
-  username: string;
-  email: string;
-  role: AppRole;
-  profile_name?: string | null;
-};
-
-type AppToken = JWT & {
-  username?: string;
-  role?: AppRole;
-};
+// Use your deployed backend by default (safe on Vercel/Render)
+const BACKEND_URL =
+  process.env.NEXT_PUBLIC_API_URL ||
+  process.env.API_URL ||
+  "https://everpay-backend.onrender.com";
 
 export const authOptions: NextAuthOptions = {
+  session: { strategy: "jwt" },
+
   providers: [
     CredentialsProvider({
       name: "Credentials",
       credentials: {
-        email: { type: "email" },
-        password: { type: "password" },
+        email: { label: "Email", type: "email" },
+        password: { label: "Password", type: "password" },
       },
+
       async authorize(credentials) {
-        if (!credentials?.email || !credentials?.password) return null;
+        const email = credentials?.email?.trim();
+        const password = credentials?.password;
 
-        const res = await fetch(`${backendUrl}/api/auth/login`, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            email: credentials.email,
-            password: credentials.password,
-          }),
-        });
+        if (!email || !password) return null;
 
-        const data = await res.json().catch(() => null);
+        try {
+          const res = await fetch(`${BACKEND_URL}/api/auth/login`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ email, password }),
+          });
 
-        if (!res.ok || !data?.creator) return null;
+          const data = await res.json().catch(() => ({} as any));
+          if (!res.ok || !data?.creator?.username) return null;
 
-        const creator = data.creator as BackendCreator;
+          const creator = data.creator;
 
-        return {
-          id: creator.username,
-          email: creator.email,
-          // These extra fields are OK at runtime; TS types are handled in callbacks via casting
-          username: creator.username,
-          role: creator.role,
-        } as any;
+          // IMPORTANT: return username so NextAuth can store it in JWT/session
+          return {
+            id: creator.username,
+            username: creator.username,
+            email: creator.email,
+            name: creator.profile_name || creator.username,
+            role: creator.role || "creator",
+          } as any;
+        } catch (e) {
+          console.error("NextAuth authorize error:", e);
+          return null;
+        }
       },
     }),
   ],
 
-  session: { strategy: "jwt" },
-
   callbacks: {
     async jwt({ token, user }) {
-      const t = token as AppToken;
-
-      // On initial sign-in, NextAuth passes "user"
+      // On login, "user" is present — copy our custom fields into the token
       if (user) {
-        const u = user as any; // runtime safe: our authorize() returns these fields
-        t.username = u.username ?? t.username;
-        t.role = u.role ?? t.role;
-        t.email = u.email ?? t.email;
+        token.username = (user as any).username;
+        token.role = (user as any).role;
+        token.name = (user as any).name;
+        token.email = (user as any).email;
       }
-
-      return t;
+      return token;
     },
 
     async session({ session, token }) {
-      const t = token as AppToken;
+      // Expose username + role on session.user
+      (session.user as any).username = token.username;
+      (session.user as any).role = token.role;
 
-      if (session.user) {
-        (session.user as any).username = t.username;
-        (session.user as any).role = t.role;
-        session.user.email = (t.email as string) || session.user.email;
-      }
+      // keep these consistent too
+      if (token.name) session.user.name = token.name as string;
+      if (token.email) session.user.email = token.email as string;
 
       return session;
     },
-
-    async redirect({ url, baseUrl }) {
-      // Keep redirects inside site
-      if (url.startsWith("/")) return `${baseUrl}${url}`;
-      if (new URL(url).origin === baseUrl) return url;
-
-      // Default post-login route:
-      return `${baseUrl}/creator/dashboard`;
-    },
   },
 
-  pages: { signIn: "/login" },
+  pages: {
+    signIn: "/login",
+  },
 
   secret: process.env.NEXTAUTH_SECRET,
 };
