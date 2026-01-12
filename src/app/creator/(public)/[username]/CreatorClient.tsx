@@ -397,19 +397,15 @@ export default function CreatorClient({ username }: { username: string }) {
           href={url}
           target="_blank"
           rel="noopener noreferrer"
-          className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 border border-white/20 text-xs text-white/90 hover:bg-white/15 transition"
+   className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 border border-white/20 text-xs text-white/90 hover:bg-white/15 transition"
           title={url}
         >
-          <span className="inline-flex items-center justify-center w-5 h-5 rounded-full bg-white/15 border border-white/20 text-[10px] font-semibold">
-            {meta.short}
-          </span>
           <span>{meta.label}</span>
         </a>
       );
     })}
   </div>
 )}
-
           </div>
         </section>
 
