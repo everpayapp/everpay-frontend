@@ -1,103 +1,95 @@
 "use client";
 
 import { useState } from "react";
-import Link from "next/link";
-
-const API_URL = process.env.NEXT_PUBLIC_API_URL!;
 
 export default function ForgotPasswordPage() {
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
-  const [done, setDone] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState("");
+  const [error, setError] = useState("");
 
-  async function submit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    setError(null);
-
-    if (!email.trim()) {
-      setError("Enter your email.");
-      return;
-    }
-
     setLoading(true);
-    try {
-      const res = await fetch(`${API_URL}/api/auth/forgot-password`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: email.trim() }),
-      });
+    setError("");
+    setSuccess("");
 
-      // Always show success message (prevents email enumeration)
-      await res.json().catch(() => ({}));
-      setDone(true);
+    try {
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/api/auth/forgot-password`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email }),
+        }
+      );
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        setError(data?.error || "Something went wrong");
+        setLoading(false);
+        return;
+      }
+
+      setSuccess(
+        "If an account exists for this email, a reset link has been sent."
+      );
     } catch {
-      setDone(true);
-    } finally {
-      setLoading(false);
+      setError("Unable to send reset email");
     }
+
+    setLoading(false);
   }
 
   return (
-    <main className="min-h-screen bg-gradient-to-b from-slate-950 to-black text-slate-50 px-6 py-12 flex justify-center">
-      <div className="w-full max-w-md space-y-6">
-        <h1 className="text-2xl font-semibold">Forgot password</h1>
+    <div className="min-h-screen flex items-center justify-center">
+      <form
+        onSubmit={handleSubmit}
+        className="w-full max-w-sm bg-black/40 border border-white/10 rounded-2xl p-6 space-y-4"
+      >
+        <h1 className="text-center text-xl font-semibold">
+          Forgot Password
+        </h1>
 
-        <div className="rounded-2xl border border-white/10 bg-white/5 p-6">
-          {done ? (
-            <div className="space-y-3">
-              <div className="text-lg font-semibold">Check your email</div>
-              <p className="text-sm text-white/70">
-                If an account exists for that email, we’ve generated a reset link.
-              </p>
+        {error && (
+          <p className="text-red-400 text-sm text-center">
+            {error}
+          </p>
+        )}
 
-              {/* TEMP for testing: we are not emailing yet.
-                  We'll wire email next. */}
-              <p className="text-xs text-white/50">
-                (Dev note: tokens are currently returned by the backend for testing.)
-              </p>
+        {success && (
+          <p className="text-green-400 text-sm text-center">
+            {success}
+          </p>
+        )}
 
-              <Link
-                href="/login"
-                className="inline-block mt-2 px-4 py-2 rounded-xl bg-white text-black font-semibold hover:bg-white/90"
-              >
-                Back to login
-              </Link>
-            </div>
-          ) : (
-            <form onSubmit={submit} className="space-y-4">
-              <label className="block text-sm font-medium">Email</label>
-              <input
-                className="w-full mt-1 bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-sm"
-                type="email"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="you@domain.com"
-              />
+        <input
+          type="email"
+          placeholder="Your email"
+          value={email}
+          onChange={(e) => setEmail(e.target.value)}
+          className="w-full p-3 rounded-xl bg-white text-black"
+          required
+        />
 
-              {error && (
-                <p className="text-red-400 bg-red-950/40 p-2 rounded-lg text-sm">
-                  {error}
-                </p>
-              )}
+        <button
+          type="submit"
+          disabled={loading}
+          className="w-full py-3 rounded-xl bg-white text-black font-semibold"
+        >
+          {loading ? "Sending…" : "Send reset link"}
+        </button>
 
-              <button
-                type="submit"
-                className="w-full bg-emerald-500 text-slate-900 rounded-xl py-2 font-medium hover:bg-emerald-400 disabled:opacity-60"
-                disabled={loading}
-              >
-                {loading ? "Sending…" : "Send reset link"}
-              </button>
-
-              <div className="text-center">
-                <Link href="/login" className="text-sm text-white/70 hover:text-white">
-                  Back to login
-                </Link>
-              </div>
-            </form>
-          )}
+        <div className="text-center">
+          <a
+            href="/login"
+            className="text-xs text-white/70 hover:text-white"
+          >
+            Back to login
+          </a>
         </div>
-      </div>
-    </main>
+      </form>
+    </div>
   );
 }
