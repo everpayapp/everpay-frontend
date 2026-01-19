@@ -1,7 +1,7 @@
 // ~/everpay-frontend/src/app/creator/settings/page.tsx
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { HexColorPicker } from "react-colorful";
@@ -43,6 +43,12 @@ export default function CreatorSettingsPage() {
   const [milestoneEnabled, setMilestoneEnabled] = useState(false);
   const [milestoneAmount, setMilestoneAmount] = useState("");
   const [milestoneText, setMilestoneText] = useState("");
+
+  // Avatar upload state
+  const fileRef = useRef<HTMLInputElement | null>(null);
+  const [avatarFile, setAvatarFile] = useState<File | null>(null);
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
 
   // Redirect if logged out
   useEffect(() => {
@@ -92,9 +98,7 @@ export default function CreatorSettingsPage() {
         setThemeEnd(data.theme_end || "#3b82f6");
 
         setMilestoneEnabled(!!data.milestone_enabled);
-        setMilestoneAmount(
-          data.milestone_amount ? String(data.milestone_amount) : ""
-        );
+        setMilestoneAmount(data.milestone_amount ? String(data.milestone_amount) : "");
         setMilestoneText(data.milestone_text || "");
       } catch {
         setError("Failed to load creator profile");
@@ -109,6 +113,88 @@ export default function CreatorSettingsPage() {
   const handleChange = (field: keyof CreatorProfile, value: string) => {
     if (!profile) return;
     setProfile({ ...profile, [field]: value });
+  };
+
+  const persistAvatarUrl = async (newUrl: string) => {
+    if (!username) return;
+
+    // keep existing profile values
+    const socialLinksArray = socialLinksText
+      .split("\n")
+      .map((l) => l.trim())
+      .filter(Boolean);
+
+    const res = await fetch(`${API_URL}/api/creator/profile/update`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        username,
+        profile_name: profile?.profile_name ?? "",
+        avatar_url: newUrl,
+        social_links: socialLinksArray,
+        theme_start: themeStart,
+        theme_mid: themeMid,
+        theme_end: themeEnd,
+        milestone_enabled: milestoneEnabled ? 1 : 0,
+        milestone_amount: Number(milestoneAmount) || 0,
+        milestone_text: milestoneText,
+      }),
+    });
+
+    const data = await res.json().catch(() => ({} as any));
+    if (!res.ok) throw new Error(data?.error || "Failed to save avatar URL");
+  };
+
+  const handleAvatarUpload = async () => {
+    if (!username) {
+      setUploadError("Missing username in session.");
+      return;
+    }
+    if (!avatarFile) {
+      setUploadError("Please choose an image first.");
+      return;
+    }
+
+    setUploadingAvatar(true);
+    setUploadError(null);
+    setSuccess(null);
+    setError(null);
+
+    try {
+      const form = new FormData();
+      form.append("username", username);
+      form.append("file", avatarFile);
+
+      const res = await fetch(`${API_URL}/api/creator/avatar`, {
+        method: "POST",
+        body: form,
+      });
+
+      const data = await res.json().catch(() => ({} as any));
+
+      if (!res.ok) {
+        throw new Error(data?.error || "Avatar upload failed");
+      }
+
+      const newUrl = data?.avatar_url as string | undefined;
+      if (!newUrl) throw new Error("Upload succeeded but no avatar_url returned.");
+
+      // Update local profile immediately so preview updates
+      setProfile((p) => (p ? { ...p, avatar_url: newUrl } : p));
+
+      // Auto-save avatar url to DB (no need to click Save Changes)
+      await persistAvatarUrl(newUrl);
+
+      // Reset picker
+      setAvatarFile(null);
+      if (fileRef.current) fileRef.current.value = "";
+
+      setSuccess("Avatar uploaded & saved ✅");
+    } catch (err: any) {
+      setUploadError(err?.message || "Avatar upload failed");
+    } finally {
+      setUploadingAvatar(false);
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -171,13 +257,10 @@ export default function CreatorSettingsPage() {
         <div className="w-full max-w-2xl space-y-4">
           <h1 className="text-2xl font-semibold">Creator Settings</h1>
           <div className="rounded-2xl border border-white/10 bg-white/5 p-6">
-            <div className="text-lg font-semibold text-white">
-              Profile not linked
-            </div>
+            <div className="text-lg font-semibold text-white">Profile not linked</div>
             <p className="mt-2 text-sm text-white/70">
-              Your session does not include a creator username. Log out and log
-              back in, and make sure the backend login returns a creator with a
-              username.
+              Your session does not include a creator username. Log out and log back
+              in, and make sure the backend login returns a creator with a username.
             </p>
           </div>
         </div>
@@ -212,32 +295,68 @@ export default function CreatorSettingsPage() {
             />
           </div>
 
-          <div>
-            <label className="text-sm font-medium">Avatar URL</label>
-            <input
-              className="w-full mt-1 bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-sm"
-              value={profile?.avatar_url || ""}
-              onChange={(e) => handleChange("avatar_url", e.target.value)}
-              placeholder="https://..."
-            />
-          </div>
+          {/* Avatar Upload (Cloudinary) */}
+          <section className="border border-white/10 bg-white/5 rounded-2xl p-4">
+            <div className="flex items-start justify-between gap-4 flex-col sm:flex-row">
+              <div className="space-y-1">
+                <div className="text-sm font-medium">Avatar</div>
+                <div className="text-xs text-white/60">
+                  Upload an image (we auto-crop + optimize).
+                </div>
+              </div>
 
-          <div className="flex justify-center mt-3">
-            <div className="w-36 h-36 rounded-full border border-white/20 overflow-hidden bg-white/10">
-              {profile?.avatar_url ? (
-                <img
-                  src={profile.avatar_url}
-                  className="w-full h-full object-cover"
-                  alt="Avatar preview"
+              <div className="w-full sm:w-auto flex items-center gap-2">
+                <input
+                  ref={fileRef}
+                  type="file"
+                  accept="image/*"
+                  onChange={(e) => setAvatarFile(e.target.files?.[0] || null)}
+                  className="w-full sm:w-auto text-xs text-white/80"
                 />
-              ) : null}
+                <button
+                  type="button"
+                  onClick={handleAvatarUpload}
+                  disabled={uploadingAvatar || !avatarFile}
+                  className="px-4 py-2 rounded-xl bg-white text-black text-sm font-semibold disabled:opacity-50"
+                >
+                  {uploadingAvatar ? "Uploading…" : "Upload"}
+                </button>
+              </div>
             </div>
-          </div>
+
+            {uploadError && (
+              <p className="mt-3 text-red-400 bg-red-950/40 p-2 rounded-lg text-sm">
+                {uploadError}
+              </p>
+            )}
+
+            <div className="flex justify-center mt-4">
+              <div className="w-36 h-36 rounded-full border border-white/20 overflow-hidden bg-white/10">
+                {profile?.avatar_url ? (
+                  <img
+                    src={profile.avatar_url}
+                    className="w-full h-full object-cover"
+                    alt="Avatar preview"
+                  />
+                ) : null}
+              </div>
+            </div>
+
+            <div className="mt-4">
+              <label className="text-xs font-medium text-white/70">Avatar URL</label>
+              <input
+                className="w-full mt-1 bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-sm"
+                value={profile?.avatar_url || ""}
+                readOnly
+              />
+              <p className="mt-1 text-[11px] text-white/50">
+                This is auto-filled after upload.
+              </p>
+            </div>
+          </section>
 
           <div>
-            <label className="text-sm font-medium">
-              Social Links (one per line)
-            </label>
+            <label className="text-sm font-medium">Social Links (one per line)</label>
             <textarea
               className="w-full mt-1 bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-sm resize-none"
               rows={4}
@@ -261,10 +380,7 @@ export default function CreatorSettingsPage() {
                       className="px-3 py-1 rounded-full bg-white/10 border border-white/20 text-xs text-white/85 hover:bg-white/15 transition"
                       title={url}
                     >
-                      {url
-                        .replace(/^https?:\/\//, "")
-                        .replace(/^www\./, "")
-                        .slice(0, 26)}
+                      {url.replace(/^https?:\/\//, "").replace(/^www\./, "").slice(0, 26)}
                     </a>
                   ))}
               </div>
@@ -330,9 +446,7 @@ export default function CreatorSettingsPage() {
           </section>
 
           {error && (
-            <p className="text-red-400 bg-red-950/40 p-2 rounded-lg text-sm">
-              {error}
-            </p>
+            <p className="text-red-400 bg-red-950/40 p-2 rounded-lg text-sm">{error}</p>
           )}
           {success && (
             <p className="text-emerald-400 bg-emerald-950/40 p-2 rounded-lg text-sm">
@@ -352,4 +466,3 @@ export default function CreatorSettingsPage() {
     </main>
   );
 }
-
