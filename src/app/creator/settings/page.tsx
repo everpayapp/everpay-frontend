@@ -178,7 +178,7 @@ export default function CreatorSettingsPage() {
 
       const newUrl = data?.avatar_url as string | undefined;
       if (!newUrl) throw new Error("Upload succeeded but no avatar_url returned.");
-
+Avatar URL
       // Update local profile immediately so preview updates
       setProfile((p) => (p ? { ...p, avatar_url: newUrl } : p));
 
@@ -342,17 +342,22 @@ export default function CreatorSettingsPage() {
               </div>
             </div>
 
-            <div className="mt-4">
-              <label className="text-xs font-medium text-white/70">Avatar URL</label>
-              <input
-                className="w-full mt-1 bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-sm"
-                value={profile?.avatar_url || ""}
-                readOnly
-              />
-              <p className="mt-1 text-[11px] text-white/50">
-                This is auto-filled after upload.
-              </p>
-            </div>
+<details className="mt-4">
+  <summary className="text-xs font-medium text-white/60 cursor-pointer select-none">
+    Advanced · Avatar URL
+  </summary>
+
+  <div className="mt-2">
+    <input
+      className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white/70"
+      value={profile?.avatar_url || ""}
+      readOnly
+    />
+    <p className="mt-1 text-[11px] text-white/40">
+      System-managed. Auto-filled after upload.
+    </p>
+  </div>
+</details>
           </section>
 
           <div>
