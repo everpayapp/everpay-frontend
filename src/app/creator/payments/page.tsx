@@ -27,6 +27,24 @@ const formatGBPFromPence = (pence: number) => formatGBP((pence || 0) / 100);
 
 type RangeKey = "today" | "7d" | "30d" | "all";
 
+function safeGetLocalStorage(key: string): string | null {
+  try {
+    if (typeof window === "undefined") return null;
+    return window.localStorage.getItem(key);
+  } catch {
+    return null;
+  }
+}
+
+function safeSetLocalStorage(key: string, value: string) {
+  try {
+    if (typeof window === "undefined") return;
+    window.localStorage.setItem(key, value);
+  } catch {
+    // ignore (prevents crash in strict/privacy modes)
+  }
+}
+
 export default function CreatorPaymentsPage() {
   // 🔐 AUTH
   const { status, data: session } = useSession();
@@ -45,7 +63,7 @@ export default function CreatorPaymentsPage() {
   const [anonymousOnly, setAnonymousOnly] = useState(false);
   const [selected, setSelected] = useState<Payment | null>(null);
 
-  // “New” highlighting
+  // “New” highlighting (safe)
   const lastSeenKey = `everpay:lastSeenPayments:${username}`;
   const [lastSeen, setLastSeen] = useState<number>(0);
   const lastSeenRef = useRef<number>(0);
@@ -57,17 +75,16 @@ export default function CreatorPaymentsPage() {
     }
   }, [status, router]);
 
-  // Load lastSeen
+  // Load lastSeen safely
   useEffect(() => {
-    if (typeof window === "undefined") return;
-    const raw = window.localStorage.getItem(lastSeenKey);
+    const raw = safeGetLocalStorage(lastSeenKey);
     const v = raw ? Number(raw) : 0;
     const safe = Number.isFinite(v) ? v : 0;
     setLastSeen(safe);
     lastSeenRef.current = safe;
   }, [lastSeenKey]);
 
-  // Load payments (with a small refresh loop like dashboard)
+  // Load payments (with refresh loop)
   useEffect(() => {
     if (status !== "authenticated") return;
 
@@ -98,13 +115,11 @@ export default function CreatorPaymentsPage() {
     };
   }, [status, username]);
 
-  // Update lastSeen once page has loaded (so “New” works)
+  // Update lastSeen after initial load (safe)
   useEffect(() => {
-    if (typeof window === "undefined") return;
     if (loading) return;
-
     const now = Date.now();
-    window.localStorage.setItem(lastSeenKey, String(now));
+    safeSetLocalStorage(lastSeenKey, String(now));
     setLastSeen(now);
     lastSeenRef.current = now;
   }, [loading, lastSeenKey]);
@@ -112,20 +127,19 @@ export default function CreatorPaymentsPage() {
   // ⛔ Wait for auth resolution
   if (status === "loading") return null;
 
-  // 📅 start-of-day
+  // helpers
+  const safeTime = (iso: string) => {
+    const t = new Date(iso).getTime();
+    return Number.isFinite(t) ? t : 0;
+  };
+
   const startOfToday = useMemo(() => {
     const d = new Date();
     d.setHours(0, 0, 0, 0);
     return d.getTime();
   }, []);
 
-  const safeTime = (iso: string) => {
-    const d = new Date(iso);
-    const t = d.getTime();
-    return Number.isFinite(t) ? t : 0;
-  };
-
-  // Today total (pence -> pounds)
+  // Today total
   const todaysTotalPence = useMemo(() => {
     return payments
       .filter((p) => safeTime(p.created_at) >= startOfToday)
@@ -148,7 +162,7 @@ export default function CreatorPaymentsPage() {
       start.setDate(now.getDate() - 30);
       return start.getTime();
     }
-    return 0; // all
+    return 0;
   }, [range]);
 
   const filtered = useMemo(() => {
@@ -156,17 +170,12 @@ export default function CreatorPaymentsPage() {
 
     return payments
       .filter((p) => safeTime(p.created_at) >= rangeStart)
-      .filter((p) => {
-        if (!anonymousOnly) return true;
-        return !!p.anonymous;
-      })
+      .filter((p) => (!anonymousOnly ? true : !!p.anonymous))
       .filter((p) => {
         if (!q) return true;
-
         const name = (p.anonymous ? "anonymous" : p.gift_name || "someone").toLowerCase();
         const msg = (p.gift_message || "").toLowerCase();
         const amt = formatGBPFromPence(p.amount).toLowerCase();
-
         return name.includes(q) || msg.includes(q) || amt.includes(q);
       })
       .sort((a, b) => safeTime(b.created_at) - safeTime(a.created_at));
@@ -180,34 +189,38 @@ export default function CreatorPaymentsPage() {
   }, [filtered]);
 
   const isNewPayment = (p: Payment) => {
-    if (!lastSeen) return false; // first ever visit = no “New”
+    if (!lastSeen) return false;
     return safeTime(p.created_at) > lastSeen;
   };
 
   const exportCSV = () => {
-    const rows = [
-      ["date", "supporter", "amount_gbp", "anonymous", "message", "id"],
-      ...filtered.map((p) => {
-        const date = new Date(p.created_at).toISOString();
-        const supporter = p.anonymous ? "Anonymous" : p.gift_name || "Someone";
-        const amount = (p.amount / 100).toFixed(2);
-        const anon = p.anonymous ? "1" : "0";
-        const msg = (p.gift_message || "").replace(/\r?\n/g, " ").trim();
-        return [date, supporter, amount, anon, msg, p.id];
-      }),
-    ];
+    try {
+      const rows = [
+        ["date", "supporter", "amount_gbp", "anonymous", "message", "id"],
+        ...filtered.map((p) => {
+          const date = new Date(p.created_at).toISOString();
+          const supporter = p.anonymous ? "Anonymous" : p.gift_name || "Someone";
+          const amount = (p.amount / 100).toFixed(2);
+          const anon = p.anonymous ? "1" : "0";
+          const msg = (p.gift_message || "").replace(/\r?\n/g, " ").trim();
+          return [date, supporter, amount, anon, msg, p.id];
+        }),
+      ];
 
-    const csv = rows
-      .map((r) => r.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(","))
-      .join("\n");
+      const csv = rows
+        .map((r) => r.map((cell) => `"${String(cell).replace(/"/g, '""')}"`).join(","))
+        .join("\n");
 
-    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `everpay-payments-${username}-${range}.csv`;
-    a.click();
-    URL.revokeObjectURL(url);
+      const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `everpay-payments-${username}-${range}.csv`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch (e) {
+      console.error("CSV export failed", e);
+    }
   };
 
   return (
@@ -342,9 +355,7 @@ export default function CreatorPaymentsPage() {
                     </p>
                   </div>
 
-                  <div className="text-xs text-white/60 whitespace-nowrap">
-                    {dateStr}
-                  </div>
+                  <div className="text-xs text-white/60 whitespace-nowrap">{dateStr}</div>
                 </button>
               );
             })}
