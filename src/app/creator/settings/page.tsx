@@ -178,7 +178,7 @@ export default function CreatorSettingsPage() {
 
       const newUrl = data?.avatar_url as string | undefined;
       if (!newUrl) throw new Error("Upload succeeded but no avatar_url returned.");
-Avatar URL
+
       // Update local profile immediately so preview updates
       setProfile((p) => (p ? { ...p, avatar_url: newUrl } : p));
 
