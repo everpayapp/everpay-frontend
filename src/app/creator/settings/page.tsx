@@ -458,6 +458,21 @@ export default function CreatorSettingsPage() {
               {success}
             </p>
           )}
+<section className="mt-8 border-t border-white/10 pt-6">
+  <h3 className="text-sm font-semibold text-white mb-3">Security</h3>
+
+  <button
+    type="button"
+    onClick={() => router.push("/forgot-password")}
+    className="w-full bg-slate-950 hover:bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-sm text-white transition"
+  >
+    Change password
+  </button>
+
+  <p className="mt-2 text-[11px] text-white/50">
+    We’ll email you a secure link to reset your password.
+  </p>
+</section>
 
           <button
             type="submit"
