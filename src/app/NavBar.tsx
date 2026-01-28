@@ -11,6 +11,7 @@ export default function NavBar() {
   // ✅ Hide navbar on public / marketing pages + auth pages
   const hideOn = [
     "/",                 // marketing homepage
+    "/example",          // example page
     "/login",
     "/signup",
     "/forgot-password",
