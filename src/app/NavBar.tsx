@@ -8,19 +8,18 @@ export default function NavBar() {
   const pathname = usePathname();
   const { status, data: session } = useSession();
 
-  // ✅ Hide navbar on public / marketing pages + auth pages
-  const hideOn = [
-    "/",                 // marketing homepage
-    "/example",          // example page
-    "/login",
-    "/signup",
-    "/forgot-password",
-    "/reset-password",
-  ];
-
-  if (hideOn.includes(pathname)) {
+  // ✅ Hide navbar on marketing, example & auth pages
+  if (
+    pathname === "/" ||
+    pathname.startsWith("/example") ||
+    pathname === "/login" ||
+    pathname === "/signup" ||
+    pathname === "/forgot-password" ||
+    pathname === "/reset-password"
+  ) {
     return null;
   }
+
 
   // ✅ Hide navbar on public creator pages (/creator/username)
   // Show only on creator dashboard routes (dashboard/payments/settings)
