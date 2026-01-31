@@ -50,6 +50,15 @@ export default function CreatorSettingsPage() {
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
 
+  // Shared “EverPay glass panel” styles (match Dashboard)
+  const PANEL =
+    "rounded-3xl border border-white/15 bg-black/25 backdrop-blur-xl shadow-2xl";
+  const SUBPANEL = "rounded-2xl border border-white/10 bg-black/20";
+  const INPUT =
+    "w-full mt-1 rounded-xl bg-white/10 border border-white/20 px-3 py-2 text-sm text-white placeholder-white/50 outline-none";
+  const TEXTAREA =
+    "w-full mt-1 rounded-xl bg-white/10 border border-white/20 px-3 py-2 text-sm text-white placeholder-white/50 outline-none resize-none";
+
   // Redirect if logged out
   useEffect(() => {
     if (status === "unauthenticated") {
@@ -98,7 +107,9 @@ export default function CreatorSettingsPage() {
         setThemeEnd(data.theme_end || "#3b82f6");
 
         setMilestoneEnabled(!!data.milestone_enabled);
-        setMilestoneAmount(data.milestone_amount ? String(data.milestone_amount) : "");
+        setMilestoneAmount(
+          data.milestone_amount ? String(data.milestone_amount) : ""
+        );
         setMilestoneText(data.milestone_text || "");
       } catch {
         setError("Failed to load creator profile");
@@ -118,7 +129,6 @@ export default function CreatorSettingsPage() {
   const persistAvatarUrl = async (newUrl: string) => {
     if (!username) return;
 
-    // keep existing profile values
     const socialLinksArray = socialLinksText
       .split("\n")
       .map((l) => l.trim())
@@ -179,13 +189,9 @@ export default function CreatorSettingsPage() {
       const newUrl = data?.avatar_url as string | undefined;
       if (!newUrl) throw new Error("Upload succeeded but no avatar_url returned.");
 
-      // Update local profile immediately so preview updates
       setProfile((p) => (p ? { ...p, avatar_url: newUrl } : p));
-
-      // Auto-save avatar url to DB (no need to click Save Changes)
       await persistAvatarUrl(newUrl);
 
-      // Reset picker
       setAvatarFile(null);
       if (fileRef.current) fileRef.current.value = "";
 
@@ -253,10 +259,10 @@ export default function CreatorSettingsPage() {
   // Authenticated but username missing
   if (status === "authenticated" && !username) {
     return (
-      <main className="min-h-screen bg-gradient-to-b from-slate-950 to-black text-slate-50 px-6 py-12 flex justify-center">
+      <main className="min-h-screen text-slate-50 px-6 py-12 flex justify-center">
         <div className="w-full max-w-2xl space-y-4">
           <h1 className="text-2xl font-semibold">Creator Settings</h1>
-          <div className="rounded-2xl border border-white/10 bg-white/5 p-6">
+          <div className={`${PANEL} p-6`}>
             <div className="text-lg font-semibold text-white">Profile not linked</div>
             <p className="mt-2 text-sm text-white/70">
               Your session does not include a creator username. Log out and log back
@@ -273,7 +279,14 @@ export default function CreatorSettingsPage() {
   }
 
   return (
-    <main className="min-h-screen bg-gradient-to-b from-slate-950 to-black text-slate-50 px-6 py-12 flex justify-center">
+    <main
+      className="min-h-screen text-slate-50 px-6 py-12 flex justify-center"
+      // ✅ “lighter wash” across the WHOLE settings page
+      style={{
+        background:
+          "linear-gradient(180deg, rgba(14,34,56,0.55) 0%, rgba(14,34,56,0.15) 45%, rgba(0,0,0,0) 100%)",
+      }}
+    >
       <div className="w-full max-w-3xl space-y-6">
         <div className="space-y-1">
           <h1 className="text-2xl font-semibold">Creator Settings</h1>
@@ -282,21 +295,18 @@ export default function CreatorSettingsPage() {
           </p>
         </div>
 
-        <form
-          className="space-y-6 bg-slate-900/60 border border-slate-800 rounded-2xl p-6"
-          onSubmit={handleSubmit}
-        >
+        <form className={`${PANEL} p-6 space-y-6`} onSubmit={handleSubmit}>
           <div>
             <label className="text-sm font-medium">Profile Name</label>
             <input
-              className="w-full mt-1 bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-sm"
+              className={INPUT}
               value={profile?.profile_name || ""}
               onChange={(e) => handleChange("profile_name", e.target.value)}
             />
           </div>
 
           {/* Avatar Upload (Cloudinary) */}
-          <section className="border border-white/10 bg-white/5 rounded-2xl p-4">
+          <section className={`${SUBPANEL} p-4`}>
             <div className="flex items-start justify-between gap-4 flex-col sm:flex-row">
               <div className="space-y-1">
                 <div className="text-sm font-medium">Avatar</div>
@@ -342,28 +352,28 @@ export default function CreatorSettingsPage() {
               </div>
             </div>
 
-<details className="mt-4">
-  <summary className="text-xs font-medium text-white/60 cursor-pointer select-none">
-    Advanced · Avatar URL
-  </summary>
+            <details className="mt-4">
+              <summary className="text-xs font-medium text-white/60 cursor-pointer select-none">
+                Advanced · Avatar URL
+              </summary>
 
-  <div className="mt-2">
-    <input
-      className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-sm text-white/70"
-      value={profile?.avatar_url || ""}
-      readOnly
-    />
-    <p className="mt-1 text-[11px] text-white/40">
-      System-managed. Auto-filled after upload.
-    </p>
-  </div>
-</details>
+              <div className="mt-2">
+                <input
+                  className={INPUT + " text-white/70"}
+                  value={profile?.avatar_url || ""}
+                  readOnly
+                />
+                <p className="mt-1 text-[11px] text-white/40">
+                  System-managed. Auto-filled after upload.
+                </p>
+              </div>
+            </details>
           </section>
 
           <div>
             <label className="text-sm font-medium">Social Links (one per line)</label>
             <textarea
-              className="w-full mt-1 bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-sm resize-none"
+              className={TEXTAREA}
               rows={4}
               value={socialLinksText}
               onChange={(e) => setSocialLinksText(e.target.value)}
@@ -385,7 +395,10 @@ export default function CreatorSettingsPage() {
                       className="px-3 py-1 rounded-full bg-white/10 border border-white/20 text-xs text-white/85 hover:bg-white/15 transition"
                       title={url}
                     >
-                      {url.replace(/^https?:\/\//, "").replace(/^www\./, "").slice(0, 26)}
+                      {url
+                        .replace(/^https?:\/\//, "")
+                        .replace(/^www\./, "")
+                        .slice(0, 26)}
                     </a>
                   ))}
               </div>
@@ -431,7 +444,7 @@ export default function CreatorSettingsPage() {
                   <label className="text-sm">Target Amount (£)</label>
                   <input
                     type="number"
-                    className="w-full mt-1 bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-sm"
+                    className={INPUT}
                     value={milestoneAmount}
                     onChange={(e) => setMilestoneAmount(e.target.value)}
                   />
@@ -441,7 +454,7 @@ export default function CreatorSettingsPage() {
                   <label className="text-sm">Milestone Description</label>
                   <input
                     type="text"
-                    className="w-full mt-1 bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-sm"
+                    className={INPUT}
                     value={milestoneText}
                     onChange={(e) => setMilestoneText(e.target.value)}
                   />
@@ -458,25 +471,26 @@ export default function CreatorSettingsPage() {
               {success}
             </p>
           )}
-<section className="mt-8 border-t border-white/10 pt-6">
-  <h3 className="text-sm font-semibold text-white mb-3">Security</h3>
 
-  <button
-    type="button"
-    onClick={() => router.push("/forgot-password")}
-    className="w-full bg-slate-950 hover:bg-slate-900 border border-slate-700 rounded-xl px-4 py-3 text-sm text-white transition"
-  >
-    Change password
-  </button>
+          <section className="mt-8 border-t border-white/10 pt-6">
+            <h3 className="text-sm font-semibold text-white mb-3">Security</h3>
 
-  <p className="mt-2 text-[11px] text-white/50">
-    We’ll email you a secure link to reset your password.
-  </p>
-</section>
+            <button
+              type="button"
+              onClick={() => router.push("/forgot-password")}
+              className="w-full bg-white/10 hover:bg-white/15 border border-white/20 rounded-xl px-4 py-3 text-sm text-white transition"
+            >
+              Change password
+            </button>
+
+            <p className="mt-2 text-[11px] text-white/50">
+              We’ll email you a secure link to reset your password.
+            </p>
+          </section>
 
           <button
             type="submit"
-            className="w-full bg-emerald-500 text-slate-900 rounded-xl py-2 font-medium hover:bg-emerald-400"
+            className="w-full bg-emerald-500 text-slate-900 rounded-xl py-2 font-medium hover:bg-emerald-400 disabled:opacity-60"
             disabled={saving}
           >
             {saving ? "Saving…" : "Save Changes"}

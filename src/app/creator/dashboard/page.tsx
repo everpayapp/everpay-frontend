@@ -158,7 +158,7 @@ export default function CreatorDashboard() {
   return (
     <>
       {/* Slightly lighter background applied safely */}
-      <div className="max-w-6xl mx-auto px-4 text-white mt-10 pb-32 bg-gradient-to-b from-[#0e2238]/60 to-transparent rounded-3xl">
+       <div className="max-w-6xl mx-auto px-4 text-white mt-10 pb-32">
         {profile && (
           <div className="w-full bg-black/60 border border-white/10 rounded-3xl p-8 shadow-2xl flex items-center gap-6 mb-10">
             <div className="w-24 h-24 rounded-full border-[5px] border-white/30 overflow-hidden shadow-xl">

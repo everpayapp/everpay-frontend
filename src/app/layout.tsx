@@ -2,7 +2,6 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import Providers from "./providers";
-import NavBar from "./NavBar";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -27,16 +26,13 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
+        className={`${geistSans.variable} ${geistMono.variable} antialiased min-h-screen`}
         style={{
-          background: "linear-gradient(180deg, #0e1b2b 0%, #061018 100%)",
-          minHeight: "100vh",
+          // Lighter, more SaaS-style global background (applies everywhere)
+          background: "linear-gradient(180deg, #18283a 0%, #07121a 100%)",
         }}
       >
-        <Providers>
-          <NavBar />
-          <main className="pt-6 px-6">{children}</main>
-        </Providers>
+        <Providers>{children}</Providers>
       </body>
     </html>
   );
