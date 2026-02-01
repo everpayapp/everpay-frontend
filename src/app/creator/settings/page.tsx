@@ -50,6 +50,17 @@ export default function CreatorSettingsPage() {
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
 
+  // Stripe Connect (payouts)
+  const [connectLoading, setConnectLoading] = useState(false);
+  const [connectError, setConnectError] = useState<string | null>(null);
+  const [connectStatus, setConnectStatus] = useState<{
+    connected: boolean;
+    stripe_account_id?: string;
+    chargesEnabled?: boolean;
+    payoutsEnabled?: boolean;
+    requirementsDue?: string[];
+  } | null>(null);
+
   // Shared “EverPay glass panel” styles (match Dashboard)
   const PANEL =
     "rounded-3xl border border-white/15 bg-black/25 backdrop-blur-xl shadow-2xl";
@@ -250,6 +261,75 @@ export default function CreatorSettingsPage() {
       setError(err?.message || "Error saving profile");
     } finally {
       setSaving(false);
+    }
+  };
+
+  const loadConnectStatus = async () => {
+    if (!username) return;
+    try {
+      setConnectError(null);
+      const res = await fetch(
+        `${API_URL}/api/stripe/connect/status?username=${encodeURIComponent(username)}`
+      );
+      const data = await res.json().catch(() => ({} as any));
+      if (!res.ok) throw new Error(data?.error || "Failed to load Connect status");
+      setConnectStatus(data);
+    } catch (e: any) {
+      setConnectError(e?.message || "Failed to load Connect status");
+    }
+  };
+
+  useEffect(() => {
+    if (status !== "authenticated") return;
+    if (!username) return;
+    loadConnectStatus();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [status, username]);
+
+  const startConnectOnboarding = async () => {
+    if (!username) return;
+    setConnectLoading(true);
+    setConnectError(null);
+    try {
+      const res = await fetch(`${API_URL}/api/stripe/connect/create`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username }),
+      });
+      const data = await res.json().catch(() => ({} as any));
+      if (!res.ok) throw new Error(data?.error || "Failed to create onboarding link");
+      if (data?.url) {
+        window.location.href = data.url;
+        return;
+      }
+      throw new Error("No onboarding URL returned");
+    } catch (e: any) {
+      setConnectError(e?.message || "Failed to start onboarding");
+      setConnectLoading(false);
+    }
+  };
+
+  const openStripeDashboard = async () => {
+    if (!username) return;
+    setConnectLoading(true);
+    setConnectError(null);
+    try {
+      const res = await fetch(`${API_URL}/api/stripe/connect/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username }),
+      });
+      const data = await res.json().catch(() => ({} as any));
+      if (!res.ok) throw new Error(data?.error || "Failed to create login link");
+      if (data?.url) {
+        window.open(data.url, "_blank", "noopener,noreferrer");
+      } else {
+        throw new Error("No dashboard URL returned");
+      }
+    } catch (e: any) {
+      setConnectError(e?.message || "Failed to open dashboard");
+    } finally {
+      setConnectLoading(false);
     }
   };
 
@@ -463,6 +543,84 @@ export default function CreatorSettingsPage() {
             )}
           </section>
 
+          {/* Payouts (Stripe Connect) */}
+          <section className="mt-8 border-t border-white/10 pt-6">
+            <h3 className="text-sm font-semibold text-white mb-2">Payouts</h3>
+            <p className="text-[11px] text-white/60 mb-4">
+              Connect your Stripe account so gifts can be paid out to your bank.
+              EverPay never stores your bank details.
+            </p>
+
+            <div className={`${SUBPANEL} p-4 space-y-3`}>
+              <div className="flex items-start justify-between gap-3 flex-col sm:flex-row">
+                <div>
+                  <div className="text-sm font-medium">
+                    {connectStatus?.connected
+                      ? "Stripe account connected ✅"
+                      : "Stripe account not connected"}
+                  </div>
+
+                  <div className="text-xs text-white/60 mt-1">
+                    {connectStatus?.connected ? (
+                      <>
+                        Payouts:{" "}
+                        <span className="text-white/80">
+                          {connectStatus?.payoutsEnabled ? "Enabled" : "Not enabled yet"}
+                        </span>
+                      </>
+                    ) : (
+                      "Set up payouts to receive money."
+                    )}
+                  </div>
+
+                  {Array.isArray(connectStatus?.requirementsDue) &&
+                    connectStatus!.requirementsDue!.length > 0 && (
+                      <div className="mt-2 text-xs text-amber-200/90">
+                        Required: {connectStatus!.requirementsDue!.join(", ")}
+                      </div>
+                    )}
+                </div>
+
+                <div className="flex gap-2 w-full sm:w-auto">
+                  <button
+                    type="button"
+                    onClick={loadConnectStatus}
+                    className="flex-1 sm:flex-none px-4 py-2 rounded-xl bg-white/10 hover:bg-white/15 border border-white/20 text-sm text-white transition"
+                    disabled={connectLoading}
+                  >
+                    Refresh
+                  </button>
+
+                  {!connectStatus?.connected ? (
+                    <button
+                      type="button"
+                      onClick={startConnectOnboarding}
+                      className="flex-1 sm:flex-none px-4 py-2 rounded-xl bg-white text-black text-sm font-semibold disabled:opacity-60"
+                      disabled={connectLoading}
+                    >
+                      {connectLoading ? "Opening…" : "Set up payouts"}
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={openStripeDashboard}
+                      className="flex-1 sm:flex-none px-4 py-2 rounded-xl bg-white text-black text-sm font-semibold disabled:opacity-60"
+                      disabled={connectLoading}
+                    >
+                      {connectLoading ? "Opening…" : "Open Stripe"}
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              {connectError && (
+                <p className="text-red-300 bg-red-950/40 p-2 rounded-lg text-sm">
+                  {connectError}
+                </p>
+              )}
+            </div>
+          </section>
+
           {error && (
             <p className="text-red-400 bg-red-950/40 p-2 rounded-lg text-sm">{error}</p>
           )}
@@ -500,3 +658,4 @@ export default function CreatorSettingsPage() {
     </main>
   );
 }
+
