@@ -23,8 +23,11 @@ export default function SignupPage() {
       return;
     }
 
-    if (!username.trim()) return setError("Username is required");
-    if (!email.trim()) return setError("Email is required");
+    const cleanUsername = username.trim().toLowerCase();
+    const cleanEmail = email.trim().toLowerCase();
+
+    if (!cleanUsername) return setError("Username is required");
+    if (!cleanEmail) return setError("Email is required");
     if (password.length < 6) return setError("Password must be at least 6 characters");
 
     setLoading(true);
@@ -33,8 +36,8 @@ export default function SignupPage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          username: username.trim(),
-          email: email.trim(),
+          username: cleanUsername,
+          email: cleanEmail,
           password,
         }),
       });
