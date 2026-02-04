@@ -28,8 +28,11 @@ export default function CreatorPaymentsPage() {
   const { status, data: session } = useSession();
   const router = useRouter();
 
-  // ✅ SESSION-BASED USERNAME (keep your fallback)
-  const username = session?.user?.email?.split("@")[0] || "lee";
+  // ✅ SESSION-BASED USERNAME (prefer real username, fallback to email prefix)
+  const username =
+    (session?.user as any)?.username ||
+    session?.user?.email?.split("@")[0] ||
+    "lee";
 
   // STATE
   const [payments, setPayments] = useState<Payment[]>([]);
@@ -110,7 +113,6 @@ export default function CreatorPaymentsPage() {
   };
 
   const matchesSearch = (p: Payment) => {
-    // NOTE: removed accidental non-ascii; keeping simple
     const q = search.trim().toLowerCase();
     if (!q) return true;
 
@@ -131,11 +133,9 @@ export default function CreatorPaymentsPage() {
     .filter((p) => (anonymousOnly ? !!p.anonymous : true))
     .filter(matchesSearch);
 
-  const totalRange =
-    filtered.reduce((sum, p) => sum + p.amount, 0) / 100;
+  const totalRange = filtered.reduce((sum, p) => sum + p.amount, 0) / 100;
 
-  const avg =
-    filtered.length > 0 ? totalRange / filtered.length : 0;
+  const avg = filtered.length > 0 ? totalRange / filtered.length : 0;
 
   const todaysTotal =
     payments
@@ -318,3 +318,4 @@ export default function CreatorPaymentsPage() {
     </main>
   );
 }
+

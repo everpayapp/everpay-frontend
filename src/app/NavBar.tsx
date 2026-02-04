@@ -36,13 +36,8 @@ export default function NavBar() {
       ? "text-white font-semibold border-b-2 border-cyan-400 pb-1"
       : "text-white/70 hover:text-white transition";
 
-  // ✅ FIX: Prefer real EverPay username from session (not email)
-  const username =
-    (session?.user as any)?.username ||
-    (session?.user as any)?.name ||
-    ((session?.user as any)?.email
-      ? (session?.user as any)?.email.split("@")[0]
-      : "creator");
+  // ✅ REAL username from NextAuth (never email)
+  const username = (session?.user as any)?.username ?? "creator";
 
   return (
     <nav className="w-full flex justify-center items-center gap-8 py-6 border-b border-white/10 bg-black/30 backdrop-blur-xl">
@@ -79,3 +74,4 @@ export default function NavBar() {
     </nav>
   );
 }
+

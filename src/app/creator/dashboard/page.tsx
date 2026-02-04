@@ -34,8 +34,11 @@ export default function CreatorDashboard() {
   const { status, data: session } = useSession();
   const router = useRouter();
 
-  // ✅ SESSION-BASED USERNAME
-  const username = session?.user?.email?.split("@")[0] || "lee";
+  // ✅ SESSION-BASED USERNAME (prefer real username, fallback to email prefix)
+  const username =
+    (session?.user as any)?.username ||
+    session?.user?.email?.split("@")[0] ||
+    "lee";
 
   // ✅ STATE
   const [payments, setPayments] = useState<Payment[]>([]);
@@ -96,7 +99,7 @@ export default function CreatorDashboard() {
     async function loadProfile() {
       try {
         const res = await fetch(
-          `${apiUrl}/api/creator/profile?username=${username}`
+          `${apiUrl}/api/creator/profile?username=${encodeURIComponent(username)}`
         );
         const data = await res.json();
 
@@ -120,8 +123,7 @@ export default function CreatorDashboard() {
   }, [apiUrl, username, status]);
 
   // 🧠 Derived values
-  const totalEarned =
-    payments.reduce((sum, p) => sum + p.amount, 0) / 100;
+  const totalEarned = payments.reduce((sum, p) => sum + p.amount, 0) / 100;
 
   const formattedTotal = totalEarned.toLocaleString("en-GB", {
     minimumFractionDigits: 2,
@@ -132,15 +134,12 @@ export default function CreatorDashboard() {
 
   const milestoneEnabled =
     profile &&
-    (profile.milestone_enabled === 1 ||
-      profile.milestone_enabled === true) &&
+    (profile.milestone_enabled === 1 || profile.milestone_enabled === true) &&
     (profile.milestone_amount || 0) > 0;
 
   const milestoneTarget = profile?.milestone_amount || 0;
   const progress =
-    milestoneTarget > 0
-      ? Math.min(1, totalEarned / milestoneTarget)
-      : 0;
+    milestoneTarget > 0 ? Math.min(1, totalEarned / milestoneTarget) : 0;
   const progressPercent = Math.round(progress * 100);
 
   const handleCopy = async () => {
@@ -158,7 +157,7 @@ export default function CreatorDashboard() {
   return (
     <>
       {/* Slightly lighter background applied safely */}
-       <div className="max-w-6xl mx-auto px-4 text-white mt-10 pb-32">
+      <div className="max-w-6xl mx-auto px-4 text-white mt-10 pb-32">
         {profile && (
           <div className="w-full bg-black/60 border border-white/10 rounded-3xl p-8 shadow-2xl flex items-center gap-6 mb-10">
             <div className="w-24 h-24 rounded-full border-[5px] border-white/30 overflow-hidden shadow-xl">
@@ -220,18 +219,14 @@ export default function CreatorDashboard() {
                   <p className="text-sm uppercase text-white/60">
                     Total Earnings
                   </p>
-                  <p className="text-5xl font-bold">
-                    £{formattedTotal}
-                  </p>
+                  <p className="text-5xl font-bold">£{formattedTotal}</p>
                 </>
               )}
             </div>
 
             {/* SHARE */}
             <div className="bg-black/40 border border-white/10 rounded-3xl p-6 space-y-4">
-              <p className="text-sm text-center">
-                Share your gift page 🌍
-              </p>
+              <p className="text-sm text-center">Share your gift page 🌍</p>
 
               <div className="bg-black/60 rounded-xl px-4 py-2 text-sm text-white/70">
                 {pageUrl}
@@ -304,3 +299,4 @@ export default function CreatorDashboard() {
     </>
   );
 }
+
