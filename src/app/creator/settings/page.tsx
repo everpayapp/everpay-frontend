@@ -646,6 +646,24 @@ export default function CreatorSettingsPage() {
             </p>
           </section>
 
+{/* DANGER ZONE */}
+<div className="mt-10 bg-red-500/10 border border-red-500/25 rounded-2xl p-5">
+  <h3 className="text-lg font-semibold text-red-200">Danger zone</h3>
+  <p className="text-sm text-white/70 mt-1">
+    Deleting your account removes your creator profile and associated payment history.
+  </p>
+
+  <div className="mt-4">
+    <a
+      href="/creator/delete-account"
+      className="inline-flex items-center justify-center px-4 py-2 rounded-xl bg-red-500 text-white font-semibold hover:bg-red-500/90 transition"
+    >
+      Delete account
+    </a>
+  </div>
+</div>
+
+
           <button
             type="submit"
             className="w-full bg-emerald-500 text-slate-900 rounded-xl py-2 font-medium hover:bg-emerald-400 disabled:opacity-60"
