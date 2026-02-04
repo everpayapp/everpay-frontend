@@ -23,10 +23,20 @@ export default function SignupPage() {
       return;
     }
 
-    const cleanUsername = username.trim().toLowerCase();
+    // ✅ Normalize: lowercase, remove spaces, keep only safe chars
+    const cleanUsername = username
+      .trim()
+      .toLowerCase()
+      .replace(/\s+/g, "")
+      .replace(/[^a-z0-9._-]/g, "");
+
     const cleanEmail = email.trim().toLowerCase();
 
     if (!cleanUsername) return setError("Username is required");
+    if (!/^[a-z0-9._-]{3,30}$/.test(cleanUsername)) {
+      return setError("Username must be 3–30 chars and use letters/numbers/._- only (no spaces).");
+    }
+
     if (!cleanEmail) return setError("Email is required");
     if (password.length < 6) return setError("Password must be at least 6 characters");
 
@@ -49,7 +59,6 @@ export default function SignupPage() {
         return;
       }
 
-      // Success: send them to login
       router.push("/login?created=1");
     } catch {
       setError("Signup failed");
@@ -78,7 +87,7 @@ export default function SignupPage() {
             <input
               value={username}
               onChange={(e) => setUsername(e.target.value)}
-              placeholder="e.g. lee"
+              placeholder="e.g. lee2417"
               className="mt-1 w-full rounded-xl bg-white/10 border border-white/20 px-3 py-2 text-sm text-white placeholder-white/40 outline-none"
             />
           </div>

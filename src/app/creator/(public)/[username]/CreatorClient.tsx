@@ -385,7 +385,10 @@ export default function CreatorClient({ username }: { username: string }) {
             <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">
               {profile.profile_name || "EVER PAY"}
             </h1>
-            <p className="text-xs sm:text-sm text-white/70">@{username}</p>
+          <p className="text-xs sm:text-sm text-white/70">
+           @{decodeURIComponent(username)}
+           </p>
+
 
 {Array.isArray(profile.social_links) && profile.social_links.length > 0 && (
   <div className="mt-3 flex flex-wrap gap-2">
