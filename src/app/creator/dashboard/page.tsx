@@ -1,4 +1,3 @@
-// ~/everpay-frontend/src/app/creator/dashboard/page.tsx
 "use client";
 
 import { useEffect, useRef, useState } from "react";
@@ -26,34 +25,27 @@ type CreatorProfile = {
 };
 
 export default function CreatorDashboard() {
-  // 🔒 ENV
   const apiUrl = process.env.NEXT_PUBLIC_API_URL!;
   const baseUrl = process.env.NEXT_PUBLIC_PUBLIC_BASE_URL!;
 
-  // 🔐 AUTH
   const { status, data: session } = useSession();
   const router = useRouter();
 
-  // ✅ SESSION USERNAME ONLY (NO FALLBACKS)
-  const username = (session?.user as any)?.username as string | undefined;
-
-  const [sessionUsernameMissing, setSessionUsernameMissing] = useState(false);
+  // ✅ HARD SAFE USERNAME (no email fallback ever)
+  const username = String((session?.user as any)?.username || "")
+    .trim()
+    .toLowerCase();
 
   useEffect(() => {
-    if (status === "authenticated" && !username) {
-      setSessionUsernameMissing(true);
-    } else {
-      setSessionUsernameMissing(false);
-    }
-  }, [status, username]);
+    if (status === "unauthenticated") router.replace("/login");
+    if (status === "authenticated" && !username) router.replace("/login");
+  }, [status, username, router]);
 
-  // ✅ STATE
   const [payments, setPayments] = useState<Payment[]>([]);
   const [profile, setProfile] = useState<CreatorProfile | null>(null);
   const [loading, setLoading] = useState(true);
   const [showQRModal, setShowQRModal] = useState(false);
 
-  // ✅ Copy feedback
   const [copied, setCopied] = useState(false);
   const copiedTimer = useRef<number | null>(null);
 
@@ -63,21 +55,11 @@ export default function CreatorDashboard() {
     };
   }, []);
 
-  // 🔐 Redirect if logged out
-  useEffect(() => {
-    if (status === "unauthenticated") {
-      router.replace("/login");
-    }
-  }, [status, router]);
-
-  // ✅ Always build public URL using username slug (encoded)
-  const pageUrl = username ? `${baseUrl}/creator/${encodeURIComponent(username)}` : "";
-
   // 🔁 Load payments
   useEffect(() => {
     if (status !== "authenticated" || !username) return;
 
-    let isMounted = true;
+    let mounted = true;
 
     const loadPayments = async () => {
       try {
@@ -85,11 +67,9 @@ export default function CreatorDashboard() {
           `${apiUrl}/api/payments/${encodeURIComponent(username)}`
         );
         const data = await res.json();
-        if (isMounted) {
-          setPayments(Array.isArray(data) ? data : []);
-        }
+        if (mounted) setPayments(Array.isArray(data) ? data : []);
       } catch (err) {
-        console.error("Failed to load payments", err);
+        console.error("Payments load failed", err);
       }
     };
 
@@ -97,7 +77,7 @@ export default function CreatorDashboard() {
     const interval = setInterval(loadPayments, 15000);
 
     return () => {
-      isMounted = false;
+      mounted = false;
       clearInterval(interval);
     };
   }, [apiUrl, username, status]);
@@ -123,7 +103,7 @@ export default function CreatorDashboard() {
           milestone_text: data.milestone_text || "",
         });
       } catch (err) {
-        console.error("Failed to load profile", err);
+        console.error("Profile load failed", err);
       } finally {
         setLoading(false);
       }
@@ -132,72 +112,43 @@ export default function CreatorDashboard() {
     loadProfile();
   }, [apiUrl, username, status]);
 
-  // 🧠 Derived values
-  const totalEarned = payments.reduce((sum, p) => sum + p.amount, 0) / 100;
+  const totalEarned = payments.reduce((s, p) => s + p.amount, 0) / 100;
 
   const formattedTotal = totalEarned.toLocaleString("en-GB", {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   });
 
+  const pageUrl = `${baseUrl}/creator/${username}`;
+
   const milestoneEnabled =
     profile &&
     (profile.milestone_enabled === 1 || profile.milestone_enabled === true) &&
     (profile.milestone_amount || 0) > 0;
 
-  const milestoneTarget = profile?.milestone_amount || 0;
-  const progress =
-    milestoneTarget > 0 ? Math.min(1, totalEarned / milestoneTarget) : 0;
-  const progressPercent = Math.round(progress * 100);
+  const target = profile?.milestone_amount || 0;
+  const progress = target > 0 ? Math.min(1, totalEarned / target) : 0;
+  const percent = Math.round(progress * 100);
 
   const handleCopy = async () => {
-    if (!pageUrl) return;
-
     await navigator.clipboard.writeText(pageUrl);
     setCopied(true);
-
     if (copiedTimer.current) window.clearTimeout(copiedTimer.current);
-    copiedTimer.current = window.setTimeout(() => {
-      setCopied(false);
-    }, 1600);
+    copiedTimer.current = window.setTimeout(() => setCopied(false), 1500);
   };
 
   if (status === "loading") return null;
 
-  if (sessionUsernameMissing) {
-    return (
-      <div className="max-w-xl mx-auto px-4 text-white mt-16">
-        <div className="bg-red-500/10 border border-red-500/25 rounded-2xl p-5">
-          <h2 className="text-lg font-semibold text-red-200">
-            Session username missing
-          </h2>
-          <p className="text-sm text-white/70 mt-2">
-            Your login session does not include a username, so EverPay can’t load the
-            correct creator profile. Please log out and log back in.
-          </p>
-
-          <button
-            onClick={() => router.push("/login")}
-            className="mt-4 px-4 py-2 rounded-xl bg-white text-black font-semibold"
-          >
-            Go to login
-          </button>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <>
-      {/* Slightly lighter background applied safely */}
       <div className="max-w-6xl mx-auto px-4 text-white mt-10 pb-32">
+
         {profile && (
-          <div className="w-full bg-black/60 border border-white/10 rounded-3xl p-8 shadow-2xl flex items-center gap-6 mb-10">
-            <div className="w-24 h-24 rounded-full border-[5px] border-white/30 overflow-hidden shadow-xl">
+          <div className="bg-black/60 border border-white/10 rounded-3xl p-8 flex items-center gap-6 mb-10">
+            <div className="w-24 h-24 rounded-full border-4 border-white/30 overflow-hidden">
               {profile.avatar_url && (
                 <img
                   src={profile.avatar_url}
-                  alt="Creator avatar"
                   className="w-full h-full object-cover"
                 />
               )}
@@ -207,38 +158,29 @@ export default function CreatorDashboard() {
               <h1 className="text-3xl font-bold uppercase">
                 {profile.profile_name}
               </h1>
-              <p className="text-sm text-white/60">@{profile.username}</p>
+              <p className="text-sm text-white/60">@{username}</p>
             </div>
           </div>
         )}
 
         <div className="grid grid-cols-1 lg:grid-cols-[55%_45%] gap-8">
-          {/* LEFT */}
+
           <div className="space-y-8">
+
             {milestoneEnabled && (
               <div className="bg-black/40 border border-white/10 rounded-3xl px-6 py-5">
-                <p className="text-xs uppercase text-white/70 mb-1">
-                  Current goal
-                </p>
-
                 {profile?.milestone_text && (
-                  <p className="text-sm font-medium mb-2">
-                    {profile.milestone_text}
-                  </p>
+                  <p className="text-sm mb-2">{profile.milestone_text}</p>
                 )}
 
-                <p className="text-[13px] text-white/80 mb-3">
-                  £{formattedTotal} of £
-                  {milestoneTarget.toLocaleString("en-GB", {
-                    minimumFractionDigits: 2,
-                  })}{" "}
-                  raised
+                <p className="text-sm mb-3">
+                  £{formattedTotal} of £{target.toFixed(2)} raised
                 </p>
 
-                <div className="w-full h-2.5 rounded-full bg-white/10 overflow-hidden">
+                <div className="h-2.5 bg-white/10 rounded-full overflow-hidden">
                   <div
                     className="h-full bg-gradient-to-r from-cyan-400 to-emerald-400"
-                    style={{ width: `${progressPercent}%` }}
+                    style={{ width: `${percent}%` }}
                   />
                 </div>
               </div>
@@ -249,19 +191,16 @@ export default function CreatorDashboard() {
                 <p className="text-white/60">Loading…</p>
               ) : (
                 <>
-                  <p className="text-sm uppercase text-white/60">
-                    Total Earnings
-                  </p>
+                  <p className="text-sm text-white/60">Total earnings</p>
                   <p className="text-5xl font-bold">£{formattedTotal}</p>
                 </>
               )}
             </div>
 
-            {/* SHARE */}
             <div className="bg-black/40 border border-white/10 rounded-3xl p-6 space-y-4">
               <p className="text-sm text-center">Share your gift page 🌍</p>
 
-              <div className="bg-black/60 rounded-xl px-4 py-2 text-sm text-white/70">
+              <div className="bg-black/60 rounded-xl px-4 py-2 text-sm">
                 {pageUrl}
               </div>
 
@@ -269,39 +208,26 @@ export default function CreatorDashboard() {
                 onClick={handleCopy}
                 className="w-full py-3 rounded-xl bg-gradient-to-r from-cyan-400 to-emerald-400 text-black font-semibold"
               >
-                {copied ? "Copied ✓" : "Copy Link"}
+                {copied ? "Copied ✓" : "Copy link"}
               </button>
 
               <button
                 onClick={() => setShowQRModal(true)}
                 className="w-full py-3 rounded-xl bg-gradient-to-r from-cyan-400 to-emerald-400 text-black font-semibold"
               >
-                📷 Show Live Stream QR
+                Show QR code
               </button>
             </div>
           </div>
 
-          {/* RIGHT */}
           <div className="bg-black/40 border border-white/10 rounded-3xl p-6">
-            <h2 className="text-2xl font-semibold mb-5 text-center">
-              Recent Supporters
-            </h2>
+            <h2 className="text-2xl mb-5 text-center">Recent supporters</h2>
 
             {payments.slice(0, 5).map((p) => (
-              <div
-                key={p.id}
-                className="bg-white/5 rounded-xl p-4 mb-2 flex justify-between"
-              >
+              <div key={p.id} className="bg-white/5 rounded-xl p-4 mb-2 flex justify-between">
                 <div>
-                  <p className="text-sm">
-                    {p.anonymous ? "Anonymous" : p.gift_name || "Someone"}
-                  </p>
-                  <p className="font-semibold">
-                    £
-                    {(p.amount / 100).toLocaleString("en-GB", {
-                      minimumFractionDigits: 2,
-                    })}
-                  </p>
+                  <p>{p.anonymous ? "Anonymous" : p.gift_name || "Someone"}</p>
+                  <p className="font-semibold">£{(p.amount / 100).toFixed(2)}</p>
                 </div>
                 <div className="text-xs opacity-60">
                   {new Date(p.created_at).toLocaleDateString()}
@@ -312,17 +238,16 @@ export default function CreatorDashboard() {
         </div>
       </div>
 
-      {/* QR MODAL */}
       {showQRModal && (
         <div className="fixed inset-0 bg-black flex items-center justify-center z-50">
-          <div className="bg-white rounded-3xl p-6 shadow-2xl text-center">
+          <div className="bg-white rounded-3xl p-6 text-center">
             <QRCode value={pageUrl} size={220} />
             <p className="mt-3 text-xs text-slate-500">
-              Powered by <strong>EverPay</strong> · Scan to support live
+              Powered by EverPay
             </p>
             <button
               onClick={() => setShowQRModal(false)}
-              className="mt-4 text-sm text-slate-400 hover:text-slate-600"
+              className="mt-4 text-sm text-slate-400"
             >
               Close
             </button>
@@ -332,4 +257,3 @@ export default function CreatorDashboard() {
     </>
   );
 }
-
