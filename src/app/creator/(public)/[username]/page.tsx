@@ -1,7 +1,7 @@
 import CreatorClient from "./CreatorClient";
 
-export default async function Page({ params }: { params: Promise<{ username: string }> }) {
-  const { username } = await params;   // ✅ Fix: await params
-  return <CreatorClient username={username} />;
+export default function Page({ params }: { params: { username: string } }) {
+  const decodedUsername = decodeURIComponent(params.username);
+  return <CreatorClient username={decodedUsername} />;
 }
 
