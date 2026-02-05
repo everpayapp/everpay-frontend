@@ -34,11 +34,18 @@ export default function CreatorDashboard() {
   const { status, data: session } = useSession();
   const router = useRouter();
 
-  // ✅ SESSION-BASED USERNAME (prefer real username, fallback to email prefix)
-  const username =
-    (session?.user as any)?.username ||
-    session?.user?.email?.split("@")[0] ||
-    "lee";
+  // ✅ SESSION USERNAME ONLY (NO FALLBACKS)
+  const username = (session?.user as any)?.username as string | undefined;
+
+  const [sessionUsernameMissing, setSessionUsernameMissing] = useState(false);
+
+  useEffect(() => {
+    if (status === "authenticated" && !username) {
+      setSessionUsernameMissing(true);
+    } else {
+      setSessionUsernameMissing(false);
+    }
+  }, [status, username]);
 
   // ✅ STATE
   const [payments, setPayments] = useState<Payment[]>([]);
@@ -63,9 +70,12 @@ export default function CreatorDashboard() {
     }
   }, [status, router]);
 
+  // ✅ Always build public URL using username slug (encoded)
+  const pageUrl = username ? `${baseUrl}/creator/${encodeURIComponent(username)}` : "";
+
   // 🔁 Load payments
   useEffect(() => {
-    if (status !== "authenticated") return;
+    if (status !== "authenticated" || !username) return;
 
     let isMounted = true;
 
@@ -94,7 +104,7 @@ export default function CreatorDashboard() {
 
   // 🔁 Load profile
   useEffect(() => {
-    if (status !== "authenticated") return;
+    if (status !== "authenticated" || !username) return;
 
     async function loadProfile() {
       try {
@@ -130,8 +140,6 @@ export default function CreatorDashboard() {
     maximumFractionDigits: 2,
   });
 
-  const pageUrl = `${baseUrl}/creator/${username}`;
-
   const milestoneEnabled =
     profile &&
     (profile.milestone_enabled === 1 || profile.milestone_enabled === true) &&
@@ -143,6 +151,8 @@ export default function CreatorDashboard() {
   const progressPercent = Math.round(progress * 100);
 
   const handleCopy = async () => {
+    if (!pageUrl) return;
+
     await navigator.clipboard.writeText(pageUrl);
     setCopied(true);
 
@@ -153,6 +163,29 @@ export default function CreatorDashboard() {
   };
 
   if (status === "loading") return null;
+
+  if (sessionUsernameMissing) {
+    return (
+      <div className="max-w-xl mx-auto px-4 text-white mt-16">
+        <div className="bg-red-500/10 border border-red-500/25 rounded-2xl p-5">
+          <h2 className="text-lg font-semibold text-red-200">
+            Session username missing
+          </h2>
+          <p className="text-sm text-white/70 mt-2">
+            Your login session does not include a username, so EverPay can’t load the
+            correct creator profile. Please log out and log back in.
+          </p>
+
+          <button
+            onClick={() => router.push("/login")}
+            className="mt-4 px-4 py-2 rounded-xl bg-white text-black font-semibold"
+          >
+            Go to login
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <>
@@ -174,7 +207,7 @@ export default function CreatorDashboard() {
               <h1 className="text-3xl font-bold uppercase">
                 {profile.profile_name}
               </h1>
-              <p className="text-sm text-white/60">@{username}</p>
+              <p className="text-sm text-white/60">@{profile.username}</p>
             </div>
           </div>
         )}
