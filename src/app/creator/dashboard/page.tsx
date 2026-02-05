@@ -78,7 +78,7 @@ export default function CreatorDashboard() {
     const loadPayments = async () => {
       try {
         const res = await fetch(
-          `${apiUrl}/api/payments/${encodeURIComponent(username)}`
+        `${apiUrl}/api/payments/creator/${encodeURIComponent(username)}`
         );
         const data = await res.json();
         if (isMounted) setPayments(Array.isArray(data) ? data : []);
