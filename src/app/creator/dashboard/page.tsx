@@ -105,7 +105,7 @@ export default function CreatorDashboard() {
     async function loadProfile() {
       try {
         const res = await fetch(
-          `${apiUrl}/api/creator/profile?username=${encodeURIComponent(username)}`
+          `${apiUrl}/api/creator/profile?username=${encodeURIComponent(username ?? "")}`
         );
         const data = await res.json();
 
