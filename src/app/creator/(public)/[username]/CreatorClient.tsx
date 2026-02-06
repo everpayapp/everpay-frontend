@@ -74,21 +74,6 @@ function normalizeSocialLinks(input: unknown): string[] {
   return Array.from(new Set(cleaned));
 }
 
-// ✅ KEY FIX: normalize username once so we never double-encode
-function normalizeUsername(input: string) {
-  const raw = String(input || "").trim();
-
-  // If it's already encoded (contains %xx), decode once safely
-  let decoded = raw;
-  try {
-    if (/%[0-9A-Fa-f]{2}/.test(raw)) decoded = decodeURIComponent(raw);
-  } catch {
-    decoded = raw;
-  }
-
-  return decoded.trim();
-}
-
 export default function CreatorClient({ username }: { username: string }) {
   const apiUrl = process.env.NEXT_PUBLIC_API_URL;
   const baseUrl = process.env.NEXT_PUBLIC_PUBLIC_BASE_URL;
@@ -97,11 +82,8 @@ export default function CreatorClient({ username }: { username: string }) {
   const origin =
     typeof window !== "undefined" ? window.location.origin : baseUrl || "";
 
-  // ✅ normalized + encoded username used everywhere
-  const normalizedUsername = normalizeUsername(username);
-  const encodedUsername = encodeURIComponent(normalizedUsername);
-
-  const pageUrl = origin ? `${origin}/creator/${encodedUsername}` : "";
+  // ✅ Use encoded username in the public link/QR (safe for spaces etc)
+  const pageUrl = origin ? `${origin}/creator/${encodeURIComponent(username)}` : "";
 
   const [amount, setAmount] = useState("");
   const [supporterName, setSupporterName] = useState("");
@@ -128,17 +110,17 @@ export default function CreatorClient({ username }: { username: string }) {
       try {
         if (!apiUrl) return;
 
-        // ✅ encode query param safely
+        // ✅ Encode username for querystring
         const res = await fetch(
-          `${apiUrl}/api/creator/profile?username=${encodedUsername}`
+          `${apiUrl}/api/creator/profile?username=${encodeURIComponent(username)}`
         );
         const data = await res.json();
 
         const socialLinks = normalizeSocialLinks(data.social_links);
 
         setProfile({
-          username: normalizedUsername,
-          profile_name: data.profile_name || normalizedUsername,
+          username,
+          profile_name: data.profile_name || username,
           avatar_url: data.avatar_url || "",
           bio: data.bio || "",
           social_links: socialLinks,
@@ -157,7 +139,7 @@ export default function CreatorClient({ username }: { username: string }) {
     }
 
     load();
-  }, [apiUrl, encodedUsername, normalizedUsername]);
+  }, [apiUrl, username]);
 
   // Refresh colours & milestone every 3 seconds (but never overwrite with undefined)
   useEffect(() => {
@@ -165,8 +147,9 @@ export default function CreatorClient({ username }: { username: string }) {
 
     const interval = setInterval(async () => {
       try {
+        // ✅ Encode username for querystring
         const res = await fetch(
-          `${apiUrl}/api/creator/profile?username=${encodedUsername}`
+          `${apiUrl}/api/creator/profile?username=${encodeURIComponent(username)}`
         );
         const data = await res.json();
 
@@ -210,7 +193,7 @@ export default function CreatorClient({ username }: { username: string }) {
     }, 3000);
 
     return () => clearInterval(interval);
-  }, [apiUrl, encodedUsername]);
+  }, [apiUrl, username]);
 
   // Load payments (and keep refreshing)
   useEffect(() => {
@@ -218,12 +201,14 @@ export default function CreatorClient({ username }: { username: string }) {
 
     async function loadPayments() {
       try {
-        // ✅ use encoded username consistently
-        const res = await fetch(`${apiUrl}/api/payments/${encodedUsername}`);
+        // ✅ Use the correct backend route for creator payments
+        const res = await fetch(
+          `${apiUrl}/api/payments/creator/${encodeURIComponent(username)}`
+        );
         const data = await res.json();
         setPayments(Array.isArray(data) ? data : []);
       } catch {
-        setPayments([]);
+        // ignore
       }
       setLoadingPayments(false);
     }
@@ -231,7 +216,7 @@ export default function CreatorClient({ username }: { username: string }) {
     loadPayments();
     const interval = setInterval(loadPayments, 5000);
     return () => clearInterval(interval);
-  }, [apiUrl, encodedUsername]);
+  }, [apiUrl, username]);
 
   // Handle send gift
   async function handlePay() {
@@ -254,21 +239,24 @@ export default function CreatorClient({ username }: { username: string }) {
     setLoading(true);
     try {
       if (typeof window !== "undefined") {
-        window.localStorage.setItem(`everpay_pending_gift_${encodedUsername}`, "1");
+        window.localStorage.setItem(`everpay_pending_gift_${username}`, "1");
       }
 
-      // Creator gifts: POST /creator/pay/:username
-      const res = await fetch(`${apiUrl}/creator/pay/${encodedUsername}`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          amount: amountPence,
-          supporterName,
-          anonymous,
-          gift_message: message,
-          isUK: true,
-        }),
-      });
+      // Creator gifts: POST /creator/pay/:username (Pay by Bank)
+      const res = await fetch(
+        `${apiUrl}/creator/pay/${encodeURIComponent(username)}`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            amount: amountPence,
+            supporterName,
+            anonymous,
+            gift_message: message,
+            isUK: true,
+          }),
+        }
+      );
 
       const data = await res.json().catch(() => ({} as any));
 
@@ -289,15 +277,16 @@ export default function CreatorClient({ username }: { username: string }) {
   // Celebration logic – runs after we have payments
   useEffect(() => {
     if (typeof window === "undefined") return;
-    if (!Array.isArray(payments) || payments.length === 0) return;
+    if (!payments.length) return;
 
-    const pendingKey = `everpay_pending_gift_${encodedUsername}`;
-    const lastKey = `everpay_last_celebrated_${encodedUsername}`;
+    const pendingKey = `everpay_pending_gift_${username}`;
+    const lastKey = `everpay_last_celebrated_${username}`;
 
     const pending = window.localStorage.getItem(pendingKey);
     if (pending !== "1") return;
 
-    const latest = payments[0] || null;
+    const latest =
+      Array.isArray(payments) && payments.length > 0 ? payments[0] : null;
     if (!latest) return;
 
     const lastCelebratedId = window.localStorage.getItem(lastKey);
@@ -327,7 +316,7 @@ export default function CreatorClient({ username }: { username: string }) {
     }, 3500);
 
     return () => clearTimeout(timeout);
-  }, [payments, encodedUsername]);
+  }, [payments, username]);
 
   const bgStart = profile?.theme_start;
   const bgMid = profile?.theme_mid;
@@ -344,6 +333,7 @@ export default function CreatorClient({ username }: { username: string }) {
     milestoneTarget > 0 ? Math.min(1, totalEarned / milestoneTarget) : 0;
   const milestonePercent = Math.round(milestoneProgress * 100);
 
+  // 🔹 Loading & "creator not found" handling
   if (!profileLoaded) {
     return (
       <div className="min-h-screen flex items-center justify-center text-white">
@@ -367,6 +357,7 @@ export default function CreatorClient({ username }: { username: string }) {
         background: `linear-gradient(to bottom right, ${bgStart}, ${bgMid}, ${bgEnd})`,
       }}
     >
+      {/* Celebration bubble overlay */}
       {showCelebration && celebration && (
         <div className="fixed inset-0 z-40 flex items-center justify-center pointer-events-none">
           <div className="gift-celebration-bubble text-center">
@@ -376,6 +367,7 @@ export default function CreatorClient({ username }: { username: string }) {
       )}
 
       <div className="w-full max-w-6xl space-y-8">
+        {/* Header */}
         <section className="w-full bg-black/20 rounded-3xl border border-white/20 backdrop-blur-xl px-6 sm:px-10 py-6 sm:py-7 shadow-2xl flex items-center gap-5 sm:gap-8">
           <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full border-[5px] border-white/40 bg-white/10 flex items-center justify-center overflow-hidden shadow-xl">
             {profile.avatar_url ? (
@@ -386,14 +378,14 @@ export default function CreatorClient({ username }: { username: string }) {
               />
             ) : (
               <span className="text-xl sm:text-2xl font-bold">
-                {profile.profile_name?.[0] || normalizedUsername?.[0] || "?"}
+                {profile.profile_name?.[0] || username?.[0] || "?"}
               </span>
             )}
           </div>
 
           <div className="flex flex-col">
             <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">
-              {profile.profile_name || normalizedUsername || "EVER PAY"}
+              {profile.profile_name || "EVER PAY"}
             </h1>
 
             {Array.isArray(profile.social_links) && profile.social_links.length > 0 && (
@@ -418,13 +410,16 @@ export default function CreatorClient({ username }: { username: string }) {
           </div>
         </section>
 
+        {/* Milestone bar */}
         {milestoneEnabled && (
           <section className="bg-black/25 rounded-3xl border border-white/20 backdrop-blur-xl px-5 py-4 shadow-2xl">
             <p className="text-[11px] uppercase tracking-[0.18em] text-white/70 mb-1">
               Goal
             </p>
             {profile.milestone_text && (
-              <p className="text-sm font-semibold mb-1">{profile.milestone_text}</p>
+              <p className="text-sm font-semibold mb-1">
+                {profile.milestone_text}
+              </p>
             )}
             <p className="text-[13px] text-white/80 mb-3">
               £
@@ -453,7 +448,9 @@ export default function CreatorClient({ username }: { username: string }) {
           </section>
         )}
 
+        {/* Two-column layout */}
         <div className="grid lg:grid-cols-2 gap-6 items-start">
+          {/* Send a Gift */}
           <section className="bg-black/25 rounded-3xl border border-white/20 backdrop-blur-xl p-6 sm:p-8 shadow-2xl flex flex-col">
             <h2 className="text-lg sm:text-xl font-semibold mb-4 flex items-center gap-2">
               Send a Gift
@@ -510,7 +507,12 @@ export default function CreatorClient({ username }: { username: string }) {
             <div className="mt-auto flex flex-col items-center gap-3">
               <div className="w-[220px] h-[220px] bg-white rounded-2xl p-3 border border-black/20 shadow-xl flex items-center justify-center">
                 {pageUrl ? (
-                  <QRCode value={pageUrl} size={190} bgColor="#ffffff" fgColor="#000000" />
+                  <QRCode
+                    value={pageUrl}
+                    size={190}
+                    bgColor="#ffffff"
+                    fgColor="#000000"
+                  />
                 ) : (
                   <span className="text-black/70 text-xs">QR unavailable</span>
                 )}
@@ -523,6 +525,7 @@ export default function CreatorClient({ username }: { username: string }) {
             </div>
           </section>
 
+          {/* Recent Gifts */}
           <section className="bg-black/25 rounded-3xl border border-white/20 backdrop-blur-xl p-6 sm:p-8 shadow-2xl flex flex-col h-[560px]">
             <h2 className="text-lg sm:text-xl font-semibold mb-4 text-center">
               Recent Gifts 🎁
