@@ -1,4 +1,4 @@
-// ~/everpay-frontend/src/app/creator/(public)/[username]/CreatorClient.tsx
+// src/app/creator/(public)/[username]/CreatorClient.tsx
 "use client";
 
 import { useState, useEffect } from "react";
@@ -29,14 +29,12 @@ type CreatorProfile = {
 
 function getSocialMeta(url: string) {
   const lower = url.toLowerCase();
-  if (lower.includes("tiktok.com")) return { label: "TikTok", short: "TT" };
-  if (lower.includes("instagram.com")) return { label: "Instagram", short: "IG" };
-  if (lower.includes("youtube.com") || lower.includes("youtu.be"))
-    return { label: "YouTube", short: "YT" };
-  if (lower.includes("facebook.com")) return { label: "Facebook", short: "FB" };
-  if (lower.includes("x.com") || lower.includes("twitter.com"))
-    return { label: "X", short: "X" };
-  return { label: "Website", short: "WWW" };
+  if (lower.includes("tiktok.com")) return { label: "TikTok" };
+  if (lower.includes("instagram.com")) return { label: "Instagram" };
+  if (lower.includes("youtube.com") || lower.includes("youtu.be")) return { label: "YouTube" };
+  if (lower.includes("facebook.com")) return { label: "Facebook" };
+  if (lower.includes("x.com") || lower.includes("twitter.com")) return { label: "X" };
+  return { label: "Website" };
 }
 
 // Normalize social links from API into a clean clickable array
@@ -117,7 +115,7 @@ export default function CreatorClient({ username }: { username: string }) {
         const socialLinks = normalizeSocialLinks(data.social_links);
 
         setProfile({
-          username,
+          username: data.username || username,
           profile_name: data.profile_name || username,
           avatar_url: data.avatar_url || "",
           bio: data.bio || "",
@@ -192,19 +190,19 @@ export default function CreatorClient({ username }: { username: string }) {
     return () => clearInterval(interval);
   }, [apiUrl, username]);
 
-  // Load payments (and keep refreshing)
+  // ✅ Load payments (THIS MUST MATCH YOUR BACKEND: /api/payments/:creator)
   useEffect(() => {
     if (!apiUrl) return;
 
     async function loadPayments() {
       try {
         const res = await fetch(
-          `${apiUrl}/api/payments/creator/${encodeURIComponent(username)}`
+          `${apiUrl}/api/payments/${encodeURIComponent(username)}`
         );
         const data = await res.json();
         setPayments(Array.isArray(data) ? data : []);
       } catch {
-        // ignore
+        setPayments([]);
       }
       setLoadingPayments(false);
     }
@@ -273,7 +271,6 @@ export default function CreatorClient({ username }: { username: string }) {
   // Celebration logic – runs after we have payments
   useEffect(() => {
     if (typeof window === "undefined") return;
-    if (!Array.isArray(payments) || payments.length === 0) return;
 
     const pendingKey = `everpay_pending_gift_${username}`;
     const lastKey = `everpay_last_celebrated_${username}`;
@@ -281,8 +278,7 @@ export default function CreatorClient({ username }: { username: string }) {
     const pending = window.localStorage.getItem(pendingKey);
     if (pending !== "1") return;
 
-    const latest =
-      Array.isArray(payments) && payments.length > 0 ? payments[0] : null;
+    const latest = Array.isArray(payments) && payments.length > 0 ? payments[0] : null;
     if (!latest) return;
 
     const lastCelebratedId = window.localStorage.getItem(lastKey);
@@ -329,7 +325,6 @@ export default function CreatorClient({ username }: { username: string }) {
     milestoneTarget > 0 ? Math.min(1, totalEarned / milestoneTarget) : 0;
   const milestonePercent = Math.round(milestoneProgress * 100);
 
-  // 🔹 Loading & "creator not found" handling
   if (!profileLoaded) {
     return (
       <div className="min-h-screen flex items-center justify-center text-white">
@@ -353,7 +348,6 @@ export default function CreatorClient({ username }: { username: string }) {
         background: `linear-gradient(to bottom right, ${bgStart}, ${bgMid}, ${bgEnd})`,
       }}
     >
-      {/* Celebration bubble overlay */}
       {showCelebration && celebration && (
         <div className="fixed inset-0 z-40 flex items-center justify-center pointer-events-none">
           <div className="gift-celebration-bubble text-center">
@@ -363,7 +357,6 @@ export default function CreatorClient({ username }: { username: string }) {
       )}
 
       <div className="w-full max-w-6xl space-y-8">
-        {/* Header */}
         <section className="w-full bg-black/20 rounded-3xl border border-white/20 backdrop-blur-xl px-6 sm:px-10 py-6 sm:py-7 shadow-2xl flex items-center gap-5 sm:gap-8">
           <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full border-[5px] border-white/40 bg-white/10 flex items-center justify-center overflow-hidden shadow-xl">
             {profile.avatar_url ? (
@@ -406,7 +399,6 @@ export default function CreatorClient({ username }: { username: string }) {
           </div>
         </section>
 
-        {/* Milestone bar */}
         {milestoneEnabled && (
           <section className="bg-black/25 rounded-3xl border border-white/20 backdrop-blur-xl px-5 py-4 shadow-2xl">
             <p className="text-[11px] uppercase tracking-[0.18em] text-white/70 mb-1">
@@ -416,15 +408,8 @@ export default function CreatorClient({ username }: { username: string }) {
               <p className="text-sm font-semibold mb-1">{profile.milestone_text}</p>
             )}
             <p className="text-[13px] text-white/80 mb-3">
-              £
-              {totalEarned.toLocaleString("en-GB", {
-                minimumFractionDigits: 2,
-              })}{" "}
-              of £
-              {milestoneTarget.toLocaleString("en-GB", {
-                minimumFractionDigits: 2,
-              })}{" "}
-              raised
+              £{totalEarned.toLocaleString("en-GB", { minimumFractionDigits: 2 })} of £
+              {milestoneTarget.toLocaleString("en-GB", { minimumFractionDigits: 2 })} raised
             </p>
 
             <div className="w-full h-2.5 rounded-full bg-white/10 overflow-hidden">
@@ -435,20 +420,14 @@ export default function CreatorClient({ username }: { username: string }) {
             </div>
 
             <p className="mt-1 text-[11px] text-white/65">
-              {milestonePercent >= 100
-                ? "Goal reached 🎉 — you smashed it!"
-                : `${milestonePercent}% complete`}
+              {milestonePercent >= 100 ? "Goal reached 🎉 — you smashed it!" : `${milestonePercent}% complete`}
             </p>
           </section>
         )}
 
-        {/* Two-column layout */}
         <div className="grid lg:grid-cols-2 gap-6 items-start">
-          {/* Send a Gift */}
           <section className="bg-black/25 rounded-3xl border border-white/20 backdrop-blur-xl p-6 sm:p-8 shadow-2xl flex flex-col">
-            <h2 className="text-lg sm:text-xl font-semibold mb-4 flex items-center gap-2">
-              Send a Gift
-            </h2>
+            <h2 className="text-lg sm:text-xl font-semibold mb-4">Send a Gift</h2>
 
             <div className="flex items-center gap-3 mb-4">
               <span className="text-xl font-bold">£</span>
@@ -501,12 +480,7 @@ export default function CreatorClient({ username }: { username: string }) {
             <div className="mt-auto flex flex-col items-center gap-3">
               <div className="w-[220px] h-[220px] bg-white rounded-2xl p-3 border border-black/20 shadow-xl flex items-center justify-center">
                 {pageUrl ? (
-                  <QRCode
-                    value={pageUrl}
-                    size={190}
-                    bgColor="#ffffff"
-                    fgColor="#000000"
-                  />
+                  <QRCode value={pageUrl} size={190} bgColor="#ffffff" fgColor="#000000" />
                 ) : (
                   <span className="text-black/70 text-xs">QR unavailable</span>
                 )}
@@ -519,7 +493,6 @@ export default function CreatorClient({ username }: { username: string }) {
             </div>
           </section>
 
-          {/* Recent Gifts */}
           <section className="bg-black/25 rounded-3xl border border-white/20 backdrop-blur-xl p-6 sm:p-8 shadow-2xl flex flex-col h-[560px]">
             <h2 className="text-lg sm:text-xl font-semibold mb-4 text-center">
               Recent Gifts 🎁
