@@ -74,38 +74,34 @@ function normalizeSocialLinks(input: unknown): string[] {
   return Array.from(new Set(cleaned));
 }
 
-// ✅ IMPORTANT: handles usernames that are already url-encoded like "Roulla%20Antoniou"
+// ✅ KEY FIX: normalize username once so we never double-encode
 function normalizeUsername(input: string) {
   const raw = String(input || "").trim();
-  if (!raw) return { raw: "", decoded: "", encoded: "" };
 
+  // If it's already encoded (contains %xx), decode once safely
   let decoded = raw;
-  // If it contains %xx, try decode once
-  if (/%[0-9A-Fa-f]{2}/.test(raw)) {
-    try {
-      decoded = decodeURIComponent(raw);
-    } catch {
-      decoded = raw;
-    }
+  try {
+    if (/%[0-9A-Fa-f]{2}/.test(raw)) decoded = decodeURIComponent(raw);
+  } catch {
+    decoded = raw;
   }
 
-  const encoded = encodeURIComponent(decoded);
-  return { raw, decoded, encoded };
+  return decoded.trim();
 }
 
 export default function CreatorClient({ username }: { username: string }) {
   const apiUrl = process.env.NEXT_PUBLIC_API_URL;
   const baseUrl = process.env.NEXT_PUBLIC_PUBLIC_BASE_URL;
 
-  const u = normalizeUsername(username);
-  const safeUsername = u.decoded;     // ✅ "Roulla Antoniou"
-  const encUsername = u.encoded;      // ✅ "Roulla%20Antoniou"
-
   // Always resolve a valid public URL (works on Vercel + locally)
   const origin =
     typeof window !== "undefined" ? window.location.origin : baseUrl || "";
 
-  const pageUrl = origin && safeUsername ? `${origin}/creator/${encUsername}` : "";
+  // ✅ normalized + encoded username used everywhere
+  const normalizedUsername = normalizeUsername(username);
+  const encodedUsername = encodeURIComponent(normalizedUsername);
+
+  const pageUrl = origin ? `${origin}/creator/${encodedUsername}` : "";
 
   const [amount, setAmount] = useState("");
   const [supporterName, setSupporterName] = useState("");
@@ -130,24 +126,19 @@ export default function CreatorClient({ username }: { username: string }) {
   useEffect(() => {
     async function load() {
       try {
-        if (!apiUrl || !safeUsername) return;
+        if (!apiUrl) return;
 
+        // ✅ encode query param safely
         const res = await fetch(
-          `${apiUrl}/api/creator/profile?username=${encUsername}`
+          `${apiUrl}/api/creator/profile?username=${encodedUsername}`
         );
         const data = await res.json();
-
-        // Backend returns {} for unknown creator
-        if (!data || !data.username) {
-          setProfile(null);
-          return;
-        }
 
         const socialLinks = normalizeSocialLinks(data.social_links);
 
         setProfile({
-          username: safeUsername,
-          profile_name: data.profile_name || safeUsername,
+          username: normalizedUsername,
+          profile_name: data.profile_name || normalizedUsername,
           avatar_url: data.avatar_url || "",
           bio: data.bio || "",
           social_links: socialLinks,
@@ -159,23 +150,23 @@ export default function CreatorClient({ username }: { username: string }) {
           milestone_text: data.milestone_text || "",
         });
       } catch {
-        setProfile(null);
+        // ignore
       } finally {
         setProfileLoaded(true);
       }
     }
 
     load();
-  }, [apiUrl, safeUsername, encUsername]);
+  }, [apiUrl, encodedUsername, normalizedUsername]);
 
-  // Refresh colours & milestone every 3 seconds
+  // Refresh colours & milestone every 3 seconds (but never overwrite with undefined)
   useEffect(() => {
-    if (!apiUrl || !safeUsername) return;
+    if (!apiUrl) return;
 
     const interval = setInterval(async () => {
       try {
         const res = await fetch(
-          `${apiUrl}/api/creator/profile?username=${encUsername}`
+          `${apiUrl}/api/creator/profile?username=${encodedUsername}`
         );
         const data = await res.json();
 
@@ -219,17 +210,16 @@ export default function CreatorClient({ username }: { username: string }) {
     }, 3000);
 
     return () => clearInterval(interval);
-  }, [apiUrl, safeUsername, encUsername]);
+  }, [apiUrl, encodedUsername]);
 
-  // Load payments (canonical route)
+  // Load payments (and keep refreshing)
   useEffect(() => {
-    if (!apiUrl || !safeUsername) return;
+    if (!apiUrl) return;
 
     async function loadPayments() {
       try {
-        const res = await fetch(
-          `${apiUrl}/api/payments/creator/${encUsername}`
-        );
+        // ✅ use encoded username consistently
+        const res = await fetch(`${apiUrl}/api/payments/${encodedUsername}`);
         const data = await res.json();
         setPayments(Array.isArray(data) ? data : []);
       } catch {
@@ -241,7 +231,7 @@ export default function CreatorClient({ username }: { username: string }) {
     loadPayments();
     const interval = setInterval(loadPayments, 5000);
     return () => clearInterval(interval);
-  }, [apiUrl, safeUsername, encUsername]);
+  }, [apiUrl, encodedUsername]);
 
   // Handle send gift
   async function handlePay() {
@@ -264,23 +254,21 @@ export default function CreatorClient({ username }: { username: string }) {
     setLoading(true);
     try {
       if (typeof window !== "undefined") {
-        window.localStorage.setItem(`everpay_pending_gift_${safeUsername}`, "1");
+        window.localStorage.setItem(`everpay_pending_gift_${encodedUsername}`, "1");
       }
 
-      const res = await fetch(
-        `${apiUrl}/creator/pay/${encUsername}`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            amount: amountPence,
-            supporterName,
-            anonymous,
-            gift_message: message,
-            isUK: true,
-          }),
-        }
-      );
+      // Creator gifts: POST /creator/pay/:username
+      const res = await fetch(`${apiUrl}/creator/pay/${encodedUsername}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          amount: amountPence,
+          supporterName,
+          anonymous,
+          gift_message: message,
+          isUK: true,
+        }),
+      });
 
       const data = await res.json().catch(() => ({} as any));
 
@@ -303,13 +291,13 @@ export default function CreatorClient({ username }: { username: string }) {
     if (typeof window === "undefined") return;
     if (!Array.isArray(payments) || payments.length === 0) return;
 
-    const pendingKey = `everpay_pending_gift_${safeUsername}`;
-    const lastKey = `everpay_last_celebrated_${safeUsername}`;
+    const pendingKey = `everpay_pending_gift_${encodedUsername}`;
+    const lastKey = `everpay_last_celebrated_${encodedUsername}`;
 
     const pending = window.localStorage.getItem(pendingKey);
     if (pending !== "1") return;
 
-    const latest = payments[0];
+    const latest = payments[0] || null;
     if (!latest) return;
 
     const lastCelebratedId = window.localStorage.getItem(lastKey);
@@ -339,7 +327,7 @@ export default function CreatorClient({ username }: { username: string }) {
     }, 3500);
 
     return () => clearTimeout(timeout);
-  }, [payments, safeUsername]);
+  }, [payments, encodedUsername]);
 
   const bgStart = profile?.theme_start;
   const bgMid = profile?.theme_mid;
@@ -398,14 +386,14 @@ export default function CreatorClient({ username }: { username: string }) {
               />
             ) : (
               <span className="text-xl sm:text-2xl font-bold">
-                {profile.profile_name?.[0] || safeUsername?.[0] || "?"}
+                {profile.profile_name?.[0] || normalizedUsername?.[0] || "?"}
               </span>
             )}
           </div>
 
           <div className="flex flex-col">
             <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">
-              {profile.profile_name || safeUsername}
+              {profile.profile_name || normalizedUsername || "EVER PAY"}
             </h1>
 
             {Array.isArray(profile.social_links) && profile.social_links.length > 0 && (
@@ -436,15 +424,17 @@ export default function CreatorClient({ username }: { username: string }) {
               Goal
             </p>
             {profile.milestone_text && (
-              <p className="text-sm font-semibold mb-1">
-                {profile.milestone_text}
-              </p>
+              <p className="text-sm font-semibold mb-1">{profile.milestone_text}</p>
             )}
             <p className="text-[13px] text-white/80 mb-3">
               £
-              {totalEarned.toLocaleString("en-GB", { minimumFractionDigits: 2 })}{" "}
+              {totalEarned.toLocaleString("en-UK", {
+                minimumFractionDigits: 2,
+              })}{" "}
               of £
-              {milestoneTarget.toLocaleString("en-GB", { minimumFractionDigits: 2 })}{" "}
+              {milestoneTarget.toLocaleString("en-UK", {
+                minimumFractionDigits: 2,
+              })}{" "}
               raised
             </p>
 
@@ -456,7 +446,9 @@ export default function CreatorClient({ username }: { username: string }) {
             </div>
 
             <p className="mt-1 text-[11px] text-white/65">
-              {milestonePercent >= 100 ? "Goal reached 🎉 — you smashed it!" : `${milestonePercent}% complete`}
+              {milestonePercent >= 100
+                ? "Goal reached 🎉 — you smashed it!"
+                : `${milestonePercent}% complete`}
             </p>
           </section>
         )}
@@ -551,7 +543,11 @@ export default function CreatorClient({ username }: { username: string }) {
                   >
                     <div className="flex-1">
                       <p className="font-semibold text-[13px] sm:text-sm">
-                        {p.anonymous ? "Anonymous" : p.gift_name?.length ? p.gift_name : "Someone"}{" "}
+                        {p.anonymous
+                          ? "Anonymous"
+                          : p.gift_name?.length
+                          ? p.gift_name
+                          : "Someone"}{" "}
                         gifted £{(p.amount / 100).toFixed(2)}
                       </p>
                       {p.gift_message && (
