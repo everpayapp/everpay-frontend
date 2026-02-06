@@ -377,7 +377,7 @@ export default function CreatorClient({ username }: { username: string }) {
               />
             ) : (
               <span className="text-xl sm:text-2xl font-bold">
-                {profile.profile_name?.[0] || username[0]}
+              {profile.profile_name?.[0] || username?.[0] || "?"}
               </span>
             )}
           </div>
