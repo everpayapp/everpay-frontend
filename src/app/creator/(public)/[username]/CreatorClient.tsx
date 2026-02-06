@@ -74,18 +74,38 @@ function normalizeSocialLinks(input: unknown): string[] {
   return Array.from(new Set(cleaned));
 }
 
+// ✅ IMPORTANT: handles usernames that are already url-encoded like "Roulla%20Antoniou"
+function normalizeUsername(input: string) {
+  const raw = String(input || "").trim();
+  if (!raw) return { raw: "", decoded: "", encoded: "" };
+
+  let decoded = raw;
+  // If it contains %xx, try decode once
+  if (/%[0-9A-Fa-f]{2}/.test(raw)) {
+    try {
+      decoded = decodeURIComponent(raw);
+    } catch {
+      decoded = raw;
+    }
+  }
+
+  const encoded = encodeURIComponent(decoded);
+  return { raw, decoded, encoded };
+}
+
 export default function CreatorClient({ username }: { username: string }) {
   const apiUrl = process.env.NEXT_PUBLIC_API_URL;
   const baseUrl = process.env.NEXT_PUBLIC_PUBLIC_BASE_URL;
 
-  const safeUsername = String(username || "").trim();
-  const encUsername = encodeURIComponent(safeUsername);
+  const u = normalizeUsername(username);
+  const safeUsername = u.decoded;     // ✅ "Roulla Antoniou"
+  const encUsername = u.encoded;      // ✅ "Roulla%20Antoniou"
 
   // Always resolve a valid public URL (works on Vercel + locally)
   const origin =
     typeof window !== "undefined" ? window.location.origin : baseUrl || "";
 
-  const pageUrl = origin && safeUsername ? `${origin}/creator/${safeUsername}` : "";
+  const pageUrl = origin && safeUsername ? `${origin}/creator/${encUsername}` : "";
 
   const [amount, setAmount] = useState("");
   const [supporterName, setSupporterName] = useState("");
@@ -117,7 +137,7 @@ export default function CreatorClient({ username }: { username: string }) {
         );
         const data = await res.json();
 
-        // If backend returns {} for unknown creator
+        // Backend returns {} for unknown creator
         if (!data || !data.username) {
           setProfile(null);
           return;
@@ -201,7 +221,7 @@ export default function CreatorClient({ username }: { username: string }) {
     return () => clearInterval(interval);
   }, [apiUrl, safeUsername, encUsername]);
 
-  // Load payments (use the canonical route now)
+  // Load payments (canonical route)
   useEffect(() => {
     if (!apiUrl || !safeUsername) return;
 
@@ -422,13 +442,9 @@ export default function CreatorClient({ username }: { username: string }) {
             )}
             <p className="text-[13px] text-white/80 mb-3">
               £
-              {totalEarned.toLocaleString("en-GB", {
-                minimumFractionDigits: 2,
-              })}{" "}
+              {totalEarned.toLocaleString("en-GB", { minimumFractionDigits: 2 })}{" "}
               of £
-              {milestoneTarget.toLocaleString("en-GB", {
-                minimumFractionDigits: 2,
-              })}{" "}
+              {milestoneTarget.toLocaleString("en-GB", { minimumFractionDigits: 2 })}{" "}
               raised
             </p>
 
@@ -440,9 +456,7 @@ export default function CreatorClient({ username }: { username: string }) {
             </div>
 
             <p className="mt-1 text-[11px] text-white/65">
-              {milestonePercent >= 100
-                ? "Goal reached 🎉 — you smashed it!"
-                : `${milestonePercent}% complete`}
+              {milestonePercent >= 100 ? "Goal reached 🎉 — you smashed it!" : `${milestonePercent}% complete`}
             </p>
           </section>
         )}
@@ -537,11 +551,7 @@ export default function CreatorClient({ username }: { username: string }) {
                   >
                     <div className="flex-1">
                       <p className="font-semibold text-[13px] sm:text-sm">
-                        {p.anonymous
-                          ? "Anonymous"
-                          : p.gift_name?.length
-                          ? p.gift_name
-                          : "Someone"}{" "}
+                        {p.anonymous ? "Anonymous" : p.gift_name?.length ? p.gift_name : "Someone"}{" "}
                         gifted £{(p.amount / 100).toFixed(2)}
                       </p>
                       {p.gift_message && (
@@ -563,3 +573,4 @@ export default function CreatorClient({ username }: { username: string }) {
     </div>
   );
 }
+
