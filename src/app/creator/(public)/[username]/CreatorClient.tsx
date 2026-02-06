@@ -46,7 +46,6 @@ function normalizeSocialLinks(input: unknown): string[] {
   if (Array.isArray(input)) {
     arr = input.map((x) => String(x));
   } else if (typeof input === "string") {
-    // could be JSON string or a single URL
     const trimmed = input.trim();
     if (!trimmed) return [];
     try {
@@ -57,7 +56,6 @@ function normalizeSocialLinks(input: unknown): string[] {
       arr = [trimmed];
     }
   } else if (input && typeof input === "object") {
-    // just in case it becomes an object later
     try {
       arr = Object.values(input as any).map((x) => String(x));
     } catch {
@@ -65,7 +63,6 @@ function normalizeSocialLinks(input: unknown): string[] {
     }
   }
 
-  // trim, remove empties, ensure https, dedupe
   const cleaned = arr
     .map((u) => (u ?? "").toString().trim())
     .filter(Boolean)
@@ -85,7 +82,7 @@ export default function CreatorClient({ username }: { username: string }) {
   const origin =
     typeof window !== "undefined" ? window.location.origin : baseUrl || "";
 
-  const pageUrl = origin ? `${origin}/creator/${username}` : "";
+  const pageUrl = origin ? `${origin}/creator/${encodeURIComponent(username)}` : "";
 
   const [amount, setAmount] = useState("");
   const [supporterName, setSupporterName] = useState("");
@@ -113,7 +110,7 @@ export default function CreatorClient({ username }: { username: string }) {
         if (!apiUrl) return;
 
         const res = await fetch(
-          `${apiUrl}/api/creator/profile?username=${username}`
+          `${apiUrl}/api/creator/profile?username=${encodeURIComponent(username)}`
         );
         const data = await res.json();
 
@@ -149,7 +146,7 @@ export default function CreatorClient({ username }: { username: string }) {
     const interval = setInterval(async () => {
       try {
         const res = await fetch(
-          `${apiUrl}/api/creator/profile?username=${username}`
+          `${apiUrl}/api/creator/profile?username=${encodeURIComponent(username)}`
         );
         const data = await res.json();
 
@@ -202,7 +199,7 @@ export default function CreatorClient({ username }: { username: string }) {
     async function loadPayments() {
       try {
         const res = await fetch(
-          `${apiUrl}/api/payments/${encodeURIComponent(username)}`
+          `${apiUrl}/api/payments/creator/${encodeURIComponent(username)}`
         );
         const data = await res.json();
         setPayments(Array.isArray(data) ? data : []);
@@ -276,7 +273,7 @@ export default function CreatorClient({ username }: { username: string }) {
   // Celebration logic – runs after we have payments
   useEffect(() => {
     if (typeof window === "undefined") return;
-    if (!payments.length) return;
+    if (!Array.isArray(payments) || payments.length === 0) return;
 
     const pendingKey = `everpay_pending_gift_${username}`;
     const lastKey = `everpay_last_celebrated_${username}`;
@@ -284,9 +281,9 @@ export default function CreatorClient({ username }: { username: string }) {
     const pending = window.localStorage.getItem(pendingKey);
     if (pending !== "1") return;
 
-    const latest = Array.isArray(payments) && payments.length > 0 ? payments[0] : null;
+    const latest =
+      Array.isArray(payments) && payments.length > 0 ? payments[0] : null;
     if (!latest) return;
-
 
     const lastCelebratedId = window.localStorage.getItem(lastKey);
     if (lastCelebratedId === latest.id) {
@@ -377,36 +374,35 @@ export default function CreatorClient({ username }: { username: string }) {
               />
             ) : (
               <span className="text-xl sm:text-2xl font-bold">
-              {profile.profile_name?.[0] || username?.[0] || "?"}
+                {profile.profile_name?.[0] || username?.[0] || "?"}
               </span>
             )}
           </div>
 
           <div className="flex flex-col">
             <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">
-              {profile.profile_name || "EVER PAY"}
+              {profile.profile_name || username}
             </h1>
 
-
-{Array.isArray(profile.social_links) && profile.social_links.length > 0 && (
-  <div className="mt-3 flex flex-wrap gap-2">
-    {profile.social_links.map((url) => {
-      const meta = getSocialMeta(url);
-      return (
-        <a
-          key={url}
-          href={url}
-          target="_blank"
-          rel="noopener noreferrer"
-   className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 border border-white/20 text-xs text-white/90 hover:bg-white/15 transition"
-          title={url}
-        >
-          <span>{meta.label}</span>
-        </a>
-      );
-    })}
-  </div>
-)}
+            {Array.isArray(profile.social_links) && profile.social_links.length > 0 && (
+              <div className="mt-3 flex flex-wrap gap-2">
+                {profile.social_links.map((url) => {
+                  const meta = getSocialMeta(url);
+                  return (
+                    <a
+                      key={url}
+                      href={url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 border border-white/20 text-xs text-white/90 hover:bg-white/15 transition"
+                      title={url}
+                    >
+                      <span>{meta.label}</span>
+                    </a>
+                  );
+                })}
+              </div>
+            )}
           </div>
         </section>
 
@@ -417,17 +413,15 @@ export default function CreatorClient({ username }: { username: string }) {
               Goal
             </p>
             {profile.milestone_text && (
-              <p className="text-sm font-semibold mb-1">
-                {profile.milestone_text}
-              </p>
+              <p className="text-sm font-semibold mb-1">{profile.milestone_text}</p>
             )}
             <p className="text-[13px] text-white/80 mb-3">
               £
-              {totalEarned.toLocaleString("en-UK", {
+              {totalEarned.toLocaleString("en-GB", {
                 minimumFractionDigits: 2,
               })}{" "}
               of £
-              {milestoneTarget.toLocaleString("en-UK", {
+              {milestoneTarget.toLocaleString("en-GB", {
                 minimumFractionDigits: 2,
               })}{" "}
               raised
@@ -572,3 +566,4 @@ export default function CreatorClient({ username }: { username: string }) {
     </div>
   );
 }
+
