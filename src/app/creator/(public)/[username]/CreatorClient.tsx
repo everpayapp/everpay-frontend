@@ -74,16 +74,26 @@ function normalizeSocialLinks(input: unknown): string[] {
   return Array.from(new Set(cleaned));
 }
 
+function sanitizeUsername(raw: string): string {
+  // keep it URL-safe and consistent (supports slugs)
+  const u = String(raw || "").trim();
+  return u;
+}
+
 export default function CreatorClient({ username }: { username: string }) {
   const apiUrl = process.env.NEXT_PUBLIC_API_URL;
   const baseUrl = process.env.NEXT_PUBLIC_PUBLIC_BASE_URL;
+
+  const cleanUsername = sanitizeUsername(username);
 
   // Always resolve a valid public URL (works on Vercel + locally)
   const origin =
     typeof window !== "undefined" ? window.location.origin : baseUrl || "";
 
-  // ✅ Use encoded username in the public link/QR (safe for spaces etc)
-  const pageUrl = origin ? `${origin}/creator/${encodeURIComponent(username)}` : "";
+  // Public link/QR uses encoded username
+  const pageUrl = origin
+    ? `${origin}/creator/${encodeURIComponent(cleanUsername)}`
+    : "";
 
   const [amount, setAmount] = useState("");
   const [supporterName, setSupporterName] = useState("");
@@ -104,54 +114,78 @@ export default function CreatorClient({ username }: { username: string }) {
   } | null>(null);
   const [showCelebration, setShowCelebration] = useState(false);
 
-  // Load creator profile (+ milestone)
+  // Load creator profile (+ milestone) — NO CACHE
   useEffect(() => {
     async function load() {
       try {
-        if (!apiUrl) return;
+        if (!apiUrl) {
+          setProfile(null);
+          return;
+        }
+        if (!cleanUsername) {
+          setProfile(null);
+          return;
+        }
 
-        // ✅ Encode username for querystring
         const res = await fetch(
-          `${apiUrl}/api/creator/profile?username=${encodeURIComponent(username)}`
+          `${apiUrl}/api/creator/profile?username=${encodeURIComponent(
+            cleanUsername
+          )}`,
+          { cache: "no-store" }
         );
-        const data = await res.json();
+
+        const data = await res.json().catch(() => ({} as any));
+
+        // If backend returns {} or missing username => creator not found
+        if (!data || !data.username) {
+          setProfile(null);
+          return;
+        }
 
         const socialLinks = normalizeSocialLinks(data.social_links);
 
         setProfile({
-          username,
-          profile_name: data.profile_name || username,
-          avatar_url: data.avatar_url || "",
-          bio: data.bio || "",
+          username: String(data.username || cleanUsername),
+          profile_name: String(data.profile_name || data.username || cleanUsername),
+          avatar_url: String(data.avatar_url || ""),
+          bio: String(data.bio || ""),
           social_links: socialLinks,
-          theme_start: data.theme_start || "#ff0080",
-          theme_mid: data.theme_mid || "#7c3aed",
-          theme_end: data.theme_end || "#2563eb",
+          theme_start: String(data.theme_start || "#ff0080"),
+          theme_mid: String(data.theme_mid || "#7c3aed"),
+          theme_end: String(data.theme_end || "#2563eb"),
           milestone_enabled: data.milestone_enabled,
           milestone_amount: Number(data.milestone_amount) || 0,
-          milestone_text: data.milestone_text || "",
+          milestone_text: String(data.milestone_text || ""),
         });
-      } catch {
-        // ignore
+      } catch (err) {
+        console.error("Public profile load failed:", err);
+        setProfile(null);
       } finally {
         setProfileLoaded(true);
       }
     }
 
+    setProfileLoaded(false);
+    setProfile(null);
     load();
-  }, [apiUrl, username]);
+  }, [apiUrl, cleanUsername]);
 
-  // Refresh colours & milestone every 3 seconds (but never overwrite with undefined)
+  // Refresh colours & milestone (NO CACHE)
   useEffect(() => {
     if (!apiUrl) return;
+    if (!cleanUsername) return;
 
     const interval = setInterval(async () => {
       try {
-        // ✅ Encode username for querystring
         const res = await fetch(
-          `${apiUrl}/api/creator/profile?username=${encodeURIComponent(username)}`
+          `${apiUrl}/api/creator/profile?username=${encodeURIComponent(
+            cleanUsername
+          )}`,
+          { cache: "no-store" }
         );
-        const data = await res.json();
+        const data = await res.json().catch(() => ({} as any));
+
+        if (!data || !data.username) return;
 
         setProfile((prev) => {
           if (!prev) return prev;
@@ -188,40 +222,48 @@ export default function CreatorClient({ username }: { username: string }) {
           };
         });
       } catch {
-        // ignore
+        // ignore refresh errors
       }
     }, 3000);
 
     return () => clearInterval(interval);
-  }, [apiUrl, username]);
+  }, [apiUrl, cleanUsername]);
 
-  // Load payments (and keep refreshing)
+  // Load payments (NO CACHE)
   useEffect(() => {
     if (!apiUrl) return;
+    if (!cleanUsername) return;
 
     async function loadPayments() {
       try {
-        // ✅ Use the correct backend route for creator payments
         const res = await fetch(
-          `${apiUrl}/api/payments/creator/${encodeURIComponent(username)}`
+          `${apiUrl}/api/payments/creator/${encodeURIComponent(cleanUsername)}`,
+          { cache: "no-store" }
         );
-        const data = await res.json();
+        const data = await res.json().catch(() => []);
         setPayments(Array.isArray(data) ? data : []);
-      } catch {
-        // ignore
+      } catch (err) {
+        console.error("Public payments load failed:", err);
+        setPayments([]);
       }
       setLoadingPayments(false);
     }
 
+    setLoadingPayments(true);
     loadPayments();
     const interval = setInterval(loadPayments, 5000);
     return () => clearInterval(interval);
-  }, [apiUrl, username]);
+  }, [apiUrl, cleanUsername]);
 
   // Handle send gift
   async function handlePay() {
     if (!apiUrl) {
       alert("Missing API URL");
+      return;
+    }
+
+    if (!cleanUsername) {
+      alert("Invalid creator");
       return;
     }
 
@@ -239,12 +281,11 @@ export default function CreatorClient({ username }: { username: string }) {
     setLoading(true);
     try {
       if (typeof window !== "undefined") {
-        window.localStorage.setItem(`everpay_pending_gift_${username}`, "1");
+        window.localStorage.setItem(`everpay_pending_gift_${cleanUsername}`, "1");
       }
 
-      // Creator gifts: POST /creator/pay/:username (Pay by Bank)
       const res = await fetch(
-        `${apiUrl}/creator/pay/${encodeURIComponent(username)}`,
+        `${apiUrl}/creator/pay/${encodeURIComponent(cleanUsername)}`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -279,14 +320,13 @@ export default function CreatorClient({ username }: { username: string }) {
     if (typeof window === "undefined") return;
     if (!payments.length) return;
 
-    const pendingKey = `everpay_pending_gift_${username}`;
-    const lastKey = `everpay_last_celebrated_${username}`;
+    const pendingKey = `everpay_pending_gift_${cleanUsername}`;
+    const lastKey = `everpay_last_celebrated_${cleanUsername}`;
 
     const pending = window.localStorage.getItem(pendingKey);
     if (pending !== "1") return;
 
-    const latest =
-      Array.isArray(payments) && payments.length > 0 ? payments[0] : null;
+    const latest = payments.length > 0 ? payments[0] : null;
     if (!latest) return;
 
     const lastCelebratedId = window.localStorage.getItem(lastKey);
@@ -316,7 +356,7 @@ export default function CreatorClient({ username }: { username: string }) {
     }, 3500);
 
     return () => clearTimeout(timeout);
-  }, [payments, username]);
+  }, [payments, cleanUsername]);
 
   const bgStart = profile?.theme_start;
   const bgMid = profile?.theme_mid;
@@ -333,7 +373,7 @@ export default function CreatorClient({ username }: { username: string }) {
     milestoneTarget > 0 ? Math.min(1, totalEarned / milestoneTarget) : 0;
   const milestonePercent = Math.round(milestoneProgress * 100);
 
-  // 🔹 Loading & "creator not found" handling
+  // Loading & not found
   if (!profileLoaded) {
     return (
       <div className="min-h-screen flex items-center justify-center text-white">
@@ -378,14 +418,14 @@ export default function CreatorClient({ username }: { username: string }) {
               />
             ) : (
               <span className="text-xl sm:text-2xl font-bold">
-                {profile.profile_name?.[0] || username?.[0] || "?"}
+                {profile.profile_name?.[0] || profile.username?.[0] || "?"}
               </span>
             )}
           </div>
 
           <div className="flex flex-col">
             <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">
-              {profile.profile_name || "EVER PAY"}
+              {profile.profile_name || profile.username}
             </h1>
 
             {Array.isArray(profile.social_links) && profile.social_links.length > 0 && (
@@ -423,11 +463,11 @@ export default function CreatorClient({ username }: { username: string }) {
             )}
             <p className="text-[13px] text-white/80 mb-3">
               £
-              {totalEarned.toLocaleString("en-UK", {
+              {totalEarned.toLocaleString("en-GB", {
                 minimumFractionDigits: 2,
               })}{" "}
               of £
-              {milestoneTarget.toLocaleString("en-UK", {
+              {milestoneTarget.toLocaleString("en-GB", {
                 minimumFractionDigits: 2,
               })}{" "}
               raised
@@ -507,12 +547,7 @@ export default function CreatorClient({ username }: { username: string }) {
             <div className="mt-auto flex flex-col items-center gap-3">
               <div className="w-[220px] h-[220px] bg-white rounded-2xl p-3 border border-black/20 shadow-xl flex items-center justify-center">
                 {pageUrl ? (
-                  <QRCode
-                    value={pageUrl}
-                    size={190}
-                    bgColor="#ffffff"
-                    fgColor="#000000"
-                  />
+                  <QRCode value={pageUrl} size={190} bgColor="#ffffff" fgColor="#000000" />
                 ) : (
                   <span className="text-black/70 text-xs">QR unavailable</span>
                 )}
@@ -572,4 +607,3 @@ export default function CreatorClient({ username }: { username: string }) {
     </div>
   );
 }
-
