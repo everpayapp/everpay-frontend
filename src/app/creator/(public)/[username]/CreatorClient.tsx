@@ -1,7 +1,7 @@
 // ~/everpay-frontend/src/app/creator/(public)/[username]/CreatorClient.tsx
 "use client";
 
-import { useState, useEffect } from "react";
+import { useEffect, useMemo, useState } from "react";
 import QRCode from "react-qr-code";
 
 type Payment = {
@@ -29,14 +29,14 @@ type CreatorProfile = {
 
 function getSocialMeta(url: string) {
   const lower = url.toLowerCase();
-  if (lower.includes("tiktok.com")) return { label: "TikTok", short: "TT" };
-  if (lower.includes("instagram.com")) return { label: "Instagram", short: "IG" };
+  if (lower.includes("tiktok.com")) return { label: "TikTok" };
+  if (lower.includes("instagram.com")) return { label: "Instagram" };
   if (lower.includes("youtube.com") || lower.includes("youtu.be"))
-    return { label: "YouTube", short: "YT" };
-  if (lower.includes("facebook.com")) return { label: "Facebook", short: "FB" };
+    return { label: "YouTube" };
+  if (lower.includes("facebook.com")) return { label: "Facebook" };
   if (lower.includes("x.com") || lower.includes("twitter.com"))
-    return { label: "X", short: "X" };
-  return { label: "Website", short: "WWW" };
+    return { label: "X" };
+  return { label: "Website" };
 }
 
 // Normalize social links from API into a clean clickable array
@@ -74,26 +74,20 @@ function normalizeSocialLinks(input: unknown): string[] {
   return Array.from(new Set(cleaned));
 }
 
-function sanitizeUsername(raw: string): string {
-  // keep it URL-safe and consistent (supports slugs)
-  const u = String(raw || "").trim();
-  return u;
-}
-
 export default function CreatorClient({ username }: { username: string }) {
-  const apiUrl = process.env.NEXT_PUBLIC_API_URL;
-  const baseUrl = process.env.NEXT_PUBLIC_PUBLIC_BASE_URL;
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL || "";
+  const baseUrl = process.env.NEXT_PUBLIC_PUBLIC_BASE_URL || "";
 
-  const cleanUsername = sanitizeUsername(username);
-
-  // Always resolve a valid public URL (works on Vercel + locally)
+  // Prefer the real origin on Vercel/browser
   const origin =
-    typeof window !== "undefined" ? window.location.origin : baseUrl || "";
+    typeof window !== "undefined" ? window.location.origin : baseUrl;
 
-  // Public link/QR uses encoded username
-  const pageUrl = origin
-    ? `${origin}/creator/${encodeURIComponent(cleanUsername)}`
-    : "";
+  const encodedUsername = useMemo(
+    () => encodeURIComponent(String(username || "").trim()),
+    [username]
+  );
+
+  const pageUrl = origin ? `${origin}/creator/${encodedUsername}` : "";
 
   const [amount, setAmount] = useState("");
   const [supporterName, setSupporterName] = useState("");
@@ -114,29 +108,26 @@ export default function CreatorClient({ username }: { username: string }) {
   } | null>(null);
   const [showCelebration, setShowCelebration] = useState(false);
 
-  // Load creator profile (+ milestone) — NO CACHE
+  // Load creator profile
   useEffect(() => {
-    async function load() {
-      try {
-        if (!apiUrl) {
-          setProfile(null);
-          return;
-        }
-        if (!cleanUsername) {
-          setProfile(null);
-          return;
-        }
+    if (!apiUrl) {
+      setProfileLoaded(true);
+      return;
+    }
 
+    let cancelled = false;
+
+    async function loadProfile() {
+      try {
         const res = await fetch(
-          `${apiUrl}/api/creator/profile?username=${encodeURIComponent(
-            cleanUsername
-          )}`,
+          `${apiUrl}/api/creator/profile?username=${encodedUsername}`,
           { cache: "no-store" }
         );
 
         const data = await res.json().catch(() => ({} as any));
+        if (cancelled) return;
 
-        // If backend returns {} or missing username => creator not found
+        // backend returns {} when not found
         if (!data || !data.username) {
           setProfile(null);
           return;
@@ -145,46 +136,43 @@ export default function CreatorClient({ username }: { username: string }) {
         const socialLinks = normalizeSocialLinks(data.social_links);
 
         setProfile({
-          username: String(data.username || cleanUsername),
-          profile_name: String(data.profile_name || data.username || cleanUsername),
+          username: String(data.username || username),
+          profile_name: String(data.profile_name || data.username || username),
           avatar_url: String(data.avatar_url || ""),
           bio: String(data.bio || ""),
           social_links: socialLinks,
-          theme_start: String(data.theme_start || "#ff0080"),
-          theme_mid: String(data.theme_mid || "#7c3aed"),
-          theme_end: String(data.theme_end || "#2563eb"),
+          theme_start: data.theme_start || "#ff0080",
+          theme_mid: data.theme_mid || "#7c3aed",
+          theme_end: data.theme_end || "#2563eb",
           milestone_enabled: data.milestone_enabled,
           milestone_amount: Number(data.milestone_amount) || 0,
           milestone_text: String(data.milestone_text || ""),
         });
-      } catch (err) {
-        console.error("Public profile load failed:", err);
+      } catch {
+        if (cancelled) return;
         setProfile(null);
       } finally {
-        setProfileLoaded(true);
+        if (!cancelled) setProfileLoaded(true);
       }
     }
 
-    setProfileLoaded(false);
-    setProfile(null);
-    load();
-  }, [apiUrl, cleanUsername]);
+    loadProfile();
+    return () => {
+      cancelled = true;
+    };
+  }, [apiUrl, encodedUsername, username]);
 
-  // Refresh colours & milestone (NO CACHE)
+  // Refresh colours & milestone every 5 seconds (safe: never overwrite with undefined)
   useEffect(() => {
     if (!apiUrl) return;
-    if (!cleanUsername) return;
 
     const interval = setInterval(async () => {
       try {
         const res = await fetch(
-          `${apiUrl}/api/creator/profile?username=${encodeURIComponent(
-            cleanUsername
-          )}`,
+          `${apiUrl}/api/creator/profile?username=${encodedUsername}`,
           { cache: "no-store" }
         );
         const data = await res.json().catch(() => ({} as any));
-
         if (!data || !data.username) return;
 
         setProfile((prev) => {
@@ -196,20 +184,12 @@ export default function CreatorClient({ username }: { username: string }) {
 
           const nextMilestoneEnabled =
             data.milestone_enabled ?? prev.milestone_enabled;
+
           const nextMilestoneAmount =
             Number(data.milestone_amount) || prev.milestone_amount || 0;
+
           const nextMilestoneText =
             data.milestone_text ?? prev.milestone_text ?? "";
-
-          const changed =
-            prev.theme_start !== nextThemeStart ||
-            prev.theme_mid !== nextThemeMid ||
-            prev.theme_end !== nextThemeEnd ||
-            prev.milestone_enabled !== nextMilestoneEnabled ||
-            (prev.milestone_amount || 0) !== (nextMilestoneAmount || 0) ||
-            (prev.milestone_text || "") !== (nextMilestoneText || "");
-
-          if (!changed) return prev;
 
           return {
             ...prev,
@@ -222,48 +202,48 @@ export default function CreatorClient({ username }: { username: string }) {
           };
         });
       } catch {
-        // ignore refresh errors
+        // ignore
       }
-    }, 3000);
+    }, 5000);
 
     return () => clearInterval(interval);
-  }, [apiUrl, cleanUsername]);
+  }, [apiUrl, encodedUsername]);
 
-  // Load payments (NO CACHE)
+  // Load payments (correct route)
   useEffect(() => {
     if (!apiUrl) return;
-    if (!cleanUsername) return;
+
+    let cancelled = false;
 
     async function loadPayments() {
       try {
         const res = await fetch(
-          `${apiUrl}/api/payments/creator/${encodeURIComponent(cleanUsername)}`,
+          `${apiUrl}/api/payments/creator/${encodedUsername}`,
           { cache: "no-store" }
         );
         const data = await res.json().catch(() => []);
+        if (cancelled) return;
         setPayments(Array.isArray(data) ? data : []);
-      } catch (err) {
-        console.error("Public payments load failed:", err);
+      } catch {
+        if (cancelled) return;
         setPayments([]);
+      } finally {
+        if (!cancelled) setLoadingPayments(false);
       }
-      setLoadingPayments(false);
     }
 
-    setLoadingPayments(true);
     loadPayments();
     const interval = setInterval(loadPayments, 5000);
-    return () => clearInterval(interval);
-  }, [apiUrl, cleanUsername]);
+    return () => {
+      cancelled = true;
+      clearInterval(interval);
+    };
+  }, [apiUrl, encodedUsername]);
 
   // Handle send gift
   async function handlePay() {
     if (!apiUrl) {
       alert("Missing API URL");
-      return;
-    }
-
-    if (!cleanUsername) {
-      alert("Invalid creator");
       return;
     }
 
@@ -281,23 +261,20 @@ export default function CreatorClient({ username }: { username: string }) {
     setLoading(true);
     try {
       if (typeof window !== "undefined") {
-        window.localStorage.setItem(`everpay_pending_gift_${cleanUsername}`, "1");
+        window.localStorage.setItem(`everpay_pending_gift_${encodedUsername}`, "1");
       }
 
-      const res = await fetch(
-        `${apiUrl}/creator/pay/${encodeURIComponent(cleanUsername)}`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            amount: amountPence,
-            supporterName,
-            anonymous,
-            gift_message: message,
-            isUK: true,
-          }),
-        }
-      );
+      const res = await fetch(`${apiUrl}/creator/pay/${encodedUsername}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          amount: amountPence,
+          supporterName,
+          anonymous,
+          gift_message: message,
+          isUK: true,
+        }),
+      });
 
       const data = await res.json().catch(() => ({} as any));
 
@@ -318,15 +295,15 @@ export default function CreatorClient({ username }: { username: string }) {
   // Celebration logic – runs after we have payments
   useEffect(() => {
     if (typeof window === "undefined") return;
-    if (!payments.length) return;
+    if (!Array.isArray(payments) || payments.length === 0) return;
 
-    const pendingKey = `everpay_pending_gift_${cleanUsername}`;
-    const lastKey = `everpay_last_celebrated_${cleanUsername}`;
+    const pendingKey = `everpay_pending_gift_${encodedUsername}`;
+    const lastKey = `everpay_last_celebrated_${encodedUsername}`;
 
     const pending = window.localStorage.getItem(pendingKey);
     if (pending !== "1") return;
 
-    const latest = payments.length > 0 ? payments[0] : null;
+    const latest = payments[0];
     if (!latest) return;
 
     const lastCelebratedId = window.localStorage.getItem(lastKey);
@@ -351,18 +328,16 @@ export default function CreatorClient({ username }: { username: string }) {
     window.localStorage.setItem(lastKey, latest.id);
     window.localStorage.removeItem(pendingKey);
 
-    const timeout = setTimeout(() => {
-      setShowCelebration(false);
-    }, 3500);
-
+    const timeout = setTimeout(() => setShowCelebration(false), 3500);
     return () => clearTimeout(timeout);
-  }, [payments, cleanUsername]);
+  }, [payments, encodedUsername]);
 
-  const bgStart = profile?.theme_start;
-  const bgMid = profile?.theme_mid;
-  const bgEnd = profile?.theme_end;
+  const bgStart = profile?.theme_start || "#0b1220";
+  const bgMid = profile?.theme_mid || "#0b1220";
+  const bgEnd = profile?.theme_end || "#0b1220";
 
-  const totalEarned = payments.reduce((sum, p) => sum + p.amount, 0) / 100;
+  const totalEarned = payments.reduce((sum, p) => sum + (p?.amount || 0), 0) / 100;
+
   const milestoneEnabled =
     profile &&
     (profile.milestone_enabled === 1 || profile.milestone_enabled === true) &&
@@ -373,7 +348,6 @@ export default function CreatorClient({ username }: { username: string }) {
     milestoneTarget > 0 ? Math.min(1, totalEarned / milestoneTarget) : 0;
   const milestonePercent = Math.round(milestoneProgress * 100);
 
-  // Loading & not found
   if (!profileLoaded) {
     return (
       <div className="min-h-screen flex items-center justify-center text-white">
@@ -418,14 +392,14 @@ export default function CreatorClient({ username }: { username: string }) {
               />
             ) : (
               <span className="text-xl sm:text-2xl font-bold">
-                {profile.profile_name?.[0] || profile.username?.[0] || "?"}
+                {(profile.profile_name?.[0] || username?.[0] || "?").toUpperCase()}
               </span>
             )}
           </div>
 
           <div className="flex flex-col">
             <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">
-              {profile.profile_name || profile.username}
+              {profile.profile_name || "EVER PAY"}
             </h1>
 
             {Array.isArray(profile.social_links) && profile.social_links.length > 0 && (
@@ -457,19 +431,12 @@ export default function CreatorClient({ username }: { username: string }) {
               Goal
             </p>
             {profile.milestone_text && (
-              <p className="text-sm font-semibold mb-1">
-                {profile.milestone_text}
-              </p>
+              <p className="text-sm font-semibold mb-1">{profile.milestone_text}</p>
             )}
             <p className="text-[13px] text-white/80 mb-3">
               £
-              {totalEarned.toLocaleString("en-GB", {
-                minimumFractionDigits: 2,
-              })}{" "}
-              of £
-              {milestoneTarget.toLocaleString("en-GB", {
-                minimumFractionDigits: 2,
-              })}{" "}
+              {totalEarned.toLocaleString("en-GB", { minimumFractionDigits: 2 })} of £
+              {milestoneTarget.toLocaleString("en-GB", { minimumFractionDigits: 2 })}{" "}
               raised
             </p>
 
@@ -492,9 +459,7 @@ export default function CreatorClient({ username }: { username: string }) {
         <div className="grid lg:grid-cols-2 gap-6 items-start">
           {/* Send a Gift */}
           <section className="bg-black/25 rounded-3xl border border-white/20 backdrop-blur-xl p-6 sm:p-8 shadow-2xl flex flex-col">
-            <h2 className="text-lg sm:text-xl font-semibold mb-4 flex items-center gap-2">
-              Send a Gift
-            </h2>
+            <h2 className="text-lg sm:text-xl font-semibold mb-4">Send a Gift</h2>
 
             <div className="flex items-center gap-3 mb-4">
               <span className="text-xl font-bold">£</span>
