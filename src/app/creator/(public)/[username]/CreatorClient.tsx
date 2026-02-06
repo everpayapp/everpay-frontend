@@ -1,7 +1,8 @@
 // ~/everpay-frontend/src/app/creator/(public)/[username]/CreatorClient.tsx
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
+import { useParams } from "next/navigation";
 import QRCode from "react-qr-code";
 
 type Payment = {
@@ -29,14 +30,13 @@ type CreatorProfile = {
 
 function getSocialMeta(url: string) {
   const lower = url.toLowerCase();
-  if (lower.includes("tiktok.com")) return { label: "TikTok" };
-  if (lower.includes("instagram.com")) return { label: "Instagram" };
+  if (lower.includes("tiktok.com")) return { label: "TikTok", short: "TT" };
+  if (lower.includes("instagram.com")) return { label: "Instagram", short: "IG" };
   if (lower.includes("youtube.com") || lower.includes("youtu.be"))
-    return { label: "YouTube" };
-  if (lower.includes("facebook.com")) return { label: "Facebook" };
-  if (lower.includes("x.com") || lower.includes("twitter.com"))
-    return { label: "X" };
-  return { label: "Website" };
+    return { label: "YouTube", short: "YT" };
+  if (lower.includes("facebook.com")) return { label: "Facebook", short: "FB" };
+  if (lower.includes("x.com") || lower.includes("twitter.com")) return { label: "X", short: "X" };
+  return { label: "Website", short: "WWW" };
 }
 
 // Normalize social links from API into a clean clickable array
@@ -74,20 +74,32 @@ function normalizeSocialLinks(input: unknown): string[] {
   return Array.from(new Set(cleaned));
 }
 
-export default function CreatorClient({ username }: { username: string }) {
-  const apiUrl = process.env.NEXT_PUBLIC_API_URL || "";
-  const baseUrl = process.env.NEXT_PUBLIC_PUBLIC_BASE_URL || "";
+function firstChar(s: string) {
+  const t = (s || "").trim();
+  return t.length ? t[0] : "?";
+}
 
-  // Prefer the real origin on Vercel/browser
-  const origin =
-    typeof window !== "undefined" ? window.location.origin : baseUrl;
+export default function CreatorClient({ username: propUsername }: { username?: string }) {
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL;
+  const baseUrl = process.env.NEXT_PUBLIC_PUBLIC_BASE_URL;
 
-  const encodedUsername = useMemo(
-    () => encodeURIComponent(String(username || "").trim()),
-    [username]
-  );
+  // ✅ CRITICAL FIX:
+  // Sometimes production renders prop username as undefined.
+  // Always fall back to route params on the client.
+  const params = useParams<{ username?: string | string[] }>();
+  const routeUsernameRaw = params?.username;
+  const routeUsername =
+    typeof routeUsernameRaw === "string"
+      ? routeUsernameRaw
+      : Array.isArray(routeUsernameRaw)
+      ? routeUsernameRaw[0]
+      : "";
 
-  const pageUrl = origin ? `${origin}/creator/${encodedUsername}` : "";
+  const username = String(propUsername || routeUsername || "").trim();
+
+  // Always resolve a valid public URL (works on Vercel + locally)
+  const origin = typeof window !== "undefined" ? window.location.origin : baseUrl || "";
+  const pageUrl = origin && username ? `${origin}/creator/${encodeURIComponent(username)}` : "";
 
   const [amount, setAmount] = useState("");
   const [supporterName, setSupporterName] = useState("");
@@ -108,26 +120,19 @@ export default function CreatorClient({ username }: { username: string }) {
   } | null>(null);
   const [showCelebration, setShowCelebration] = useState(false);
 
-  // Load creator profile
+  // Load creator profile (+ milestone)
   useEffect(() => {
-    if (!apiUrl) {
-      setProfileLoaded(true);
-      return;
-    }
-
-    let cancelled = false;
-
-    async function loadProfile() {
+    async function load() {
       try {
+        if (!apiUrl) return;
+        if (!username) return;
+
         const res = await fetch(
-          `${apiUrl}/api/creator/profile?username=${encodedUsername}`,
-          { cache: "no-store" }
+          `${apiUrl}/api/creator/profile?username=${encodeURIComponent(username)}`
         );
-
         const data = await res.json().catch(() => ({} as any));
-        if (cancelled) return;
 
-        // backend returns {} when not found
+        // keep old backend behavior: {} when not found
         if (!data || !data.username) {
           setProfile(null);
           return;
@@ -136,44 +141,39 @@ export default function CreatorClient({ username }: { username: string }) {
         const socialLinks = normalizeSocialLinks(data.social_links);
 
         setProfile({
-          username: String(data.username || username),
-          profile_name: String(data.profile_name || data.username || username),
-          avatar_url: String(data.avatar_url || ""),
-          bio: String(data.bio || ""),
+          username: data.username || username,
+          profile_name: data.profile_name || username,
+          avatar_url: data.avatar_url || "",
+          bio: data.bio || "",
           social_links: socialLinks,
           theme_start: data.theme_start || "#ff0080",
           theme_mid: data.theme_mid || "#7c3aed",
           theme_end: data.theme_end || "#2563eb",
           milestone_enabled: data.milestone_enabled,
           milestone_amount: Number(data.milestone_amount) || 0,
-          milestone_text: String(data.milestone_text || ""),
+          milestone_text: data.milestone_text || "",
         });
       } catch {
-        if (cancelled) return;
         setProfile(null);
       } finally {
-        if (!cancelled) setProfileLoaded(true);
+        setProfileLoaded(true);
       }
     }
 
-    loadProfile();
-    return () => {
-      cancelled = true;
-    };
-  }, [apiUrl, encodedUsername, username]);
+    load();
+  }, [apiUrl, username]);
 
-  // Refresh colours & milestone every 5 seconds (safe: never overwrite with undefined)
+  // Refresh colours & milestone every 3 seconds (but never overwrite with undefined)
   useEffect(() => {
     if (!apiUrl) return;
+    if (!username) return;
 
     const interval = setInterval(async () => {
       try {
         const res = await fetch(
-          `${apiUrl}/api/creator/profile?username=${encodedUsername}`,
-          { cache: "no-store" }
+          `${apiUrl}/api/creator/profile?username=${encodeURIComponent(username)}`
         );
         const data = await res.json().catch(() => ({} as any));
-        if (!data || !data.username) return;
 
         setProfile((prev) => {
           if (!prev) return prev;
@@ -182,14 +182,20 @@ export default function CreatorClient({ username }: { username: string }) {
           const nextThemeMid = data.theme_mid || prev.theme_mid;
           const nextThemeEnd = data.theme_end || prev.theme_end;
 
-          const nextMilestoneEnabled =
-            data.milestone_enabled ?? prev.milestone_enabled;
-
+          const nextMilestoneEnabled = data.milestone_enabled ?? prev.milestone_enabled;
           const nextMilestoneAmount =
             Number(data.milestone_amount) || prev.milestone_amount || 0;
+          const nextMilestoneText = data.milestone_text ?? prev.milestone_text ?? "";
 
-          const nextMilestoneText =
-            data.milestone_text ?? prev.milestone_text ?? "";
+          const changed =
+            prev.theme_start !== nextThemeStart ||
+            prev.theme_mid !== nextThemeMid ||
+            prev.theme_end !== nextThemeEnd ||
+            prev.milestone_enabled !== nextMilestoneEnabled ||
+            (prev.milestone_amount || 0) !== (nextMilestoneAmount || 0) ||
+            (prev.milestone_text || "") !== (nextMilestoneText || "");
+
+          if (!changed) return prev;
 
           return {
             ...prev,
@@ -204,46 +210,41 @@ export default function CreatorClient({ username }: { username: string }) {
       } catch {
         // ignore
       }
-    }, 5000);
+    }, 3000);
 
     return () => clearInterval(interval);
-  }, [apiUrl, encodedUsername]);
+  }, [apiUrl, username]);
 
-  // Load payments (correct route)
+  // Load payments (and keep refreshing)
   useEffect(() => {
     if (!apiUrl) return;
-
-    let cancelled = false;
+    if (!username) return;
 
     async function loadPayments() {
       try {
-        const res = await fetch(
-          `${apiUrl}/api/payments/creator/${encodedUsername}`,
-          { cache: "no-store" }
-        );
+        const res = await fetch(`${apiUrl}/api/payments/creator/${encodeURIComponent(username)}`);
         const data = await res.json().catch(() => []);
-        if (cancelled) return;
         setPayments(Array.isArray(data) ? data : []);
       } catch {
-        if (cancelled) return;
         setPayments([]);
       } finally {
-        if (!cancelled) setLoadingPayments(false);
+        setLoadingPayments(false);
       }
     }
 
     loadPayments();
     const interval = setInterval(loadPayments, 5000);
-    return () => {
-      cancelled = true;
-      clearInterval(interval);
-    };
-  }, [apiUrl, encodedUsername]);
+    return () => clearInterval(interval);
+  }, [apiUrl, username]);
 
   // Handle send gift
   async function handlePay() {
     if (!apiUrl) {
       alert("Missing API URL");
+      return;
+    }
+    if (!username) {
+      alert("Missing creator username in URL");
       return;
     }
 
@@ -261,10 +262,10 @@ export default function CreatorClient({ username }: { username: string }) {
     setLoading(true);
     try {
       if (typeof window !== "undefined") {
-        window.localStorage.setItem(`everpay_pending_gift_${encodedUsername}`, "1");
+        window.localStorage.setItem(`everpay_pending_gift_${username}`, "1");
       }
 
-      const res = await fetch(`${apiUrl}/creator/pay/${encodedUsername}`, {
+      const res = await fetch(`${apiUrl}/creator/pay/${encodeURIComponent(username)}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -295,15 +296,16 @@ export default function CreatorClient({ username }: { username: string }) {
   // Celebration logic – runs after we have payments
   useEffect(() => {
     if (typeof window === "undefined") return;
+    if (!username) return;
     if (!Array.isArray(payments) || payments.length === 0) return;
 
-    const pendingKey = `everpay_pending_gift_${encodedUsername}`;
-    const lastKey = `everpay_last_celebrated_${encodedUsername}`;
+    const pendingKey = `everpay_pending_gift_${username}`;
+    const lastKey = `everpay_last_celebrated_${username}`;
 
     const pending = window.localStorage.getItem(pendingKey);
     if (pending !== "1") return;
 
-    const latest = payments[0];
+    const latest = payments[0] ?? null;
     if (!latest) return;
 
     const lastCelebratedId = window.localStorage.getItem(lastKey);
@@ -330,13 +332,13 @@ export default function CreatorClient({ username }: { username: string }) {
 
     const timeout = setTimeout(() => setShowCelebration(false), 3500);
     return () => clearTimeout(timeout);
-  }, [payments, encodedUsername]);
+  }, [payments, username]);
 
-  const bgStart = profile?.theme_start || "#0b1220";
-  const bgMid = profile?.theme_mid || "#0b1220";
-  const bgEnd = profile?.theme_end || "#0b1220";
+  const bgStart = profile?.theme_start;
+  const bgMid = profile?.theme_mid;
+  const bgEnd = profile?.theme_end;
 
-  const totalEarned = payments.reduce((sum, p) => sum + (p?.amount || 0), 0) / 100;
+  const totalEarned = payments.reduce((sum, p) => sum + p.amount, 0) / 100;
 
   const milestoneEnabled =
     profile &&
@@ -344,9 +346,17 @@ export default function CreatorClient({ username }: { username: string }) {
     (profile.milestone_amount || 0) > 0;
 
   const milestoneTarget = profile?.milestone_amount || 0;
-  const milestoneProgress =
-    milestoneTarget > 0 ? Math.min(1, totalEarned / milestoneTarget) : 0;
+  const milestoneProgress = milestoneTarget > 0 ? Math.min(1, totalEarned / milestoneTarget) : 0;
   const milestonePercent = Math.round(milestoneProgress * 100);
+
+  // If username missing entirely, show clear message (prevents loading EverPay/Lee by accident)
+  if (!username) {
+    return (
+      <div className="min-h-screen flex items-center justify-center text-white">
+        Creator username missing in URL.
+      </div>
+    );
+  }
 
   if (!profileLoaded) {
     return (
@@ -385,14 +395,10 @@ export default function CreatorClient({ username }: { username: string }) {
         <section className="w-full bg-black/20 rounded-3xl border border-white/20 backdrop-blur-xl px-6 sm:px-10 py-6 sm:py-7 shadow-2xl flex items-center gap-5 sm:gap-8">
           <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full border-[5px] border-white/40 bg-white/10 flex items-center justify-center overflow-hidden shadow-xl">
             {profile.avatar_url ? (
-              <img
-                src={profile.avatar_url}
-                alt="Avatar"
-                className="w-full h-full object-cover"
-              />
+              <img src={profile.avatar_url} alt="Avatar" className="w-full h-full object-cover" />
             ) : (
               <span className="text-xl sm:text-2xl font-bold">
-                {(profile.profile_name?.[0] || username?.[0] || "?").toUpperCase()}
+                {firstChar(profile.profile_name) || firstChar(username)}
               </span>
             )}
           </div>
@@ -427,17 +433,14 @@ export default function CreatorClient({ username }: { username: string }) {
         {/* Milestone bar */}
         {milestoneEnabled && (
           <section className="bg-black/25 rounded-3xl border border-white/20 backdrop-blur-xl px-5 py-4 shadow-2xl">
-            <p className="text-[11px] uppercase tracking-[0.18em] text-white/70 mb-1">
-              Goal
-            </p>
-            {profile.milestone_text && (
-              <p className="text-sm font-semibold mb-1">{profile.milestone_text}</p>
-            )}
+            <p className="text-[11px] uppercase tracking-[0.18em] text-white/70 mb-1">Goal</p>
+
+            {profile.milestone_text && <p className="text-sm font-semibold mb-1">{profile.milestone_text}</p>}
+
             <p className="text-[13px] text-white/80 mb-3">
               £
               {totalEarned.toLocaleString("en-GB", { minimumFractionDigits: 2 })} of £
-              {milestoneTarget.toLocaleString("en-GB", { minimumFractionDigits: 2 })}{" "}
-              raised
+              {milestoneTarget.toLocaleString("en-GB", { minimumFractionDigits: 2 })} raised
             </p>
 
             <div className="w-full h-2.5 rounded-full bg-white/10 overflow-hidden">
@@ -448,9 +451,7 @@ export default function CreatorClient({ username }: { username: string }) {
             </div>
 
             <p className="mt-1 text-[11px] text-white/65">
-              {milestonePercent >= 100
-                ? "Goal reached 🎉 — you smashed it!"
-                : `${milestonePercent}% complete`}
+              {milestonePercent >= 100 ? "Goal reached 🎉 — you smashed it!" : `${milestonePercent}% complete`}
             </p>
           </section>
         )}
@@ -459,7 +460,9 @@ export default function CreatorClient({ username }: { username: string }) {
         <div className="grid lg:grid-cols-2 gap-6 items-start">
           {/* Send a Gift */}
           <section className="bg-black/25 rounded-3xl border border-white/20 backdrop-blur-xl p-6 sm:p-8 shadow-2xl flex flex-col">
-            <h2 className="text-lg sm:text-xl font-semibold mb-4">Send a Gift</h2>
+            <h2 className="text-lg sm:text-xl font-semibold mb-4 flex items-center gap-2">
+              Send a Gift
+            </h2>
 
             <div className="flex items-center gap-3 mb-4">
               <span className="text-xl font-bold">£</span>
@@ -489,11 +492,7 @@ export default function CreatorClient({ username }: { username: string }) {
             />
 
             <label className="flex items-center gap-2 text-xs sm:text-sm mb-4 cursor-pointer">
-              <input
-                type="checkbox"
-                checked={anonymous}
-                onChange={(e) => setAnonymous(e.target.checked)}
-              />
+              <input type="checkbox" checked={anonymous} onChange={(e) => setAnonymous(e.target.checked)} />
               <span>Gift anonymously</span>
             </label>
 
@@ -505,9 +504,7 @@ export default function CreatorClient({ username }: { username: string }) {
               {loading ? "Redirecting…" : "Send Gift 🎁"}
             </button>
 
-            <p className="text-center text-[11px] text-white/70">
-              Secure checkout powered by Stripe
-            </p>
+            <p className="text-center text-[11px] text-white/70">Secure checkout powered by Stripe</p>
 
             <div className="mt-auto flex flex-col items-center gap-3">
               <div className="w-[220px] h-[220px] bg-white rounded-2xl p-3 border border-black/20 shadow-xl flex items-center justify-center">
@@ -519,24 +516,18 @@ export default function CreatorClient({ username }: { username: string }) {
               </div>
 
               <p className="text-xs text-white/80">Scan to support me</p>
-              <p className="text-[11px] text-white/50 tracking-wide">
-                Powered by EverPay
-              </p>
+              <p className="text-[11px] text-white/50 tracking-wide">Powered by EverPay</p>
             </div>
           </section>
 
           {/* Recent Gifts */}
           <section className="bg-black/25 rounded-3xl border border-white/20 backdrop-blur-xl p-6 sm:p-8 shadow-2xl flex flex-col h-[560px]">
-            <h2 className="text-lg sm:text-xl font-semibold mb-4 text-center">
-              Recent Gifts 🎁
-            </h2>
+            <h2 className="text-lg sm:text-xl font-semibold mb-4 text-center">Recent Gifts 🎁</h2>
 
             {loadingPayments ? (
               <p className="text-center text-white/70 text-sm">Loading…</p>
             ) : payments.length === 0 ? (
-              <p className="text-center text-white/70 text-sm">
-                No gifts yet — be the first! 🎁
-              </p>
+              <p className="text-center text-white/70 text-sm">No gifts yet — be the first! 🎁</p>
             ) : (
               <div className="space-y-3 overflow-y-auto pr-1">
                 {payments.map((p) => (
@@ -546,17 +537,11 @@ export default function CreatorClient({ username }: { username: string }) {
                   >
                     <div className="flex-1">
                       <p className="font-semibold text-[13px] sm:text-sm">
-                        {p.anonymous
-                          ? "Anonymous"
-                          : p.gift_name?.length
-                          ? p.gift_name
-                          : "Someone"}{" "}
-                        gifted £{(p.amount / 100).toFixed(2)}
+                        {p.anonymous ? "Anonymous" : p.gift_name?.length ? p.gift_name : "Someone"} gifted £
+                        {(p.amount / 100).toFixed(2)}
                       </p>
                       {p.gift_message && (
-                        <p className="text-[11px] sm:text-xs opacity-80 mt-1 italic">
-                          “{p.gift_message}”
-                        </p>
+                        <p className="text-[11px] sm:text-xs opacity-80 mt-1 italic">“{p.gift_message}”</p>
                       )}
                     </div>
                     <p className="text-[10px] opacity-60 whitespace-nowrap mt-1">
