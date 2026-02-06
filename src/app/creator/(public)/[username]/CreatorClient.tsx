@@ -284,8 +284,9 @@ export default function CreatorClient({ username }: { username: string }) {
     const pending = window.localStorage.getItem(pendingKey);
     if (pending !== "1") return;
 
-    const latest = payments[0];
+    const latest = Array.isArray(payments) && payments.length > 0 ? payments[0] : null;
     if (!latest) return;
+
 
     const lastCelebratedId = window.localStorage.getItem(lastKey);
     if (lastCelebratedId === latest.id) {
