@@ -373,38 +373,70 @@ export default function CreatorClient({ username: propUsername }: { username?: s
       )}
 
       <div className="w-full max-w-6xl space-y-8 px-1 sm:px-0 overflow-x-hidden">
-        {/* Header */}
-        <section className="w-full bg-black/20 rounded-3xl border border-white/20 backdrop-blur-xl px-6 sm:px-10 py-6 sm:py-7 shadow-2xl flex items-center gap-5 sm:gap-8">
-          <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full border-[5px] border-white/40 bg-white/10 flex items-center justify-center overflow-hidden shadow-xl">
-            {profile.avatar_url ? (
-              <img src={profile.avatar_url} alt="Avatar" className="w-full h-full object-cover" />
-            ) : (
-              <span className="text-xl sm:text-2xl font-bold">{firstChar(profile.profile_name) || firstChar(username)}</span>
-            )}
-          </div>
-
-          <div className="flex flex-col">
-            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">{profile.profile_name || "EVER PAY"}</h1>
-
-            {Array.isArray(profile.social_links) && profile.social_links.length > 0 && (
-              <div className="mt-3 flex flex-wrap gap-2">
-                {profile.social_links.map((url) => {
-                  const meta = getSocialMeta(url);
-                  return (
-                    <a
-                      key={url}
-                      href={url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 border border-white/20 text-xs text-white/90 hover:bg-white/15 transition"
-                      title={url}
-                    >
-                      <span>{meta.label}</span>
-                    </a>
-                  );
-                })}
+        {/* Header + Prize Pool (right side) */}
+        <section className="w-full bg-black/20 rounded-3xl border border-white/20 backdrop-blur-xl px-6 sm:px-10 py-6 sm:py-7 shadow-2xl">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-5 sm:gap-8">
+            {/* Left: avatar + name + socials */}
+            <div className="flex items-center gap-5 sm:gap-8 min-w-0">
+              <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full border-[5px] border-white/40 bg-white/10 flex items-center justify-center overflow-hidden shadow-xl shrink-0">
+                {profile.avatar_url ? (
+                  <img src={profile.avatar_url} alt="Avatar" className="w-full h-full object-cover" />
+                ) : (
+                  <span className="text-xl sm:text-2xl font-bold">{firstChar(profile.profile_name) || firstChar(username)}</span>
+                )}
               </div>
-            )}
+
+              <div className="flex flex-col min-w-0">
+                <h1 className="text-2xl sm:text-3xl font-bold tracking-tight truncate">
+                  {profile.profile_name || "EVER PAY"}
+                </h1>
+
+                {Array.isArray(profile.social_links) && profile.social_links.length > 0 && (
+                  <div className="mt-3 flex flex-wrap gap-2">
+                    {profile.social_links.map((url) => {
+                      const meta = getSocialMeta(url);
+                      return (
+                        <a
+                          key={url}
+                          href={url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 border border-white/20 text-xs text-white/90 hover:bg-white/15 transition"
+                          title={url}
+                        >
+                          <span>{meta.label}</span>
+                        </a>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Right: Prize Pool (mandatory) */}
+            <div className="w-full sm:w-auto">
+              <div className="rounded-3xl bg-white/10 border border-white/20 backdrop-blur-xl px-5 py-4 sm:px-6 sm:py-5 shadow-xl">
+                <div className="flex items-start justify-between gap-4">
+                  <div>
+                    <p className="text-[11px] uppercase tracking-[0.18em] text-white/70">🏆 Monthly Prize Pool</p>
+                    <p className="text-sm text-white/85 mt-2">
+                      The EverPay fee helps fund a monthly cash prize for supporters.
+                    </p>
+                    <ul className="mt-3 space-y-1 text-sm text-white/80">
+                      <li>• More gifts = bigger prizes</li>
+                      <li>• Winners picked every month</li>
+                      <li>• Never taken from creators</li>
+                    </ul>
+                  </div>
+
+                  <div className="shrink-0 rounded-2xl bg-black/20 border border-white/15 px-4 py-3 text-center">
+                    <div className="text-[11px] uppercase tracking-[0.18em] text-white/70">This month</div>
+                    <div className="text-2xl font-bold mt-1">£TBD</div>
+                    <div className="text-[11px] text-white/60 mt-1">Live total soon</div>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </section>
 
@@ -495,67 +527,39 @@ export default function CreatorClient({ username: propUsername }: { username?: s
             </div>
           </section>
 
-          {/* RIGHT — Prize Pool + Recent Gifts */}
-          <div className="flex flex-col gap-6">
-            {/* Prize Pool (mandatory) */}
-            <section className="bg-black/25 rounded-3xl border border-white/20 backdrop-blur-xl p-6 sm:p-8 shadow-2xl">
-              <div className="flex items-start justify-between gap-4">
-                <div>
-                  <h3 className="text-lg sm:text-xl font-semibold">🏆 Monthly Prize Pool</h3>
-                  <p className="text-sm text-white/80 mt-2">
-                    Every gift helps grow a monthly cash prize for supporters.
-                  </p>
-                  <ul className="mt-3 space-y-1 text-sm text-white/80">
-                    <li>• More gifts = bigger prizes</li>
-                    <li>• Winners picked every month</li>
-                    <li>• Creators aren’t charged</li>
-                  </ul>
-                </div>
+          {/* RIGHT — Recent Gifts */}
+          <section className="bg-black/25 rounded-3xl border border-white/20 backdrop-blur-xl p-6 sm:p-8 shadow-2xl flex flex-col h-[360px] lg:h-[520px]">
+            <h2 className="text-lg sm:text-xl font-semibold mb-4 text-center">Recent Gifts 🎁</h2>
 
-                <div className="shrink-0 rounded-2xl bg-white/10 border border-white/20 px-4 py-3 text-center">
-                  <div className="text-[11px] uppercase tracking-[0.18em] text-white/70">This month</div>
-                  <div className="text-2xl font-bold mt-1">£TBD</div>
-                  <div className="text-[11px] text-white/60 mt-1">Live total soon</div>
-                </div>
-              </div>
-
-              <p className="text-[11px] text-white/60 mt-4">Funded by EverPay fees — never taken from creators.</p>
-            </section>
-
-            {/* Recent Gifts — fixed height on desktop, scrollable */}
-            <section className="bg-black/25 rounded-3xl border border-white/20 backdrop-blur-xl p-6 sm:p-8 shadow-2xl flex flex-col h-[360px] lg:h-[520px]">
-              <h2 className="text-lg sm:text-xl font-semibold mb-4 text-center">Recent Gifts 🎁</h2>
-
-              {loadingPayments ? (
-                <p className="text-center text-white/70 text-sm">Loading…</p>
-              ) : payments.length === 0 ? (
-                <p className="text-center text-white/70 text-sm">No gifts yet — be the first! 🎁</p>
-              ) : (
-                <div className="flex-1 min-h-0 space-y-3 overflow-y-auto pr-1">
-                  {payments.map((p) => (
-                    <div
-                      key={p.id}
-                      className="bg-white/5 border border-white/15 rounded-xl px-4 py-3 text-sm flex justify-between gap-3 shadow-sm"
-                    >
-                      <div className="flex-1">
-                        <p className="font-semibold text-[13px] sm:text-sm">
-                          {p.anonymous ? "Anonymous" : p.gift_name?.length ? p.gift_name : "Someone"} gifted £
-                          {(p.amount / 100).toFixed(2)}
-                        </p>
-                        {p.gift_message && (
-                          <p className="text-[11px] sm:text-xs opacity-80 mt-1 italic">“{p.gift_message}”</p>
-                        )}
-                      </div>
-
-                      <p className="text-[10px] opacity-60 whitespace-nowrap mt-1">
-                        {new Date(p.created_at).toLocaleDateString()}
+            {loadingPayments ? (
+              <p className="text-center text-white/70 text-sm">Loading…</p>
+            ) : payments.length === 0 ? (
+              <p className="text-center text-white/70 text-sm">No gifts yet — be the first! 🎁</p>
+            ) : (
+              <div className="flex-1 min-h-0 space-y-3 overflow-y-auto pr-1">
+                {payments.map((p) => (
+                  <div
+                    key={p.id}
+                    className="bg-white/5 border border-white/15 rounded-xl px-4 py-3 text-sm flex justify-between gap-3 shadow-sm"
+                  >
+                    <div className="flex-1">
+                      <p className="font-semibold text-[13px] sm:text-sm">
+                        {p.anonymous ? "Anonymous" : p.gift_name?.length ? p.gift_name : "Someone"} gifted £
+                        {(p.amount / 100).toFixed(2)}
                       </p>
+                      {p.gift_message && (
+                        <p className="text-[11px] sm:text-xs opacity-80 mt-1 italic">“{p.gift_message}”</p>
+                      )}
                     </div>
-                  ))}
-                </div>
-              )}
-            </section>
-          </div>
+
+                    <p className="text-[10px] opacity-60 whitespace-nowrap mt-1">
+                      {new Date(p.created_at).toLocaleDateString()}
+                    </p>
+                  </div>
+                ))}
+              </div>
+            )}
+          </section>
         </div>
       </div>
     </div>
