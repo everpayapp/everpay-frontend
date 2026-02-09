@@ -127,9 +127,7 @@ export default function CreatorClient({ username: propUsername }: { username?: s
         if (!apiUrl) return;
         if (!username) return;
 
-        const res = await fetch(
-          `${apiUrl}/api/creator/profile?username=${encodeURIComponent(username)}`
-        );
+        const res = await fetch(`${apiUrl}/api/creator/profile?username=${encodeURIComponent(username)}`);
         const data = await res.json().catch(() => ({} as any));
 
         // keep old backend behavior: {} when not found
@@ -170,9 +168,7 @@ export default function CreatorClient({ username: propUsername }: { username?: s
 
     const interval = setInterval(async () => {
       try {
-        const res = await fetch(
-          `${apiUrl}/api/creator/profile?username=${encodeURIComponent(username)}`
-        );
+        const res = await fetch(`${apiUrl}/api/creator/profile?username=${encodeURIComponent(username)}`);
         const data = await res.json().catch(() => ({} as any));
 
         setProfile((prev) => {
@@ -183,8 +179,7 @@ export default function CreatorClient({ username: propUsername }: { username?: s
           const nextThemeEnd = data.theme_end || prev.theme_end;
 
           const nextMilestoneEnabled = data.milestone_enabled ?? prev.milestone_enabled;
-          const nextMilestoneAmount =
-            Number(data.milestone_amount) || prev.milestone_amount || 0;
+          const nextMilestoneAmount = Number(data.milestone_amount) || prev.milestone_amount || 0;
           const nextMilestoneText = data.milestone_text ?? prev.milestone_text ?? "";
 
           const changed =
@@ -351,27 +346,15 @@ export default function CreatorClient({ username: propUsername }: { username?: s
 
   // If username missing entirely, show clear message (prevents loading EverPay/Lee by accident)
   if (!username) {
-    return (
-      <div className="min-h-screen flex items-center justify-center text-white">
-        Creator username missing in URL.
-      </div>
-    );
+    return <div className="min-h-screen flex items-center justify-center text-white">Creator username missing in URL.</div>;
   }
 
   if (!profileLoaded) {
-    return (
-      <div className="min-h-screen flex items-center justify-center text-white">
-        Loading creator…
-      </div>
-    );
+    return <div className="min-h-screen flex items-center justify-center text-white">Loading creator…</div>;
   }
 
   if (!profile) {
-    return (
-      <div className="min-h-screen flex items-center justify-center text-white">
-        Creator not found.
-      </div>
-    );
+    return <div className="min-h-screen flex items-center justify-center text-white">Creator not found.</div>;
   }
 
   return (
@@ -397,16 +380,12 @@ export default function CreatorClient({ username: propUsername }: { username?: s
             {profile.avatar_url ? (
               <img src={profile.avatar_url} alt="Avatar" className="w-full h-full object-cover" />
             ) : (
-              <span className="text-xl sm:text-2xl font-bold">
-                {firstChar(profile.profile_name) || firstChar(username)}
-              </span>
+              <span className="text-xl sm:text-2xl font-bold">{firstChar(profile.profile_name) || firstChar(username)}</span>
             )}
           </div>
 
           <div className="flex flex-col">
-            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">
-              {profile.profile_name || "EVER PAY"}
-            </h1>
+            <h1 className="text-2xl sm:text-3xl font-bold tracking-tight">{profile.profile_name || "EVER PAY"}</h1>
 
             {Array.isArray(profile.social_links) && profile.social_links.length > 0 && (
               <div className="mt-3 flex flex-wrap gap-2">
@@ -438,8 +417,7 @@ export default function CreatorClient({ username: propUsername }: { username?: s
             {profile.milestone_text && <p className="text-sm font-semibold mb-1">{profile.milestone_text}</p>}
 
             <p className="text-[13px] text-white/80 mb-3">
-              £
-              {totalEarned.toLocaleString("en-GB", { minimumFractionDigits: 2 })} of £
+              £{totalEarned.toLocaleString("en-GB", { minimumFractionDigits: 2 })} of £
               {milestoneTarget.toLocaleString("en-GB", { minimumFractionDigits: 2 })} raised
             </p>
 
@@ -458,100 +436,129 @@ export default function CreatorClient({ username: propUsername }: { username?: s
 
         {/* Two-column layout */}
         <div className="grid lg:grid-cols-2 gap-6 items-start">
-          {/* Send a Gift */}
-          <section className="bg-black/25 rounded-3xl border border-white/20 backdrop-blur-xl p-6 sm:p-8 shadow-2xl flex flex-col">
-            <h2 className="text-lg sm:text-xl font-semibold mb-4 flex items-center gap-2">
-              Send a Gift
-            </h2>
+          {/* LEFT column */}
+          <div className="space-y-6">
+            {/* Send a Gift */}
+            <section className="bg-black/25 rounded-3xl border border-white/20 backdrop-blur-xl p-6 sm:p-8 shadow-2xl flex flex-col">
+              <h2 className="text-lg sm:text-xl font-semibold mb-4 flex items-center gap-2">Send a Gift</h2>
 
-            <div className="flex items-center gap-3 mb-4">
-              <span className="text-xl font-bold">£</span>
+              <div className="flex items-center gap-3 mb-4">
+                <span className="text-xl font-bold">£</span>
+                <input
+                  type="number"
+                  value={amount}
+                  onChange={(e) => setAmount(e.target.value)}
+                  placeholder="0.00"
+                  className="flex-1 rounded-xl bg-white/10 border border-white/20 px-3 py-2 text-base text-white placeholder-white/60 outline-none"
+                />
+              </div>
+
               <input
-                type="number"
-                value={amount}
-                onChange={(e) => setAmount(e.target.value)}
-                placeholder="0.00"
-                className="flex-1 rounded-xl bg-white/10 border border-white/20 px-3 py-2 text-base text-white placeholder-white/60 outline-none"
+                type="text"
+                value={supporterName}
+                onChange={(e) => setSupporterName(e.target.value)}
+                placeholder="Your name (optional)"
+                disabled={anonymous}
+                className="w-full rounded-xl bg-white/10 border border-white/20 px-3 py-2 text-sm text-white placeholder-white/60 outline-none mb-3"
               />
-            </div>
 
-            <input
-              type="text"
-              value={supporterName}
-              onChange={(e) => setSupporterName(e.target.value)}
-              placeholder="Your name (optional)"
-              disabled={anonymous}
-              className="w-full rounded-xl bg-white/10 border border-white/20 px-3 py-2 text-sm text-white placeholder-white/60 outline-none mb-3"
-            />
+              <textarea
+                value={message}
+                onChange={(e) => setMessage(e.target.value.slice(0, 120))}
+                placeholder="Leave a message (optional)"
+                className="w-full rounded-xl bg-white/10 border border-white/20 px-3 py-2 text-sm text-white placeholder-white/60 outline-none h-24 resize-none mb-4"
+              />
 
-            <textarea
-              value={message}
-              onChange={(e) => setMessage(e.target.value.slice(0, 120))}
-              placeholder="Leave a message (optional)"
-              className="w-full rounded-xl bg-white/10 border border-white/20 px-3 py-2 text-sm text-white placeholder-white/60 outline-none h-24 resize-none mb-4"
-            />
+              <label className="flex items-center gap-2 text-xs sm:text-sm mb-4 cursor-pointer">
+                <input type="checkbox" checked={anonymous} onChange={(e) => setAnonymous(e.target.checked)} />
+                <span>Gift anonymously</span>
+              </label>
 
-            <label className="flex items-center gap-2 text-xs sm:text-sm mb-4 cursor-pointer">
-              <input type="checkbox" checked={anonymous} onChange={(e) => setAnonymous(e.target.checked)} />
-              <span>Gift anonymously</span>
-            </label>
+              <button
+                className="w-full py-3 rounded-xl bg-white text-black font-semibold hover:bg-white/90 active:scale-[0.98] transition mb-2"
+                onClick={handlePay}
+                disabled={loading}
+              >
+                {loading ? "Redirecting…" : "Send Gift 🎁"}
+              </button>
 
-            <button
-              className="w-full py-3 rounded-xl bg-white text-black font-semibold hover:bg-white/90 active:scale-[0.98] transition mb-2"
-              onClick={handlePay}
-              disabled={loading}
-            >
-              {loading ? "Redirecting…" : "Send Gift 🎁"}
-            </button>
+              <p className="text-center text-[11px] text-white/70">Secure checkout powered by Stripe</p>
 
-            <p className="text-center text-[11px] text-white/70">Secure checkout powered by Stripe</p>
+              <div className="mt-auto flex flex-col items-center gap-3">
+                <div className="w-[220px] h-[220px] bg-white rounded-2xl p-3 border border-black/20 shadow-xl flex items-center justify-center">
+                  {pageUrl ? (
+                    <QRCode value={pageUrl} size={190} bgColor="#ffffff" fgColor="#000000" />
+                  ) : (
+                    <span className="text-black/70 text-xs">QR unavailable</span>
+                  )}
+                </div>
 
-            <div className="mt-auto flex flex-col items-center gap-3">
-              <div className="w-[220px] h-[220px] bg-white rounded-2xl p-3 border border-black/20 shadow-xl flex items-center justify-center">
-                {pageUrl ? (
-                  <QRCode value={pageUrl} size={190} bgColor="#ffffff" fgColor="#000000" />
-                ) : (
-                  <span className="text-black/70 text-xs">QR unavailable</span>
-                )}
+                <p className="text-xs text-white/80">Scan to support me</p>
+                <p className="text-[11px] text-white/50 tracking-wide">Powered by EverPay</p>
+              </div>
+            </section>
+          </div>
+
+          {/* RIGHT column */}
+          <div className="space-y-6">
+            {/* Prize Pool (mandatory) */}
+            <section className="bg-black/25 rounded-3xl border border-white/20 backdrop-blur-xl p-6 sm:p-8 shadow-2xl">
+              <div className="flex items-start justify-between gap-4">
+                <div>
+                  <h3 className="text-lg sm:text-xl font-semibold">🏆 Monthly Prize Pool</h3>
+                  <p className="text-sm text-white/80 mt-2">
+                    A small EverPay fee from each gift helps fund a monthly cash prize pool for supporters.
+                  </p>
+                  <ul className="mt-3 space-y-1 text-sm text-white/80">
+                    <li>• More gifts = bigger prizes</li>
+                    <li>• Winners picked every month</li>
+                    <li>• Creators aren’t charged for the prize pool</li>
+                  </ul>
+                </div>
+
+                <div className="shrink-0 rounded-2xl bg-white/10 border border-white/20 px-4 py-3 text-center">
+                  <div className="text-[11px] uppercase tracking-[0.18em] text-white/70">This month</div>
+                  <div className="text-2xl font-bold mt-1">£TBD</div>
+                  <div className="text-[11px] text-white/60 mt-1">Live total soon</div>
+                </div>
               </div>
 
-              <p className="text-xs text-white/80">Scan to support me</p>
-              <p className="text-[11px] text-white/50 tracking-wide">Powered by EverPay</p>
-            </div>
-          </section>
+              <p className="text-[11px] text-white/60 mt-4">
+                Prize pool is funded by EverPay platform fees — not taken from creators.
+              </p>
+            </section>
 
-          {/* Recent Gifts */}
-          <section className="bg-black/25 rounded-3xl border border-white/20 backdrop-blur-xl p-6 sm:p-8 shadow-2xl flex flex-col h-[560px]">
-            <h2 className="text-lg sm:text-xl font-semibold mb-4 text-center">Recent Gifts 🎁</h2>
+            {/* Recent Gifts */}
+            <section className="bg-black/25 rounded-3xl border border-white/20 backdrop-blur-xl p-6 sm:p-8 shadow-2xl flex flex-col h-[560px]">
+              <h2 className="text-lg sm:text-xl font-semibold mb-4 text-center">Recent Gifts 🎁</h2>
 
-            {loadingPayments ? (
-              <p className="text-center text-white/70 text-sm">Loading…</p>
-            ) : payments.length === 0 ? (
-              <p className="text-center text-white/70 text-sm">No gifts yet — be the first! 🎁</p>
-            ) : (
-              <div className="space-y-3 overflow-y-auto pr-1">
-                {payments.map((p) => (
-                  <div
-                    key={p.id}
-                    className="bg-white/5 border border-white/15 rounded-xl px-4 py-3 text-sm flex justify-between gap-3 shadow-sm"
-                  >
-                    <div className="flex-1">
-                      <p className="font-semibold text-[13px] sm:text-sm">
-                        {p.anonymous ? "Anonymous" : p.gift_name?.length ? p.gift_name : "Someone"} gifted £
-                        {(p.amount / 100).toFixed(2)}
+              {loadingPayments ? (
+                <p className="text-center text-white/70 text-sm">Loading…</p>
+              ) : payments.length === 0 ? (
+                <p className="text-center text-white/70 text-sm">No gifts yet — be the first! 🎁</p>
+              ) : (
+                <div className="space-y-3 overflow-y-auto pr-1">
+                  {payments.map((p) => (
+                    <div
+                      key={p.id}
+                      className="bg-white/5 border border-white/15 rounded-xl px-4 py-3 text-sm flex justify-between gap-3 shadow-sm"
+                    >
+                      <div className="flex-1">
+                        <p className="font-semibold text-[13px] sm:text-sm">
+                          {p.anonymous ? "Anonymous" : p.gift_name?.length ? p.gift_name : "Someone"} gifted £
+                          {(p.amount / 100).toFixed(2)}
+                        </p>
+                        {p.gift_message && <p className="text-[11px] sm:text-xs opacity-80 mt-1 italic">“{p.gift_message}”</p>}
+                      </div>
+                      <p className="text-[10px] opacity-60 whitespace-nowrap mt-1">
+                        {new Date(p.created_at).toLocaleDateString()}
                       </p>
-                      {p.gift_message && (
-                        <p className="text-[11px] sm:text-xs opacity-80 mt-1 italic">“{p.gift_message}”</p>
-                      )}
                     </div>
-                    <p className="text-[10px] opacity-60 whitespace-nowrap mt-1">
-                      {new Date(p.created_at).toLocaleDateString()}
-                    </p>
-                  </div>
-                ))}
-              </div>
-            )}
-          </section>
+                  ))}
+                </div>
+              )}
+            </section>
+          </div>
         </div>
       </div>
     </div>
