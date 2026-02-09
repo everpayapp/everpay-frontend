@@ -372,7 +372,7 @@ export default function CreatorClient({ username: propUsername }: { username?: s
         </div>
       )}
 
-      <div className="w-full max-w-6xl space-y-8">
+      <div className="w-full max-w-6xl space-y-8 px-1 sm:px-0 overflow-x-hidden">
         {/* Header */}
         <section className="w-full bg-black/20 rounded-3xl border border-white/20 backdrop-blur-xl px-6 sm:px-10 py-6 sm:py-7 shadow-2xl flex items-center gap-5 sm:gap-8">
           <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full border-[5px] border-white/40 bg-white/10 flex items-center justify-center overflow-hidden shadow-xl">
@@ -523,7 +523,7 @@ export default function CreatorClient({ username: propUsername }: { username?: s
             </section>
 
             {/* Recent Gifts — fixed height on desktop, scrollable */}
-            <section className="bg-black/25 rounded-3xl border border-white/20 backdrop-blur-xl p-6 sm:p-8 shadow-2xl flex flex-col lg:h-[520px]">
+            <section className="bg-black/25 rounded-3xl border border-white/20 backdrop-blur-xl p-6 sm:p-8 shadow-2xl flex flex-col h-[360px] lg:h-[520px]">
               <h2 className="text-lg sm:text-xl font-semibold mb-4 text-center">Recent Gifts 🎁</h2>
 
               {loadingPayments ? (
@@ -531,7 +531,7 @@ export default function CreatorClient({ username: propUsername }: { username?: s
               ) : payments.length === 0 ? (
                 <p className="text-center text-white/70 text-sm">No gifts yet — be the first! 🎁</p>
               ) : (
-                <div className="space-y-3 overflow-y-auto pr-1 lg:max-h-[420px]">
+                <div className="flex-1 min-h-0 space-y-3 overflow-y-auto pr-1">
                   {payments.map((p) => (
                     <div
                       key={p.id}
