@@ -581,7 +581,7 @@ export default function CreatorClient({ username: propUsername }: { username?: s
 
           {/* RIGHT — Recent Gifts */}
           <section className="bg-black/25 rounded-3xl border border-white/20 backdrop-blur-xl p-5 sm:p-8 shadow-2xl flex flex-col h-auto max-h-[360px] lg:h-[520px] lg:max-h-none">
-            <div className="mb-4 flex items-center justify-between">
+            <div className="mb-4 flex items-center justify-start lg:justify-between">
               <h2 className="text-lg sm:text-xl font-semibold">Recent Gifts 🎁</h2>
             </div>
 
