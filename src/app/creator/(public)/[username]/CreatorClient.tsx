@@ -119,6 +119,9 @@ export default function CreatorClient({ username: propUsername }: { username?: s
   } | null>(null);
   const [showCelebration, setShowCelebration] = useState(false);
 
+  // ✅ Avatar modal
+  const [showAvatar, setShowAvatar] = useState(false);
+
   // Load creator profile (+ milestone)
   useEffect(() => {
     async function load() {
@@ -372,14 +375,31 @@ export default function CreatorClient({ username: propUsername }: { username?: s
         </div>
       )}
 
+      {/* Avatar fullscreen modal */}
+      {showAvatar && profile.avatar_url && (
+        <div
+          className="fixed inset-0 z-50 bg-black/90 flex items-center justify-center px-4"
+          onClick={() => setShowAvatar(false)}
+        >
+          <img
+            src={profile.avatar_url}
+            alt="Profile"
+            className="max-w-full max-h-full rounded-2xl shadow-2xl"
+          />
+        </div>
+      )}
+
       <div className="w-full max-w-6xl space-y-5 sm:space-y-8 px-1 sm:px-0 overflow-x-hidden">
         {/* Header + Prize Pool (desktop/right) */}
         <section className="w-full bg-black/20 rounded-3xl border border-white/20 backdrop-blur-xl px-5 sm:px-10 py-5 sm:py-7 shadow-2xl">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 sm:gap-8">
             {/* Left: avatar + name + socials */}
             <div className="flex items-center gap-4 sm:gap-8 min-w-0">
-              {/* ✅ FIXED AVATAR WRAPPER (no w-18, mobile-safe sizing) */}
-              <div className="w-14 h-14 sm:w-24 sm:h-24 rounded-full border-[4px] sm:border-[5px] border-white/40 bg-white/10 flex items-center justify-center overflow-hidden shadow-xl shrink-0">
+              <div
+                className="w-14 h-14 sm:w-24 sm:h-24 rounded-full border-[4px] sm:border-[5px] border-white/40 bg-white/10 flex items-center justify-center overflow-hidden shadow-xl shrink-0 cursor-pointer hover:opacity-90 transition"
+                onClick={() => profile.avatar_url && setShowAvatar(true)}
+                title="View profile image"
+              >
                 {profile.avatar_url ? (
                   <img
                     src={profile.avatar_url}
@@ -398,7 +418,7 @@ export default function CreatorClient({ username: propUsername }: { username?: s
                   {profile.profile_name || "EVER PAY"}
                 </h1>
 
-                {/* Mobile compact prize hint (doesn't take vertical space like the full card) */}
+                {/* ✅ Mobile prize pool pill ONLY (Option A) */}
                 <div className="sm:hidden mt-2">
                   <div className="inline-flex items-center gap-2 rounded-full bg-white/10 border border-white/15 px-3 py-1 text-[11px] text-white/85">
                     <span>🏆 Monthly Prize Pool</span>
@@ -544,7 +564,7 @@ export default function CreatorClient({ username: propUsername }: { username?: s
             </div>
           </section>
 
-          {/* RIGHT — Recent Gifts (on mobile this comes immediately after Send Gift) */}
+          {/* RIGHT — Recent Gifts */}
           <section className="bg-black/25 rounded-3xl border border-white/20 backdrop-blur-xl p-5 sm:p-8 shadow-2xl flex flex-col h-auto max-h-[360px] lg:h-[520px] lg:max-h-none">
             <div className="mb-4 flex items-center justify-between">
               <h2 className="text-lg sm:text-xl font-semibold">Recent Gifts 🎁</h2>
@@ -582,24 +602,7 @@ export default function CreatorClient({ username: propUsername }: { username?: s
           </section>
         </div>
 
-        {/* ✅ MOBILE: compact Prize Pool (moved down so it doesn't dominate) */}
-        <section className="sm:hidden bg-black/25 rounded-3xl border border-white/20 backdrop-blur-xl px-5 py-4 shadow-2xl">
-          <div className="flex items-start justify-between gap-4">
-            <div>
-              <p className="text-[11px] uppercase tracking-[0.18em] text-white/70">🏆 Monthly Prize Pool</p>
-              <p className="text-sm text-white/85 mt-2">
-                Supports a monthly cash prize for supporters (never taken from creators).
-              </p>
-            </div>
-            <div className="shrink-0 rounded-2xl bg-black/20 border border-white/15 px-4 py-3 text-center">
-              <div className="text-[11px] uppercase tracking-[0.18em] text-white/70">This month</div>
-              <div className="text-2xl font-bold mt-1">£TBD</div>
-              <div className="text-[11px] text-white/60 mt-1">Live total soon</div>
-            </div>
-          </div>
-        </section>
-
-        {/* ✅ MOBILE: QR moved lower + smaller so it doesn't dominate */}
+        {/* ✅ MOBILE QR (kept lower, optional) */}
         <section className="lg:hidden bg-black/25 rounded-3xl border border-white/20 backdrop-blur-xl px-5 py-4 shadow-2xl">
           <div className="mb-3 flex items-center justify-between">
             <h2 className="text-base font-semibold text-white">Scan to gift</h2>
@@ -621,4 +624,3 @@ export default function CreatorClient({ username: propUsername }: { username?: s
     </div>
   );
 }
-
