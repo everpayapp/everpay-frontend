@@ -378,11 +378,18 @@ export default function CreatorClient({ username: propUsername }: { username?: s
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 sm:gap-8">
             {/* Left: avatar + name + socials */}
             <div className="flex items-center gap-4 sm:gap-8 min-w-0">
-              <div className="w-18 h-18 sm:w-24 sm:h-24 rounded-full border-[5px] border-white/40 bg-white/10 flex items-center justify-center overflow-hidden shadow-xl shrink-0">
+              {/* ✅ FIXED AVATAR WRAPPER (no w-18, mobile-safe sizing) */}
+              <div className="w-14 h-14 sm:w-24 sm:h-24 rounded-full border-[4px] sm:border-[5px] border-white/40 bg-white/10 flex items-center justify-center overflow-hidden shadow-xl shrink-0">
                 {profile.avatar_url ? (
-                  <img src={profile.avatar_url} alt="Avatar" className="w-full h-full object-cover" />
+                  <img
+                    src={profile.avatar_url}
+                    alt="Avatar"
+                    className="w-full h-full object-contain"
+                  />
                 ) : (
-                  <span className="text-xl sm:text-2xl font-bold">{firstChar(profile.profile_name) || firstChar(username)}</span>
+                  <span className="text-xl sm:text-2xl font-bold">
+                    {firstChar(profile.profile_name) || firstChar(username)}
+                  </span>
                 )}
               </div>
 
@@ -580,7 +587,9 @@ export default function CreatorClient({ username: propUsername }: { username?: s
           <div className="flex items-start justify-between gap-4">
             <div>
               <p className="text-[11px] uppercase tracking-[0.18em] text-white/70">🏆 Monthly Prize Pool</p>
-              <p className="text-sm text-white/85 mt-2">Supports a monthly cash prize for supporters (never taken from creators).</p>
+              <p className="text-sm text-white/85 mt-2">
+                Supports a monthly cash prize for supporters (never taken from creators).
+              </p>
             </div>
             <div className="shrink-0 rounded-2xl bg-black/20 border border-white/15 px-4 py-3 text-center">
               <div className="text-[11px] uppercase tracking-[0.18em] text-white/70">This month</div>
