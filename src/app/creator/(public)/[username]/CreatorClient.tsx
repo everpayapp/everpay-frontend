@@ -358,7 +358,7 @@ export default function CreatorClient({ username: propUsername }: { username?: s
 
   return (
     <div
-      className="min-h-screen text-white flex justify-center px-4 py-10 transition-[background] duration-[600ms]"
+      className="min-h-screen text-white flex justify-center px-4 py-6 sm:py-10 transition-[background] duration-[600ms]"
       style={{
         background: `linear-gradient(to bottom right, ${bgStart}, ${bgMid}, ${bgEnd})`,
       }}
@@ -372,13 +372,13 @@ export default function CreatorClient({ username: propUsername }: { username?: s
         </div>
       )}
 
-      <div className="w-full max-w-6xl space-y-8 px-1 sm:px-0 overflow-x-hidden">
-        {/* Header + Prize Pool (right side) */}
-        <section className="w-full bg-black/20 rounded-3xl border border-white/20 backdrop-blur-xl px-6 sm:px-10 py-6 sm:py-7 shadow-2xl">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-5 sm:gap-8">
+      <div className="w-full max-w-6xl space-y-5 sm:space-y-8 px-1 sm:px-0 overflow-x-hidden">
+        {/* Header + Prize Pool (desktop/right) */}
+        <section className="w-full bg-black/20 rounded-3xl border border-white/20 backdrop-blur-xl px-5 sm:px-10 py-5 sm:py-7 shadow-2xl">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 sm:gap-8">
             {/* Left: avatar + name + socials */}
-            <div className="flex items-center gap-5 sm:gap-8 min-w-0">
-              <div className="w-20 h-20 sm:w-24 sm:h-24 rounded-full border-[5px] border-white/40 bg-white/10 flex items-center justify-center overflow-hidden shadow-xl shrink-0">
+            <div className="flex items-center gap-4 sm:gap-8 min-w-0">
+              <div className="w-18 h-18 sm:w-24 sm:h-24 rounded-full border-[5px] border-white/40 bg-white/10 flex items-center justify-center overflow-hidden shadow-xl shrink-0">
                 {profile.avatar_url ? (
                   <img src={profile.avatar_url} alt="Avatar" className="w-full h-full object-cover" />
                 ) : (
@@ -390,6 +390,15 @@ export default function CreatorClient({ username: propUsername }: { username?: s
                 <h1 className="text-2xl sm:text-3xl font-bold tracking-tight truncate">
                   {profile.profile_name || "EVER PAY"}
                 </h1>
+
+                {/* Mobile compact prize hint (doesn't take vertical space like the full card) */}
+                <div className="sm:hidden mt-2">
+                  <div className="inline-flex items-center gap-2 rounded-full bg-white/10 border border-white/15 px-3 py-1 text-[11px] text-white/85">
+                    <span>🏆 Monthly Prize Pool</span>
+                    <span className="opacity-70">•</span>
+                    <span className="font-semibold">£TBD</span>
+                  </div>
+                </div>
 
                 {Array.isArray(profile.social_links) && profile.social_links.length > 0 && (
                   <div className="mt-3 flex flex-wrap gap-2">
@@ -413,8 +422,8 @@ export default function CreatorClient({ username: propUsername }: { username?: s
               </div>
             </div>
 
-            {/* Right: Prize Pool (mandatory) */}
-            <div className="w-full sm:w-auto">
+            {/* Right: Prize Pool (FULL CARD – desktop/tablet only) */}
+            <div className="hidden sm:block w-full sm:w-auto">
               <div className="rounded-3xl bg-white/10 border border-white/20 backdrop-blur-xl px-5 py-4 sm:px-6 sm:py-5 shadow-xl">
                 <div className="flex items-start justify-between gap-4">
                   <div>
@@ -466,9 +475,9 @@ export default function CreatorClient({ username: propUsername }: { username?: s
         )}
 
         {/* Two-column layout (mobile stacks cleanly) */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 items-start">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 sm:gap-6 items-start">
           {/* LEFT — Send Gift */}
-          <section className="bg-black/25 rounded-3xl border border-white/20 backdrop-blur-xl p-6 sm:p-8 shadow-2xl flex flex-col">
+          <section className="bg-black/25 rounded-3xl border border-white/20 backdrop-blur-xl p-5 sm:p-8 shadow-2xl flex flex-col">
             <h2 className="text-lg sm:text-xl font-semibold mb-4 flex items-center gap-2">Send a Gift</h2>
 
             <div className="flex items-center gap-3 mb-4">
@@ -513,7 +522,8 @@ export default function CreatorClient({ username: propUsername }: { username?: s
 
             <p className="text-center text-[11px] text-white/70">Secure checkout powered by Stripe</p>
 
-            <div className="mt-6 flex flex-col items-center gap-3">
+            {/* ✅ Desktop QR stays here (keeps desktop identical) */}
+            <div className="mt-6 hidden lg:flex flex-col items-center gap-3">
               <div className="w-[220px] h-[220px] bg-white rounded-2xl p-3 border border-black/20 shadow-xl flex items-center justify-center">
                 {pageUrl ? (
                   <QRCode value={pageUrl} size={190} bgColor="#ffffff" fgColor="#000000" />
@@ -527,9 +537,12 @@ export default function CreatorClient({ username: propUsername }: { username?: s
             </div>
           </section>
 
-          {/* RIGHT — Recent Gifts */}
-          <section className="bg-black/25 rounded-3xl border border-white/20 backdrop-blur-xl p-6 sm:p-8 shadow-2xl flex flex-col h-[360px] lg:h-[520px]">
-            <h2 className="text-lg sm:text-xl font-semibold mb-4 text-center">Recent Gifts 🎁</h2>
+          {/* RIGHT — Recent Gifts (on mobile this comes immediately after Send Gift) */}
+          <section className="bg-black/25 rounded-3xl border border-white/20 backdrop-blur-xl p-5 sm:p-8 shadow-2xl flex flex-col h-auto max-h-[360px] lg:h-[520px] lg:max-h-none">
+            <div className="mb-4 flex items-center justify-between">
+              <h2 className="text-lg sm:text-xl font-semibold">Recent Gifts 🎁</h2>
+              <span className="text-[11px] text-white/60">Live</span>
+            </div>
 
             {loadingPayments ? (
               <p className="text-center text-white/70 text-sm">Loading…</p>
@@ -561,7 +574,42 @@ export default function CreatorClient({ username: propUsername }: { username?: s
             )}
           </section>
         </div>
+
+        {/* ✅ MOBILE: compact Prize Pool (moved down so it doesn't dominate) */}
+        <section className="sm:hidden bg-black/25 rounded-3xl border border-white/20 backdrop-blur-xl px-5 py-4 shadow-2xl">
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <p className="text-[11px] uppercase tracking-[0.18em] text-white/70">🏆 Monthly Prize Pool</p>
+              <p className="text-sm text-white/85 mt-2">Supports a monthly cash prize for supporters (never taken from creators).</p>
+            </div>
+            <div className="shrink-0 rounded-2xl bg-black/20 border border-white/15 px-4 py-3 text-center">
+              <div className="text-[11px] uppercase tracking-[0.18em] text-white/70">This month</div>
+              <div className="text-2xl font-bold mt-1">£TBD</div>
+              <div className="text-[11px] text-white/60 mt-1">Live total soon</div>
+            </div>
+          </div>
+        </section>
+
+        {/* ✅ MOBILE: QR moved lower + smaller so it doesn't dominate */}
+        <section className="lg:hidden bg-black/25 rounded-3xl border border-white/20 backdrop-blur-xl px-5 py-4 shadow-2xl">
+          <div className="mb-3 flex items-center justify-between">
+            <h2 className="text-base font-semibold text-white">Scan to gift</h2>
+            <span className="text-[11px] text-white/60">Optional</span>
+          </div>
+
+          <div className="mx-auto w-full max-w-[220px] bg-white rounded-2xl p-3 border border-black/20 shadow-xl flex items-center justify-center">
+            {pageUrl ? (
+              <QRCode value={pageUrl} size={170} bgColor="#ffffff" fgColor="#000000" />
+            ) : (
+              <span className="text-black/70 text-xs">QR unavailable</span>
+            )}
+          </div>
+
+          <p className="mt-3 text-center text-xs text-white/80">Scan to support me</p>
+          <p className="mt-1 text-center text-[11px] text-white/50 tracking-wide">Powered by EverPay</p>
+        </section>
       </div>
     </div>
   );
 }
+
