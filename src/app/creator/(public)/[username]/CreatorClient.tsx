@@ -82,9 +82,7 @@ export default function CreatorClient({ username: propUsername }: { username?: s
   const apiUrl = process.env.NEXT_PUBLIC_API_URL;
   const baseUrl = process.env.NEXT_PUBLIC_PUBLIC_BASE_URL;
 
-  // ✅ CRITICAL FIX:
-  // Sometimes production renders prop username as undefined.
-  // Always fall back to route params on the client.
+  // ✅ CRITICAL FIX: fallback to route params on client
   const params = useParams<{ username?: string | string[] }>();
   const routeUsernameRaw = params?.username;
   const routeUsername =
@@ -132,7 +130,6 @@ export default function CreatorClient({ username: propUsername }: { username?: s
         const res = await fetch(`${apiUrl}/api/creator/profile?username=${encodeURIComponent(username)}`);
         const data = await res.json().catch(() => ({} as any));
 
-        // keep old backend behavior: {} when not found
         if (!data || !data.username) {
           setProfile(null);
           return;
@@ -346,7 +343,6 @@ export default function CreatorClient({ username: propUsername }: { username?: s
   const milestoneProgress = milestoneTarget > 0 ? Math.min(1, totalEarned / milestoneTarget) : 0;
   const milestonePercent = Math.round(milestoneProgress * 100);
 
-  // If username missing entirely, show clear message (prevents loading EverPay/Lee by accident)
   if (!username) {
     return <div className="min-h-screen flex items-center justify-center text-white">Creator username missing in URL.</div>;
   }
@@ -381,11 +377,7 @@ export default function CreatorClient({ username: propUsername }: { username?: s
           className="fixed inset-0 z-50 bg-black/90 flex items-center justify-center px-4"
           onClick={() => setShowAvatar(false)}
         >
-          <img
-            src={profile.avatar_url}
-            alt="Profile"
-            className="max-w-full max-h-full rounded-2xl shadow-2xl"
-          />
+          <img src={profile.avatar_url} alt="Profile" className="max-w-full max-h-full rounded-2xl shadow-2xl" />
         </div>
       )}
 
@@ -401,31 +393,24 @@ export default function CreatorClient({ username: propUsername }: { username?: s
                 title="View profile image"
               >
                 {profile.avatar_url ? (
-                  <img
-                    src={profile.avatar_url}
-                    alt="Avatar"
-                    className="w-full h-full object-contain"
-                  />
+                  <img src={profile.avatar_url} alt="Avatar" className="w-full h-full object-contain" />
                 ) : (
-                  <span className="text-xl sm:text-2xl font-bold">
-                    {firstChar(profile.profile_name) || firstChar(username)}
-                  </span>
+                  <span className="text-xl sm:text-2xl font-bold">{firstChar(profile.profile_name) || firstChar(username)}</span>
                 )}
               </div>
 
-<div className="flex flex-col min-w-0">
-  <div className="flex items-center gap-2 min-w-0">
-    <h1 className="text-2xl sm:text-3xl font-bold tracking-tight truncate">
-      {profile.profile_name || "EVER PAY"}
-    </h1>
+              <div className="flex flex-col min-w-0">
+                <div className="flex items-center gap-2 min-w-0">
+                  <h1 className="text-2xl sm:text-3xl font-bold tracking-tight truncate">
+                    {profile.profile_name || "EVER PAY"}
+                  </h1>
 
-    <span className="inline-flex items-center gap-1 px-2 py-[2px] rounded-full bg-blue-500/20 border border-blue-400/40 text-[11px] text-blue-200 shrink-0">
-      ✔ Verified
-    </span>
-  </div>
+                  <span className="inline-flex items-center gap-1 px-2 py-[2px] rounded-full bg-blue-500/20 border border-blue-400/40 text-[11px] text-blue-200 shrink-0">
+                    ✔ Verified
+                  </span>
+                </div>
 
-
-                {/* ✅ Mobile prize pool pill ONLY (Option A) */}
+                {/* ✅ Mobile prize pill */}
                 <div className="sm:hidden mt-2">
                   <div className="inline-flex items-center gap-2 rounded-full bg-white/10 border border-white/15 px-3 py-1 text-[11px] text-white/85">
                     <span>🏆 Monthly Prize Pool</span>
@@ -434,24 +419,47 @@ export default function CreatorClient({ username: propUsername }: { username?: s
                   </div>
                 </div>
 
+                {/* ✅ Socials: mobile scroll row, desktop wrap */}
                 {Array.isArray(profile.social_links) && profile.social_links.length > 0 && (
-                  <div className="mt-3 flex flex-wrap gap-2">
-                    {profile.social_links.map((url) => {
-                      const meta = getSocialMeta(url);
-                      return (
-                        <a
-                          key={url}
-                          href={url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 border border-white/20 text-xs text-white/90 hover:bg-white/15 transition"
-                          title={url}
-                        >
-                          <span>{meta.label}</span>
-                        </a>
-                      );
-                    })}
-                  </div>
+                  <>
+                    <div className="sm:hidden mt-3 -mx-1 px-1 overflow-x-auto whitespace-nowrap">
+                      <div className="inline-flex gap-2">
+                        {profile.social_links.map((url) => {
+                          const meta = getSocialMeta(url);
+                          return (
+                            <a
+                              key={url}
+                              href={url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="shrink-0 inline-flex items-center px-3 py-1 rounded-full bg-white/10 border border-white/20 text-xs text-white/90 hover:bg-white/15 transition"
+                              title={url}
+                            >
+                              <span>{meta.label}</span>
+                            </a>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    <div className="hidden sm:flex mt-3 flex-wrap gap-2">
+                      {profile.social_links.map((url) => {
+                        const meta = getSocialMeta(url);
+                        return (
+                          <a
+                            key={url}
+                            href={url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 border border-white/20 text-xs text-white/90 hover:bg-white/15 transition"
+                            title={url}
+                          >
+                            <span>{meta.label}</span>
+                          </a>
+                        );
+                      })}
+                    </div>
+                  </>
                 )}
               </div>
             </div>
@@ -556,7 +564,7 @@ export default function CreatorClient({ username: propUsername }: { username?: s
 
             <p className="text-center text-[11px] text-white/70">Secure checkout powered by Stripe</p>
 
-            {/* ✅ Desktop QR stays here (keeps desktop identical) */}
+            {/* ✅ Desktop QR stays here */}
             <div className="mt-6 hidden lg:flex flex-col items-center gap-3">
               <div className="w-[220px] h-[220px] bg-white rounded-2xl p-3 border border-black/20 shadow-xl flex items-center justify-center">
                 {pageUrl ? (
@@ -593,9 +601,7 @@ export default function CreatorClient({ username: propUsername }: { username?: s
                         {p.anonymous ? "Anonymous" : p.gift_name?.length ? p.gift_name : "Someone"} gifted £
                         {(p.amount / 100).toFixed(2)}
                       </p>
-                      {p.gift_message && (
-                        <p className="text-[11px] sm:text-xs opacity-80 mt-1 italic">“{p.gift_message}”</p>
-                      )}
+                      {p.gift_message && <p className="text-[11px] sm:text-xs opacity-80 mt-1 italic">“{p.gift_message}”</p>}
                     </div>
 
                     <p className="text-[10px] opacity-60 whitespace-nowrap mt-1">
@@ -608,7 +614,7 @@ export default function CreatorClient({ username: propUsername }: { username?: s
           </section>
         </div>
 
-        {/* ✅ MOBILE QR (kept lower, optional) */}
+        {/* ✅ MOBILE QR */}
         <section className="lg:hidden bg-black/25 rounded-3xl border border-white/20 backdrop-blur-xl px-5 py-4 shadow-2xl">
           <div className="mb-3 flex items-center justify-between">
             <h2 className="text-base font-semibold text-white">Scan to gift</h2>
