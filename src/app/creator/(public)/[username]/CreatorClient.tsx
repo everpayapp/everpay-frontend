@@ -413,10 +413,17 @@ export default function CreatorClient({ username: propUsername }: { username?: s
                 )}
               </div>
 
-              <div className="flex flex-col min-w-0">
-                <h1 className="text-2xl sm:text-3xl font-bold tracking-tight truncate">
-                  {profile.profile_name || "EVER PAY"}
-                </h1>
+<div className="flex flex-col min-w-0">
+  <div className="flex items-center gap-2 min-w-0">
+    <h1 className="text-2xl sm:text-3xl font-bold tracking-tight truncate">
+      {profile.profile_name || "EVER PAY"}
+    </h1>
+
+    <span className="inline-flex items-center gap-1 px-2 py-[2px] rounded-full bg-blue-500/20 border border-blue-400/40 text-[11px] text-blue-200 shrink-0">
+      ✔ Verified
+    </span>
+  </div>
+
 
                 {/* ✅ Mobile prize pool pill ONLY (Option A) */}
                 <div className="sm:hidden mt-2">
