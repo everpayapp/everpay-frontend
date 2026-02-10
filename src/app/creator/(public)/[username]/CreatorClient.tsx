@@ -568,7 +568,6 @@ export default function CreatorClient({ username: propUsername }: { username?: s
           <section className="bg-black/25 rounded-3xl border border-white/20 backdrop-blur-xl p-5 sm:p-8 shadow-2xl flex flex-col h-auto max-h-[360px] lg:h-[520px] lg:max-h-none">
             <div className="mb-4 flex items-center justify-between">
               <h2 className="text-lg sm:text-xl font-semibold">Recent Gifts 🎁</h2>
-              <span className="text-[11px] text-white/60">Live</span>
             </div>
 
             {loadingPayments ? (
@@ -606,7 +605,6 @@ export default function CreatorClient({ username: propUsername }: { username?: s
         <section className="lg:hidden bg-black/25 rounded-3xl border border-white/20 backdrop-blur-xl px-5 py-4 shadow-2xl">
           <div className="mb-3 flex items-center justify-between">
             <h2 className="text-base font-semibold text-white">Scan to gift</h2>
-            <span className="text-[11px] text-white/60">Optional</span>
           </div>
 
           <div className="mx-auto w-full max-w-[220px] bg-white rounded-2xl p-3 border border-black/20 shadow-xl flex items-center justify-center">
