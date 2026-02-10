@@ -40,38 +40,55 @@ export default function NavBar() {
   const username = (session?.user as any)?.username ?? "creator";
 
   return (
-    <nav className="w-full flex justify-center items-center gap-8 py-6 border-b border-white/10 bg-black/30 backdrop-blur-xl">
-      <Link href="/creator/dashboard" className={linkClass("/creator/dashboard")}>
-        Dashboard
-      </Link>
+    <nav className="w-full border-b border-white/10 bg-black/30 backdrop-blur-xl">
+      {/* Scroll container */}
+      <div className="relative max-w-6xl mx-auto">
+        {/* subtle fade edges to hint scroll on mobile */}
+        <div className="pointer-events-none absolute inset-y-0 left-0 w-6 bg-gradient-to-r from-black/40 to-transparent" />
+        <div className="pointer-events-none absolute inset-y-0 right-0 w-6 bg-gradient-to-l from-black/40 to-transparent" />
 
-      <Link href="/creator/payments" className={linkClass("/creator/payments")}>
-        Payments
-      </Link>
-
-      <Link href="/creator/settings" className={linkClass("/creator/settings")}>
-        Settings
-      </Link>
-
-      {status === "authenticated" && (
-        <>
-          <span className="text-white/50 text-sm">
-            Logged in as <span className="text-white/80">@{username}</span>
-          </span>
-
-          <button
-            onClick={() =>
-              signOut({
-                callbackUrl: "/login",
-              })
-            }
-            className="text-white/60 hover:text-white transition"
+        <div className="flex items-center gap-6 sm:gap-8 py-4 sm:py-6 px-3 sm:px-0 overflow-x-auto whitespace-nowrap">
+          <Link
+            href="/creator/dashboard"
+            className={`shrink-0 ${linkClass("/creator/dashboard")}`}
           >
-            Logout
-          </button>
-        </>
-      )}
+            Dashboard
+          </Link>
+
+          <Link
+            href="/creator/payments"
+            className={`shrink-0 ${linkClass("/creator/payments")}`}
+          >
+            Payments
+          </Link>
+
+          <Link
+            href="/creator/settings"
+            className={`shrink-0 ${linkClass("/creator/settings")}`}
+          >
+            Settings
+          </Link>
+
+          {status === "authenticated" && (
+            <>
+              <span className="shrink-0 text-white/50 text-sm">
+                Logged in as <span className="text-white/80">@{username}</span>
+              </span>
+
+              <button
+                onClick={() =>
+                  signOut({
+                    callbackUrl: "/login",
+                  })
+                }
+                className="shrink-0 text-white/60 hover:text-white transition"
+              >
+                Logout
+              </button>
+            </>
+          )}
+        </div>
+      </div>
     </nav>
   );
 }
-

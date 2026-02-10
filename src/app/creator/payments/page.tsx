@@ -178,7 +178,7 @@ export default function CreatorPaymentsPage() {
       {/* SUMMARY / CONTROLS */}
       <div className="mb-8 bg-black/40 border border-white/10 rounded-2xl p-6">
         <div className="flex flex-col gap-4">
-          <div className="flex items-start justify-between gap-4">
+          <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
             <div>
               <p className="text-sm uppercase text-white/60 mb-1">Today</p>
               <p className="text-4xl font-bold">{formatGBP(todaysTotal)}</p>
@@ -285,12 +285,13 @@ export default function CreatorPaymentsPage() {
               className="bg-black/40 border border-white/10 rounded-xl p-4 flex justify-between gap-4"
             >
               <div className="min-w-0">
-                <div className="flex items-center gap-2">
-                  <p className="font-semibold">{formatGBP(p.amount / 100)}</p>
-                  <span className="text-[11px] px-2 py-0.5 rounded-full bg-white/10 border border-white/10 text-white/70">
-                    Completed
-                  </span>
-                </div>
+<div className="flex items-center justify-between gap-2">
+  <p className="font-semibold">{formatGBP(p.amount / 100)}</p>
+
+  <span className="shrink-0 text-[11px] px-2 py-0.5 rounded-full bg-white/10 border border-white/10 text-white/70">
+    Completed
+  </span>
+</div>
 
                 <p className="text-xs text-white/70 truncate">
                   {p.anonymous ? "Anonymous" : p.gift_name || "Someone"}
