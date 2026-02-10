@@ -65,9 +65,7 @@ export default function CreatorPaymentsPage() {
 
     async function load() {
       try {
-        const res = await fetch(
-          `${API_URL}/api/payments/${encodeURIComponent(username)}`
-        );
+        const res = await fetch(`${API_URL}/api/payments/${encodeURIComponent(username)}`);
         const data = await res.json();
         if (!mountedRef.current) return;
         setPayments(Array.isArray(data) ? data : []);
@@ -167,8 +165,14 @@ export default function CreatorPaymentsPage() {
     window.URL.revokeObjectURL(url);
   };
 
+  const chipBase =
+    "shrink-0 px-3 py-1.5 rounded-lg text-xs border transition";
+  const chipOn = "bg-white/10 border-white/20";
+  const chipOff =
+    "bg-transparent border-white/10 text-white/70 hover:text-white";
+
   return (
-    <main className="max-w-4xl mx-auto mt-10 text-white">
+    <main className="max-w-4xl mx-auto mt-6 sm:mt-10 px-3 sm:px-0 text-white">
       <h1 className="text-2xl font-semibold mb-6">Creator Payments</h1>
 
       {/* SUMMARY / CONTROLS */}
@@ -180,44 +184,29 @@ export default function CreatorPaymentsPage() {
               <p className="text-4xl font-bold">{formatGBP(todaysTotal)}</p>
             </div>
 
-            <div className="flex gap-2">
+            {/* ✅ Mobile: scrollable filter chips (no wrap/squash) */}
+            <div className="flex items-center gap-2 overflow-x-auto whitespace-nowrap -mx-2 px-2 pb-1">
               <button
                 onClick={() => setRange("today")}
-                className={`px-3 py-1.5 rounded-lg text-xs border ${
-                  range === "today"
-                    ? "bg-white/10 border-white/20"
-                    : "bg-transparent border-white/10 text-white/70 hover:text-white"
-                }`}
+                className={`${chipBase} ${range === "today" ? chipOn : chipOff}`}
               >
                 Today
               </button>
               <button
                 onClick={() => setRange("7d")}
-                className={`px-3 py-1.5 rounded-lg text-xs border ${
-                  range === "7d"
-                    ? "bg-white/10 border-white/20"
-                    : "bg-transparent border-white/10 text-white/70 hover:text-white"
-                }`}
+                className={`${chipBase} ${range === "7d" ? chipOn : chipOff}`}
               >
                 7 Days
               </button>
               <button
                 onClick={() => setRange("30d")}
-                className={`px-3 py-1.5 rounded-lg text-xs border ${
-                  range === "30d"
-                    ? "bg-white/10 border-white/20"
-                    : "bg-transparent border-white/10 text-white/70 hover:text-white"
-                }`}
+                className={`${chipBase} ${range === "30d" ? chipOn : chipOff}`}
               >
                 30 Days
               </button>
               <button
                 onClick={() => setRange("all")}
-                className={`px-3 py-1.5 rounded-lg text-xs border ${
-                  range === "all"
-                    ? "bg-white/10 border-white/20"
-                    : "bg-transparent border-white/10 text-white/70 hover:text-white"
-                }`}
+                className={`${chipBase} ${range === "all" ? chipOn : chipOff}`}
               >
                 All
               </button>
@@ -255,10 +244,11 @@ export default function CreatorPaymentsPage() {
               className="w-full sm:flex-1 bg-black/30 border border-white/10 rounded-xl px-4 py-2 text-sm text-white placeholder:text-white/40 outline-none"
             />
 
-            <div className="flex gap-2">
+            {/* ✅ Mobile: actions scroll instead of wrap */}
+            <div className="flex items-center gap-2 overflow-x-auto whitespace-nowrap -mx-2 px-2 pb-1 sm:overflow-visible sm:whitespace-normal sm:mx-0 sm:px-0 sm:pb-0">
               <button
                 onClick={() => setAnonymousOnly((v) => !v)}
-                className={`px-3 py-2 rounded-xl text-xs border ${
+                className={`shrink-0 px-3 py-2 rounded-xl text-xs border ${
                   anonymousOnly
                     ? "bg-white/10 border-white/20"
                     : "bg-black/30 border-white/10 text-white/70 hover:text-white"
@@ -269,7 +259,7 @@ export default function CreatorPaymentsPage() {
 
               <button
                 onClick={exportCSV}
-                className="px-3 py-2 rounded-xl text-xs bg-gradient-to-r from-cyan-400 to-emerald-400 text-black font-semibold"
+                className="shrink-0 px-3 py-2 rounded-xl text-xs bg-gradient-to-r from-cyan-400 to-emerald-400 text-black font-semibold"
               >
                 Export CSV
               </button>
@@ -318,4 +308,3 @@ export default function CreatorPaymentsPage() {
     </main>
   );
 }
-
