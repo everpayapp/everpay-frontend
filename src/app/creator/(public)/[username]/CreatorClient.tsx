@@ -117,7 +117,7 @@ export default function CreatorClient({ username: propUsername }: { username?: s
   } | null>(null);
   const [showCelebration, setShowCelebration] = useState(false);
 
-  // ✅ Avatar modal
+  // ✅ Profile picture modal (kept as showAvatar internally, but UI says "profile picture")
   const [showAvatar, setShowAvatar] = useState(false);
 
   // Load creator profile (+ milestone)
@@ -371,13 +371,13 @@ export default function CreatorClient({ username: propUsername }: { username?: s
         </div>
       )}
 
-      {/* Avatar fullscreen modal */}
+      {/* Profile picture fullscreen modal */}
       {showAvatar && profile.avatar_url && (
         <div
           className="fixed inset-0 z-50 bg-black/90 flex items-center justify-center px-4"
           onClick={() => setShowAvatar(false)}
         >
-          <img src={profile.avatar_url} alt="Profile" className="max-w-full max-h-full rounded-2xl shadow-2xl" />
+          <img src={profile.avatar_url} alt="Profile picture" className="max-w-full max-h-full rounded-2xl shadow-2xl" />
         </div>
       )}
 
@@ -385,17 +385,19 @@ export default function CreatorClient({ username: propUsername }: { username?: s
         {/* Header + Prize Pool (desktop/right) */}
         <section className="w-full bg-black/20 rounded-3xl border border-white/20 backdrop-blur-xl px-5 sm:px-10 py-5 sm:py-7 shadow-2xl">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 sm:gap-8">
-            {/* Left: avatar + name + socials */}
+            {/* Left: profile picture + name + socials */}
             <div className="flex items-center gap-4 sm:gap-8 min-w-0">
               <div
                 className="w-14 h-14 sm:w-24 sm:h-24 rounded-full border-[4px] sm:border-[5px] border-white/40 bg-white/10 flex items-center justify-center overflow-hidden shadow-xl shrink-0 cursor-pointer hover:opacity-90 transition"
                 onClick={() => profile.avatar_url && setShowAvatar(true)}
-                title="View profile image"
+                title="View profile picture"
               >
                 {profile.avatar_url ? (
-                  <img src={profile.avatar_url} alt="Avatar" className="w-full h-full object-contain" />
+                  <img src={profile.avatar_url} alt="Profile picture" className="w-full h-full object-contain" />
                 ) : (
-                  <span className="text-xl sm:text-2xl font-bold">{firstChar(profile.profile_name) || firstChar(username)}</span>
+                  <span className="text-xl sm:text-2xl font-bold">
+                    {firstChar(profile.profile_name) || firstChar(username)}
+                  </span>
                 )}
               </div>
 
@@ -470,9 +472,7 @@ export default function CreatorClient({ username: propUsername }: { username?: s
                 <div className="flex items-start justify-between gap-4">
                   <div>
                     <p className="text-[11px] uppercase tracking-[0.18em] text-white/70">🏆 Monthly Prize Pool</p>
-                    <p className="text-sm text-white/85 mt-2">
-                      The EverPay fee helps fund a monthly cash prize for supporters.
-                    </p>
+                    <p className="text-sm text-white/85 mt-2">The EverPay fee helps fund a monthly cash prize for supporters.</p>
                     <ul className="mt-3 space-y-1 text-sm text-white/80">
                       <li>• More gifts = bigger prizes</li>
                       <li>• Winners picked every month</li>
@@ -517,9 +517,9 @@ export default function CreatorClient({ username: propUsername }: { username?: s
         )}
 
         {/* Two-column layout (mobile stacks cleanly) */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 sm:gap-6 items-start">
-          {/* LEFT — Send Gift */}
-          <section className="bg-black/25 rounded-3xl border border-white/20 backdrop-blur-xl p-5 sm:p-8 shadow-2xl flex flex-col">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 sm:gap-6 items-start lg:items-stretch">
+          {/* LEFT — Send Gift (matches Recent Gifts height on desktop) */}
+          <section className="bg-black/25 rounded-3xl border border-white/20 backdrop-blur-xl p-5 sm:p-8 shadow-2xl flex flex-col min-h-0 h-auto max-h-[360px] lg:h-[640px] lg:max-h-none overflow-hidden">
             <h2 className="text-lg sm:text-xl font-semibold mb-4 flex items-center gap-2">Send a Gift</h2>
 
             <div className="flex items-center gap-3 mb-4">
@@ -546,7 +546,7 @@ export default function CreatorClient({ username: propUsername }: { username?: s
               value={message}
               onChange={(e) => setMessage(e.target.value.slice(0, 120))}
               placeholder="Leave a message (optional)"
-              className="w-full rounded-xl bg-white/10 border border-white/20 px-3 py-2 text-sm text-white placeholder-white/60 outline-none h-24 resize-none mb-4"
+              className="w-full rounded-xl bg-white/10 border border-white/20 px-3 py-2 text-sm text-white placeholder-white/60 outline-none h-24 resize-none mb-4 shrink-0"
             />
 
             <label className="flex items-center gap-2 text-xs sm:text-sm mb-4 cursor-pointer">
@@ -564,11 +564,11 @@ export default function CreatorClient({ username: propUsername }: { username?: s
 
             <p className="text-center text-[11px] text-white/70">Secure checkout powered by Stripe</p>
 
-            {/* ✅ Desktop QR stays here */}
-            <div className="mt-6 hidden lg:flex flex-col items-center gap-3">
-              <div className="w-[220px] h-[220px] bg-white rounded-2xl p-3 border border-black/20 shadow-xl flex items-center justify-center">
+            {/* ✅ Desktop QR stays here (slightly smaller so panel fits cleanly) */}
+            <div className="mt-auto pt-6 hidden lg:flex flex-col items-center gap-3">
+              <div className="w-[200px] h-[200px] bg-white rounded-2xl p-3 border border-black/20 shadow-xl flex items-center justify-center">
                 {pageUrl ? (
-                  <QRCode value={pageUrl} size={190} bgColor="#ffffff" fgColor="#000000" />
+                  <QRCode value={pageUrl} size={170} bgColor="#ffffff" fgColor="#000000" />
                 ) : (
                   <span className="text-black/70 text-xs">QR unavailable</span>
                 )}
@@ -579,8 +579,8 @@ export default function CreatorClient({ username: propUsername }: { username?: s
             </div>
           </section>
 
-          {/* RIGHT — Recent Gifts */}
-            <section className="bg-black/25 rounded-3xl border border-white/20 backdrop-blur-xl p-5 sm:p-8 shadow-2xl flex flex-col h-auto max-h-[360px] lg:h-full lg:min-h-[640px]">
+          {/* RIGHT — Recent Gifts (biggest + scrollable on desktop) */}
+          <section className="bg-black/25 rounded-3xl border border-white/20 backdrop-blur-xl p-5 sm:p-8 shadow-2xl flex flex-col min-h-0 h-auto max-h-[360px] lg:h-[640px] lg:max-h-none">
             <div className="mb-4 flex items-center justify-start lg:justify-between">
               <h2 className="text-lg sm:text-xl font-semibold">Recent Gifts 🎁</h2>
             </div>
@@ -601,7 +601,9 @@ export default function CreatorClient({ username: propUsername }: { username?: s
                         {p.anonymous ? "Anonymous" : p.gift_name?.length ? p.gift_name : "Someone"} gifted £
                         {(p.amount / 100).toFixed(2)}
                       </p>
-                      {p.gift_message && <p className="text-[11px] sm:text-xs opacity-80 mt-1 italic">“{p.gift_message}”</p>}
+                      {p.gift_message && (
+                        <p className="text-[11px] sm:text-xs opacity-80 mt-1 italic">“{p.gift_message}”</p>
+                      )}
                     </div>
 
                     <p className="text-[10px] opacity-60 whitespace-nowrap mt-1">
@@ -635,3 +637,4 @@ export default function CreatorClient({ username: propUsername }: { username?: s
     </div>
   );
 }
+
