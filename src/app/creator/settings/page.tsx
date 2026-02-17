@@ -44,7 +44,7 @@ export default function CreatorSettingsPage() {
   const [milestoneAmount, setMilestoneAmount] = useState("");
   const [milestoneText, setMilestoneText] = useState("");
 
-  // Avatar upload state
+  // Profile picture upload state
   const fileRef = useRef<HTMLInputElement | null>(null);
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
@@ -163,7 +163,7 @@ export default function CreatorSettingsPage() {
     });
 
     const data = await res.json().catch(() => ({} as any));
-    if (!res.ok) throw new Error(data?.error || "Failed to save avatar URL");
+    if (!res.ok) throw new Error(data?.error || "Failed to save profile picture URL");
   };
 
   const handleAvatarUpload = async () => {
@@ -194,7 +194,7 @@ export default function CreatorSettingsPage() {
       const data = await res.json().catch(() => ({} as any));
 
       if (!res.ok) {
-        throw new Error(data?.error || "Avatar upload failed");
+        throw new Error(data?.error || "Profile picture upload failed");
       }
 
       const newUrl = data?.avatar_url as string | undefined;
@@ -206,9 +206,9 @@ export default function CreatorSettingsPage() {
       setAvatarFile(null);
       if (fileRef.current) fileRef.current.value = "";
 
-      setSuccess("Avatar uploaded & saved ✅");
+      setSuccess("Profile picture uploaded & saved ✅");
     } catch (err: any) {
-      setUploadError(err?.message || "Avatar upload failed");
+      setUploadError(err?.message || "Profile picture upload failed");
     } finally {
       setUploadingAvatar(false);
     }
@@ -385,13 +385,13 @@ export default function CreatorSettingsPage() {
             />
           </div>
 
-          {/* Avatar Upload (Cloudinary) */}
+          {/* Profile Picture Upload (Cloudinary) */}
           <section className={`${SUBPANEL} p-4`}>
             <div className="flex items-start justify-between gap-4 flex-col sm:flex-row">
               <div className="space-y-1">
-                <div className="text-sm font-medium">Avatar</div>
+                <div className="text-sm font-medium">Profile Picture</div>
                 <div className="text-xs text-white/60">
-                  Upload an image (we auto-crop + optimize).
+                  Upload a profile picture (we auto-crop + optimize).
                 </div>
               </div>
 
@@ -426,7 +426,7 @@ export default function CreatorSettingsPage() {
                   <img
                     src={profile.avatar_url}
                     className="w-full h-full object-cover"
-                    alt="Avatar preview"
+                    alt="Profile picture preview"
                   />
                 ) : null}
               </div>
@@ -434,7 +434,7 @@ export default function CreatorSettingsPage() {
 
             <details className="mt-4">
               <summary className="text-xs font-medium text-white/60 cursor-pointer select-none">
-                Advanced · Avatar URL
+                Advanced · Profile Picture URL
               </summary>
 
               <div className="mt-2">
@@ -646,23 +646,22 @@ export default function CreatorSettingsPage() {
             </p>
           </section>
 
-{/* DANGER ZONE */}
-<div className="mt-10 bg-red-500/10 border border-red-500/25 rounded-2xl p-5">
-  <h3 className="text-lg font-semibold text-red-200">Danger zone</h3>
-  <p className="text-sm text-white/70 mt-1">
-    Deleting your account removes your creator profile and associated payment history.
-  </p>
+          {/* DANGER ZONE */}
+          <div className="mt-10 bg-red-500/10 border border-red-500/25 rounded-2xl p-5">
+            <h3 className="text-lg font-semibold text-red-200">Danger zone</h3>
+            <p className="text-sm text-white/70 mt-1">
+              Deleting your account removes your creator profile and associated payment history.
+            </p>
 
-  <div className="mt-4">
-    <a
-      href="/creator/delete-account"
-      className="inline-flex items-center justify-center px-4 py-2 rounded-xl bg-red-500 text-white font-semibold hover:bg-red-500/90 transition"
-    >
-      Delete account
-    </a>
-  </div>
-</div>
-
+            <div className="mt-4">
+              <a
+                href="/creator/delete-account"
+                className="inline-flex items-center justify-center px-4 py-2 rounded-xl bg-red-500 text-white font-semibold hover:bg-red-500/90 transition"
+              >
+                Delete account
+              </a>
+            </div>
+          </div>
 
           <button
             type="submit"
