@@ -110,6 +110,10 @@ export default function CreatorClient({ username: propUsername }: { username?: s
   const [profile, setProfile] = useState<CreatorProfile | null>(null);
   const [profileLoaded, setProfileLoaded] = useState(false);
 
+  // ✅ Prize pool (live monthly total)
+  const [prizePoolGbp, setPrizePoolGbp] = useState<number | null>(null);
+  const [loadingPrizePool, setLoadingPrizePool] = useState(true);
+
   const [celebration, setCelebration] = useState<{
     amount: number;
     name: string;
@@ -230,6 +234,28 @@ export default function CreatorClient({ username: propUsername }: { username?: s
     const interval = setInterval(loadPayments, 5000);
     return () => clearInterval(interval);
   }, [apiUrl, username]);
+
+  // Load prize pool (monthly live total)
+  useEffect(() => {
+    if (!apiUrl) return;
+
+    async function loadPrizePool() {
+      try {
+        const res = await fetch(`${apiUrl}/api/prize-pool`);
+        const data = await res.json().catch(() => ({} as any));
+        const gbp = Number(data?.prize_pool_gbp);
+        setPrizePoolGbp(Number.isFinite(gbp) ? gbp : null);
+      } catch {
+        setPrizePoolGbp(null);
+      } finally {
+        setLoadingPrizePool(false);
+      }
+    }
+
+    loadPrizePool();
+    const interval = setInterval(loadPrizePool, 15000);
+    return () => clearInterval(interval);
+  }, [apiUrl]);
 
   // Handle send gift
   async function handlePay() {
@@ -417,7 +443,9 @@ export default function CreatorClient({ username: propUsername }: { username?: s
                   <div className="inline-flex items-center gap-2 rounded-full bg-white/10 border border-white/15 px-3 py-1 text-[11px] text-white/85">
                     <span>🏆 Monthly Prize Pool</span>
                     <span className="opacity-70">•</span>
-                    <span className="font-semibold">£TBD</span>
+                    <span className="font-semibold">
+                      {loadingPrizePool ? "£…" : prizePoolGbp !== null ? `£${prizePoolGbp.toFixed(2)}` : "£0.00"}
+                    </span>
                   </div>
                 </div>
 
@@ -482,8 +510,10 @@ export default function CreatorClient({ username: propUsername }: { username?: s
 
                   <div className="shrink-0 rounded-2xl bg-black/20 border border-white/15 px-4 py-3 text-center">
                     <div className="text-[11px] uppercase tracking-[0.18em] text-white/70">This month</div>
-                    <div className="text-2xl font-bold mt-1">£TBD</div>
-                    <div className="text-[11px] text-white/60 mt-1">Live total soon</div>
+                    <div className="text-2xl font-bold mt-1">
+                      {loadingPrizePool ? "£…" : prizePoolGbp !== null ? `£${prizePoolGbp.toFixed(2)}` : "£0.00"}
+                    </div>
+                    <div className="text-[11px] text-white/60 mt-1">Live total</div>
                   </div>
                 </div>
               </div>
