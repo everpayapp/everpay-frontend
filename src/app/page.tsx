@@ -216,9 +216,19 @@ export default function HomePage() {
             <p className="mt-4 text-xs text-white/50">No monthly fees. No setup costs.</p>
           </div>
 
-          <footer className="mt-10 text-center text-xs text-white/40">
-            © {new Date().getFullYear()} EverPay. Powered by Stripe.
-          </footer>
+         <footer className="mt-10 text-center text-xs text-white/40">
+  <div className="flex flex-wrap items-center justify-center gap-3">
+    <span>© {new Date().getFullYear()} EverPay. Powered by Stripe.</span>
+    <span className="opacity-40">•</span>
+    <Link href="/terms" className="hover:text-white transition">
+      Terms
+    </Link>
+    <span className="opacity-40">•</span>
+    <Link href="/privacy" className="hover:text-white transition">
+      Privacy
+    </Link>
+  </div>
+</footer>
         </div>
       </section>
     </main>
