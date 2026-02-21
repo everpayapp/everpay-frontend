@@ -14,6 +14,12 @@ type Payment = {
   created_at: string;
 };
 
+type TopSupporter = {
+  name: string;
+  total_pence: number;
+  total_gbp: number;
+};
+
 type CreatorProfile = {
   username: string;
   profile_name: string;
@@ -107,12 +113,12 @@ export default function CreatorClient({ username: propUsername }: { username?: s
   const [payments, setPayments] = useState<Payment[]>([]);
   const [loadingPayments, setLoadingPayments] = useState(true);
 
+  // ✅ NEW: Top supporters (monthly leaderboard)
+  const [topSupporters, setTopSupporters] = useState<TopSupporter[]>([]);
+  const [loadingTopSupporters, setLoadingTopSupporters] = useState(true);
+
   const [profile, setProfile] = useState<CreatorProfile | null>(null);
   const [profileLoaded, setProfileLoaded] = useState(false);
-
-  // ✅ Prize pool (live monthly total)
-  const [prizePoolGbp, setPrizePoolGbp] = useState<number | null>(null);
-  const [loadingPrizePool, setLoadingPrizePool] = useState(true);
 
   const [celebration, setCelebration] = useState<{
     amount: number;
@@ -235,27 +241,28 @@ export default function CreatorClient({ username: propUsername }: { username?: s
     return () => clearInterval(interval);
   }, [apiUrl, username]);
 
-  // Load prize pool (monthly live total)
+  // ✅ NEW: Load top supporters (monthly leaderboard)
   useEffect(() => {
     if (!apiUrl) return;
+    if (!username) return;
 
-    async function loadPrizePool() {
+    async function loadTopSupporters() {
       try {
-        const res = await fetch(`${apiUrl}/api/prize-pool`);
+        const res = await fetch(`${apiUrl}/api/top-supporters/${encodeURIComponent(username)}?limit=4`);
         const data = await res.json().catch(() => ({} as any));
-        const gbp = Number(data?.prize_pool_gbp);
-        setPrizePoolGbp(Number.isFinite(gbp) ? gbp : null);
+        const list = Array.isArray(data?.top_supporters) ? data.top_supporters : [];
+        setTopSupporters(list);
       } catch {
-        setPrizePoolGbp(null);
+        setTopSupporters([]);
       } finally {
-        setLoadingPrizePool(false);
+        setLoadingTopSupporters(false);
       }
     }
 
-    loadPrizePool();
-    const interval = setInterval(loadPrizePool, 15000);
+    loadTopSupporters();
+    const interval = setInterval(loadTopSupporters, 15000);
     return () => clearInterval(interval);
-  }, [apiUrl]);
+  }, [apiUrl, username]);
 
   // Handle send gift
   async function handlePay() {
@@ -443,9 +450,7 @@ export default function CreatorClient({ username: propUsername }: { username?: s
                   <div className="inline-flex items-center gap-2 rounded-full bg-white/10 border border-white/15 px-3 py-1 text-[11px] text-white/85">
                     <span>🏆 Monthly Prize Pool</span>
                     <span className="opacity-70">•</span>
-                    <span className="font-semibold">
-                      {loadingPrizePool ? "£…" : prizePoolGbp !== null ? `£${prizePoolGbp.toFixed(2)}` : "£0.00"}
-                    </span>
+                    <span className="font-semibold">£TBD</span>
                   </div>
                 </div>
 
@@ -510,10 +515,8 @@ export default function CreatorClient({ username: propUsername }: { username?: s
 
                   <div className="shrink-0 rounded-2xl bg-black/20 border border-white/15 px-4 py-3 text-center">
                     <div className="text-[11px] uppercase tracking-[0.18em] text-white/70">This month</div>
-                    <div className="text-2xl font-bold mt-1">
-                      {loadingPrizePool ? "£…" : prizePoolGbp !== null ? `£${prizePoolGbp.toFixed(2)}` : "£0.00"}
-                    </div>
-                    <div className="text-[11px] text-white/60 mt-1">Live total</div>
+                    <div className="text-2xl font-bold mt-1">£TBD</div>
+                    <div className="text-[11px] text-white/60 mt-1">Live total soon</div>
                   </div>
                 </div>
               </div>
@@ -615,6 +618,46 @@ export default function CreatorClient({ username: propUsername }: { username?: s
               <h2 className="text-lg sm:text-xl font-semibold">Recent Gifts 🎁</h2>
             </div>
 
+            {/* ✅ Top Supporters (ABOVE the gifts list, inside right panel) */}
+            <div className="mb-4 rounded-2xl bg-white/5 border border-white/15 p-4">
+              <div className="flex items-center justify-between gap-3">
+                <div className="font-semibold text-sm sm:text-base">Top Supporters 🏆</div>
+                <div className="text-[11px] text-white/60">This month</div>
+              </div>
+
+              {loadingTopSupporters ? (
+                <p className="mt-3 text-white/70 text-sm">Loading…</p>
+              ) : topSupporters.length === 0 ? (
+                <p className="mt-3 text-white/70 text-sm">No top supporters yet — be the first 🎁</p>
+              ) : (
+                <div className="mt-3 space-y-2">
+                  {topSupporters.map((s, idx) => (
+                    <div
+                      key={`${s.name}-${idx}`}
+                      className="bg-white/5 border border-white/15 rounded-xl px-3 py-2 flex items-center justify-between gap-3"
+                    >
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div className="w-7 h-7 rounded-full bg-white/10 border border-white/15 flex items-center justify-center text-xs font-semibold shrink-0">
+                          {idx + 1}
+                        </div>
+                        <div className="min-w-0">
+                          <div className="font-semibold text-sm truncate">{s.name || "Someone"}</div>
+                        </div>
+                      </div>
+
+                      <div className="shrink-0 text-sm font-semibold">
+                        £{Number(s.total_gbp || 0).toFixed(2)}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              <p className="mt-3 text-[11px] text-white/60">
+                More gifts = bigger prize pool 🏆
+              </p>
+            </div>
+
             {loadingPayments ? (
               <p className="text-center text-white/70 text-sm">Loading…</p>
             ) : payments.length === 0 ? (
@@ -667,4 +710,3 @@ export default function CreatorClient({ username: propUsername }: { username?: s
     </div>
   );
 }
-
