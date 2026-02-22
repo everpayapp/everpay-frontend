@@ -360,6 +360,35 @@ export default function CreatorClient({ username: propUsername }: { username?: s
 
   const totalEarned = payments.reduce((sum, p) => sum + p.amount, 0) / 100;
 
+  // ✅ Top Supporters (from payments)
+  const topSupporters = (() => {
+    if (!Array.isArray(payments) || payments.length === 0) return [];
+
+    const map = new Map<string, { name: string; totalPence: number; gifts: number }>();
+
+    for (const p of payments) {
+      // ignore anonymous gifts for top supporters (privacy-safe)
+      if (p.anonymous) continue;
+
+      const rawName = (p.gift_name || "").trim();
+      if (!rawName) continue;
+
+      const key = rawName.toLowerCase();
+      const prev = map.get(key);
+
+      if (prev) {
+        prev.totalPence += p.amount || 0;
+        prev.gifts += 1;
+      } else {
+        map.set(key, { name: rawName, totalPence: p.amount || 0, gifts: 1 });
+      }
+    }
+
+    return Array.from(map.values())
+      .sort((a, b) => b.totalPence - a.totalPence)
+      .slice(0, 5);
+  })();
+
   const milestoneEnabled =
     profile &&
     (profile.milestone_enabled === 1 || profile.milestone_enabled === true) &&
@@ -611,6 +640,31 @@ export default function CreatorClient({ username: propUsername }: { username?: s
 
           {/* RIGHT — Recent Gifts (biggest + scrollable on desktop) */}
           <section className="bg-black/25 rounded-3xl border border-white/20 backdrop-blur-xl p-5 sm:p-8 shadow-2xl flex flex-col min-h-0 h-auto max-h-[360px] lg:h-[640px] lg:max-h-none">
+            {/* ✅ Top Supporters */}
+            {!loadingPayments && topSupporters.length > 0 && (
+              <div className="mb-4 rounded-2xl bg-white/5 border border-white/15 p-4">
+                <p className="text-[11px] uppercase tracking-[0.18em] text-white/70 mb-3">Top Supporters</p>
+
+                <div className="space-y-2">
+                  {topSupporters.map((s, idx) => (
+                    <div
+                      key={`${s.name}-${idx}`}
+                      className="flex items-center justify-between gap-3 rounded-xl bg-white/5 border border-white/10 px-3 py-2"
+                    >
+                      <div className="min-w-0">
+                        <p className="text-sm font-semibold truncate">{s.name}</p>
+                        <p className="text-[11px] text-white/60">
+                          {s.gifts} gift{s.gifts === 1 ? "" : "s"}
+                        </p>
+                      </div>
+
+                      <div className="shrink-0 text-sm font-semibold">£{(s.totalPence / 100).toFixed(2)}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
             <div className="mb-4 flex items-center justify-start lg:justify-between">
               <h2 className="text-lg sm:text-xl font-semibold">Recent Gifts 🎁</h2>
             </div>
