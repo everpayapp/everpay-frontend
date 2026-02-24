@@ -1,7 +1,7 @@
 // ~/everpay-frontend/src/app/creator/(public)/[username]/CreatorClient.tsx
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useParams } from "next/navigation";
 import QRCode from "react-qr-code";
 
@@ -78,6 +78,25 @@ function firstChar(s: string) {
   return t.length ? t[0] : "?";
 }
 
+function formatGBP(pence: number) {
+  const v = Number(pence || 0) / 100;
+  return `£${v.toFixed(2)}`;
+}
+
+// TikTok-ish verified badge (subtle)
+function VerifiedBadge() {
+  return (
+    <span className="inline-flex items-center gap-1.5 text-[12px] text-white/80 shrink-0">
+      <span className="inline-flex items-center justify-center w-[18px] h-[18px] rounded-full bg-[#1d9bf0] shadow-sm">
+        <svg viewBox="0 0 24 24" width="12" height="12" aria-hidden="true" className="fill-white">
+          <path d="M9.0 16.2 4.8 12l1.4-1.4L9 13.4l8.8-8.8L19.2 6z" />
+        </svg>
+      </span>
+      <span className="font-medium">Verified</span>
+    </span>
+  );
+}
+
 export default function CreatorClient({ username: propUsername }: { username?: string }) {
   const apiUrl = process.env.NEXT_PUBLIC_API_URL;
   const baseUrl = process.env.NEXT_PUBLIC_PUBLIC_BASE_URL;
@@ -121,7 +140,7 @@ export default function CreatorClient({ username: propUsername }: { username?: s
   } | null>(null);
   const [showCelebration, setShowCelebration] = useState(false);
 
-  // ✅ Profile picture modal (kept as showAvatar internally, but UI says "profile picture")
+  // ✅ Profile picture modal
   const [showAvatar, setShowAvatar] = useState(false);
 
   // Load creator profile (+ milestone)
@@ -335,7 +354,7 @@ export default function CreatorClient({ username: propUsername }: { username?: s
     }
 
     const displayName = latest.anonymous
-      ? "Someone"
+      ? "Anonymous"
       : latest.gift_name && latest.gift_name.trim().length
       ? latest.gift_name
       : "Someone";
@@ -358,36 +377,37 @@ export default function CreatorClient({ username: propUsername }: { username?: s
   const bgMid = profile?.theme_mid;
   const bgEnd = profile?.theme_end;
 
-  const totalEarned = payments.reduce((sum, p) => sum + p.amount, 0) / 100;
+  const totalEarned = payments.reduce((sum, p) => sum + (p.amount || 0), 0) / 100;
 
-  // ✅ Top Supporters (from payments)
-  const topSupporters = (() => {
+  // ✅ Top Supporters (includes Someone + Anonymous) — top 4
+  const topSupporters = useMemo(() => {
     if (!Array.isArray(payments) || payments.length === 0) return [];
 
-    const map = new Map<string, { name: string; totalPence: number; gifts: number }>();
+    const map = new Map<string, { label: string; totalPence: number; gifts: number }>();
 
     for (const p of payments) {
-      // ignore anonymous gifts for top supporters (privacy-safe)
-      if (p.anonymous) continue;
-
+      const isAnon = !!p.anonymous;
       const rawName = (p.gift_name || "").trim();
-      if (!rawName) continue;
 
-      const key = rawName.toLowerCase();
+      let label = "Someone";
+      if (isAnon) label = "Anonymous";
+      else if (rawName) label = rawName;
+
+      const key = isAnon ? "__anonymous__" : rawName ? rawName.toLowerCase() : "__someone__";
+
       const prev = map.get(key);
-
       if (prev) {
         prev.totalPence += p.amount || 0;
         prev.gifts += 1;
       } else {
-        map.set(key, { name: rawName, totalPence: p.amount || 0, gifts: 1 });
+        map.set(key, { label, totalPence: p.amount || 0, gifts: 1 });
       }
     }
 
     return Array.from(map.values())
       .sort((a, b) => b.totalPence - a.totalPence)
-      .slice(0, 5);
-  })();
+      .slice(0, 4);
+  }, [payments]);
 
   const milestoneEnabled =
     profile &&
@@ -417,30 +437,11 @@ export default function CreatorClient({ username: propUsername }: { username?: s
         background: `linear-gradient(to bottom right, ${bgStart}, ${bgMid}, ${bgEnd})`,
       }}
     >
-      {/* Celebration bubble overlay */}
-      {showCelebration && celebration && (
-        <div className="fixed inset-0 z-40 flex items-center justify-center pointer-events-none">
-          <div className="gift-celebration-bubble text-center">
-            <div className="text-2xl sm:text-3xl font-bold">Thank you 🎁</div>
-          </div>
-        </div>
-      )}
-
-      {/* Profile picture fullscreen modal */}
-      {showAvatar && profile.avatar_url && (
-        <div
-          className="fixed inset-0 z-50 bg-black/90 flex items-center justify-center px-4"
-          onClick={() => setShowAvatar(false)}
-        >
-          <img src={profile.avatar_url} alt="Profile picture" className="max-w-full max-h-full rounded-2xl shadow-2xl" />
-        </div>
-      )}
-
       <div className="w-full max-w-6xl space-y-5 sm:space-y-8 px-1 sm:px-0 overflow-x-hidden">
-        {/* Header + Prize Pool (desktop/right) */}
+        {/* Header + Prize Pool */}
         <section className="w-full bg-black/20 rounded-3xl border border-white/20 backdrop-blur-xl px-5 sm:px-10 py-5 sm:py-7 shadow-2xl">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 sm:gap-8">
-            {/* Left: profile picture + name + socials */}
+            {/* Left */}
             <div className="flex items-center gap-4 sm:gap-8 min-w-0">
               <div
                 className="w-14 h-14 sm:w-24 sm:h-24 rounded-full border-[4px] sm:border-[5px] border-white/40 bg-white/10 flex items-center justify-center overflow-hidden shadow-xl shrink-0 cursor-pointer hover:opacity-90 transition"
@@ -457,17 +458,14 @@ export default function CreatorClient({ username: propUsername }: { username?: s
               </div>
 
               <div className="flex flex-col min-w-0">
-                <div className="flex items-center gap-2 min-w-0">
+                <div className="flex items-center gap-3 min-w-0">
                   <h1 className="text-2xl sm:text-3xl font-bold tracking-tight truncate">
                     {profile.profile_name || "EVER PAY"}
                   </h1>
-
-                  <span className="inline-flex items-center gap-1 px-2 py-[2px] rounded-full bg-blue-500/20 border border-blue-400/40 text-[11px] text-blue-200 shrink-0">
-                    ✔ Verified
-                  </span>
+                  <VerifiedBadge />
                 </div>
 
-                {/* ✅ Mobile prize pill */}
+                {/* Mobile prize pill */}
                 <div className="sm:hidden mt-2">
                   <div className="inline-flex items-center gap-2 rounded-full bg-white/10 border border-white/15 px-3 py-1 text-[11px] text-white/85">
                     <span>🏆 Monthly Prize Pool</span>
@@ -478,7 +476,7 @@ export default function CreatorClient({ username: propUsername }: { username?: s
                   </div>
                 </div>
 
-                {/* ✅ Socials: mobile scroll row, desktop wrap */}
+                {/* Socials */}
                 {Array.isArray(profile.social_links) && profile.social_links.length > 0 && (
                   <>
                     <div className="sm:hidden mt-3 -mx-1 px-1 overflow-x-auto whitespace-nowrap">
@@ -523,13 +521,15 @@ export default function CreatorClient({ username: propUsername }: { username?: s
               </div>
             </div>
 
-            {/* Right: Prize Pool (FULL CARD – desktop/tablet only) */}
+            {/* Prize Pool (desktop/tablet) */}
             <div className="hidden sm:block w-full sm:w-auto">
               <div className="rounded-3xl bg-white/10 border border-white/20 backdrop-blur-xl px-5 py-4 sm:px-6 sm:py-5 shadow-xl">
                 <div className="flex items-start justify-between gap-4">
                   <div>
                     <p className="text-[11px] uppercase tracking-[0.18em] text-white/70">🏆 Monthly Prize Pool</p>
-                    <p className="text-sm text-white/85 mt-2">The EverPay fee helps fund a monthly cash prize for supporters.</p>
+                    <p className="text-sm text-white/85 mt-2">
+                      The EverPay fee helps fund a monthly cash prize for supporters.
+                    </p>
                     <ul className="mt-3 space-y-1 text-sm text-white/80">
                       <li>• More gifts = bigger prizes</li>
                       <li>• Winners picked every month</li>
@@ -575,10 +575,10 @@ export default function CreatorClient({ username: propUsername }: { username?: s
           </section>
         )}
 
-        {/* Two-column layout (mobile stacks cleanly) */}
+        {/* Two-column layout */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 sm:gap-6 items-start lg:items-stretch">
-          {/* LEFT — Send Gift (matches Recent Gifts height on desktop) */}
-          <section className="bg-black/25 rounded-3xl border border-white/20 backdrop-blur-xl p-5 sm:p-8 shadow-2xl flex flex-col min-h-0 h-auto max-h-[360px] lg:h-[640px] lg:max-h-none overflow-hidden">
+          {/* LEFT — Send Gift */}
+          <section className="bg-black/25 rounded-3xl border border-white/20 backdrop-blur-xl p-5 sm:p-8 shadow-2xl flex flex-col min-h-0 h-auto max-h-[360px] lg:h-[670px] lg:max-h-none overflow-hidden">
             <h2 className="text-lg sm:text-xl font-semibold mb-4 flex items-center gap-2">Send a Gift</h2>
 
             <div className="flex items-center gap-3 mb-4">
@@ -623,42 +623,51 @@ export default function CreatorClient({ username: propUsername }: { username?: s
 
             <p className="text-center text-[11px] text-white/70">Secure checkout powered by Stripe</p>
 
-            {/* ✅ Desktop QR stays here (slightly smaller so panel fits cleanly) */}
-            <div className="mt-auto pt-6 hidden lg:flex flex-col items-center gap-3">
-              <div className="w-[200px] h-[200px] bg-white rounded-2xl p-3 border border-black/20 shadow-xl flex items-center justify-center">
+            {/* ✅ Desktop QR — adjust to ALWAYS show "Powered by EverPay" */}
+            <div className="mt-auto pt-4 pb-2 hidden lg:flex flex-col items-center gap-2">
+              <div className="w-[190px] h-[190px] bg-white rounded-2xl p-3 border border-black/20 shadow-xl flex items-center justify-center">
                 {pageUrl ? (
-                  <QRCode value={pageUrl} size={170} bgColor="#ffffff" fgColor="#000000" />
+                  <QRCode value={pageUrl} size={160} bgColor="#ffffff" fgColor="#000000" />
                 ) : (
                   <span className="text-black/70 text-xs">QR unavailable</span>
                 )}
               </div>
 
               <p className="text-xs text-white/80">Scan to support me</p>
-              <p className="text-[11px] text-white/50 tracking-wide">Powered by EverPay</p>
+              <p className="text-[11px] text-white/65 tracking-wide">Powered by EverPay</p>
             </div>
           </section>
 
-          {/* RIGHT — Recent Gifts (biggest + scrollable on desktop) */}
-          <section className="bg-black/25 rounded-3xl border border-white/20 backdrop-blur-xl p-5 sm:p-8 shadow-2xl flex flex-col min-h-0 h-auto max-h-[360px] lg:h-[640px] lg:max-h-none">
+          {/* RIGHT — Top Supporters + Recent Gifts */}
+          <section className="bg-black/25 rounded-3xl border border-white/20 backdrop-blur-xl p-5 sm:p-8 shadow-2xl flex flex-col min-h-0 h-auto max-h-[360px] lg:h-[670px] lg:max-h-none">
             {/* ✅ Top Supporters */}
             {!loadingPayments && topSupporters.length > 0 && (
               <div className="mb-4 rounded-2xl bg-white/5 border border-white/15 p-4">
-                <p className="text-[11px] uppercase tracking-[0.18em] text-white/70 mb-3">Top Supporters</p>
+                <div className="flex items-center justify-between mb-3">
+                  <p className="text-[11px] uppercase tracking-[0.18em] text-white/70">Top Supporters</p>
+                  <p className="text-[11px] text-white/55">This month</p>
+                </div>
 
                 <div className="space-y-2">
                   {topSupporters.map((s, idx) => (
                     <div
-                      key={`${s.name}-${idx}`}
+                      key={`${s.label}-${idx}`}
                       className="flex items-center justify-between gap-3 rounded-xl bg-white/5 border border-white/10 px-3 py-2"
                     >
-                      <div className="min-w-0">
-                        <p className="text-sm font-semibold truncate">{s.name}</p>
-                        <p className="text-[11px] text-white/60">
-                          {s.gifts} gift{s.gifts === 1 ? "" : "s"}
-                        </p>
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div className="w-7 h-7 rounded-full bg-white/10 border border-white/15 flex items-center justify-center text-[12px] font-bold text-white/85 shrink-0">
+                          {idx + 1}
+                        </div>
+
+                        <div className="min-w-0">
+                          <p className="text-sm font-semibold truncate">{s.label}</p>
+                          <p className="text-[11px] text-white/60">
+                            {s.gifts} gift{s.gifts === 1 ? "" : "s"}
+                          </p>
+                        </div>
                       </div>
 
-                      <div className="shrink-0 text-sm font-semibold">£{(s.totalPence / 100).toFixed(2)}</div>
+                      <div className="shrink-0 text-sm font-semibold">{formatGBP(s.totalPence)}</div>
                     </div>
                   ))}
                 </div>
@@ -674,27 +683,34 @@ export default function CreatorClient({ username: propUsername }: { username?: s
             ) : payments.length === 0 ? (
               <p className="text-center text-white/70 text-sm">No gifts yet — be the first! 🎁</p>
             ) : (
-              <div className="flex-1 min-h-0 space-y-3 overflow-y-auto pr-1">
-                {payments.map((p) => (
-                  <div
-                    key={p.id}
-                    className="bg-white/5 border border-white/15 rounded-xl px-4 py-3 text-sm flex justify-between gap-3 shadow-sm"
-                  >
-                    <div className="flex-1">
-                      <p className="font-semibold text-[13px] sm:text-sm">
-                        {p.anonymous ? "Anonymous" : p.gift_name?.length ? p.gift_name : "Someone"} gifted £
-                        {(p.amount / 100).toFixed(2)}
-                      </p>
-                      {p.gift_message && (
-                        <p className="text-[11px] sm:text-xs opacity-80 mt-1 italic">“{p.gift_message}”</p>
-                      )}
-                    </div>
+              <div className="flex-1 min-h-0 space-y-3 overflow-y-auto pr-1 everpay-scroll">
+                {payments.map((p) => {
+                  const displayName = p.anonymous
+                    ? "Anonymous"
+                    : p.gift_name?.trim()
+                    ? p.gift_name!
+                    : "Someone";
 
-                    <p className="text-[10px] opacity-60 whitespace-nowrap mt-1">
-                      {new Date(p.created_at).toLocaleDateString()}
-                    </p>
-                  </div>
-                ))}
+                  return (
+                    <div
+                      key={p.id}
+                      className="bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-sm flex justify-between gap-3 shadow-sm"
+                    >
+                      <div className="flex-1">
+                        <p className="font-semibold text-[13px] sm:text-sm">
+                          {displayName} gifted {formatGBP(p.amount)}
+                        </p>
+                        {p.gift_message && (
+                          <p className="text-[11px] sm:text-xs opacity-80 mt-1 italic">“{p.gift_message}”</p>
+                        )}
+                      </div>
+
+                      <p className="text-[10px] opacity-60 whitespace-nowrap mt-1">
+                        {new Date(p.created_at).toLocaleDateString()}
+                      </p>
+                    </div>
+                  );
+                })}
               </div>
             )}
           </section>
@@ -715,8 +731,30 @@ export default function CreatorClient({ username: propUsername }: { username?: s
           </div>
 
           <p className="mt-3 text-center text-xs text-white/80">Scan to support me</p>
-          <p className="mt-1 text-center text-[11px] text-white/50 tracking-wide">Powered by EverPay</p>
+          <p className="mt-1 text-center text-[11px] text-white/65 tracking-wide">Powered by EverPay</p>
         </section>
+
+        {/* ✅ Local thin scrollbar styling (scoped) */}
+        <style jsx global>{`
+          .everpay-scroll {
+            scrollbar-width: thin; /* Firefox */
+            scrollbar-color: rgba(255, 255, 255, 0.22) rgba(255, 255, 255, 0.05);
+          }
+          .everpay-scroll::-webkit-scrollbar {
+            width: 5px;
+          }
+          .everpay-scroll::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 999px;
+          }
+          .everpay-scroll::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.22);
+            border-radius: 999px;
+          }
+          .everpay-scroll::-webkit-scrollbar-thumb:hover {
+            background: rgba(255, 255, 255, 0.32);
+          }
+        `}</style>
       </div>
     </div>
   );
