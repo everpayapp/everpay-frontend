@@ -1,7 +1,7 @@
 // ~/everpay-frontend/src/app/creator/(public)/[username]/CreatorClient.tsx
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useParams } from "next/navigation";
 import QRCode from "react-qr-code";
 
@@ -101,15 +101,11 @@ export default function CreatorClient({ username: propUsername }: { username?: s
   const apiUrl = process.env.NEXT_PUBLIC_API_URL;
   const baseUrl = process.env.NEXT_PUBLIC_PUBLIC_BASE_URL;
 
-  // ✅ CRITICAL FIX: fallback to route params on client
+  // fallback to route params on client
   const params = useParams<{ username?: string | string[] }>();
   const routeUsernameRaw = params?.username;
   const routeUsername =
-    typeof routeUsernameRaw === "string"
-      ? routeUsernameRaw
-      : Array.isArray(routeUsernameRaw)
-      ? routeUsernameRaw[0]
-      : "";
+    typeof routeUsernameRaw === "string" ? routeUsernameRaw : Array.isArray(routeUsernameRaw) ? routeUsernameRaw[0] : "";
 
   const username = String(propUsername || routeUsername || "").trim();
 
@@ -136,13 +132,13 @@ export default function CreatorClient({ username: propUsername }: { username?: s
   } | null>(null);
   const [showCelebration, setShowCelebration] = useState(false);
 
-  // ✅ Profile picture modal
+  // Profile picture modal
   const [showAvatar, setShowAvatar] = useState(false);
 
-  // ✅ Animated milestone percent (smooth climb)
+  // Animated milestone percent (smooth climb)
   const [displayMilestonePercent, setDisplayMilestonePercent] = useState(0);
 
-  // ✅ Mobile QR collapsible (default collapsed)
+  // Mobile QR collapsible (default collapsed)
   const [showMobileQR, setShowMobileQR] = useState(false);
 
   // Preset amounts (GBP) — no Custom
@@ -336,11 +332,7 @@ export default function CreatorClient({ username: propUsername }: { username?: s
       return;
     }
 
-    const displayName = latest.anonymous
-      ? "Anonymous"
-      : latest.gift_name && latest.gift_name.trim().length
-      ? latest.gift_name
-      : "Someone";
+    const displayName = latest.anonymous ? "Anonymous" : latest.gift_name && latest.gift_name.trim().length ? latest.gift_name : "Someone";
 
     setCelebration({
       amount: latest.amount,
@@ -362,7 +354,7 @@ export default function CreatorClient({ username: propUsername }: { username?: s
 
   const totalEarned = payments.reduce((sum, p) => sum + (p.amount || 0), 0) / 100;
 
-  // ✅ Top Supporters — top 4
+  // Top Supporters — top 4
   const topSupporters = useMemo(() => {
     if (!Array.isArray(payments) || payments.length === 0) return [];
 
@@ -401,7 +393,7 @@ export default function CreatorClient({ username: propUsername }: { username?: s
   const milestoneProgress = milestoneTarget > 0 ? Math.min(1, totalEarned / milestoneTarget) : 0;
   const milestonePercent = Math.round(milestoneProgress * 100);
 
-  // ✅ Animate milestone percent smoothly instead of jumping
+  // Animate milestone percent smoothly
   useEffect(() => {
     if (!milestoneEnabled) {
       setDisplayMilestonePercent(0);
@@ -436,6 +428,9 @@ export default function CreatorClient({ username: propUsername }: { username?: s
     background: `linear-gradient(90deg, ${bgStart}, ${bgMid}, ${bgEnd})`,
   };
 
+  // Premium panel styles (fix “double colour behind panels”)
+  const panelClass = "bg-black/45 backdrop-blur-md rounded-3xl border border-white/18 shadow-2xl";
+
   return (
     <div
       className="min-h-screen text-white flex justify-center px-4 py-6 sm:py-8 transition-[background] duration-[600ms]"
@@ -444,29 +439,25 @@ export default function CreatorClient({ username: propUsername }: { username?: s
       }}
     >
       <div className="w-full max-w-6xl space-y-4 sm:space-y-6 px-1 sm:px-0 overflow-x-hidden">
-        {/* Header (tighter) */}
-        <section className="w-full bg-black/30 rounded-3xl border border-white/20 backdrop-blur-xl px-5 sm:px-8 py-4 sm:py-6 shadow-2xl">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-6">
+        {/* Header */}
+        <section className={`w-full ${panelClass} px-5 sm:px-8 py-4 sm:py-6`}>
+          <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 sm:gap-6">
             <div className="flex items-center gap-4 sm:gap-6 min-w-0">
               <div
-                className="w-14 h-14 sm:w-20 sm:h-20 rounded-full border-[4px] border-white/40 bg-white/10 flex items-center justify-center overflow-hidden shadow-xl shrink-0 cursor-pointer hover:opacity-90 transition"
+                className="w-14 h-14 sm:w-20 sm:h-20 rounded-full border-[4px] border-white/35 bg-white/10 flex items-center justify-center overflow-hidden shadow-xl shrink-0 cursor-pointer hover:opacity-90 transition"
                 onClick={() => profile.avatar_url && setShowAvatar(true)}
                 title="View profile picture"
               >
                 {profile.avatar_url ? (
                   <img src={profile.avatar_url} alt="Profile picture" className="w-full h-full object-contain" />
                 ) : (
-                  <span className="text-xl sm:text-2xl font-bold">
-                    {firstChar(profile.profile_name) || firstChar(username)}
-                  </span>
+                  <span className="text-xl sm:text-2xl font-bold">{firstChar(profile.profile_name) || firstChar(username)}</span>
                 )}
               </div>
 
               <div className="flex flex-col min-w-0">
                 <div className="flex items-center gap-3 min-w-0">
-                  <h1 className="text-2xl sm:text-3xl font-bold tracking-tight truncate">
-                    {profile.profile_name || "EVER PAY"}
-                  </h1>
+                  <h1 className="text-2xl sm:text-3xl font-bold tracking-tight truncate">{profile.profile_name || username}</h1>
                   <VerifiedBadge />
                 </div>
 
@@ -512,14 +503,24 @@ export default function CreatorClient({ username: propUsername }: { username?: s
                     </div>
                   </>
                 )}
+
+                {/* Mobile brand (tiny, tucked away) */}
+                <div className="sm:hidden mt-3">
+                  <span className="text-[11px] text-white/55 tracking-wide">Powered by EverPay</span>
+                </div>
               </div>
+            </div>
+
+            {/* Desktop brand (top-right, subtle but readable) */}
+            <div className="hidden sm:flex items-start justify-end pt-1">
+              <span className="text-[12px] text-white/70 font-medium tracking-wide">Powered by EverPay</span>
             </div>
           </div>
         </section>
 
-        {/* Milestone bar (slightly higher contrast) */}
+        {/* Milestone bar */}
         {milestoneEnabled && (
-          <section className="bg-black/30 rounded-3xl border border-white/20 backdrop-blur-xl px-5 py-4 shadow-2xl">
+          <section className={`${panelClass} px-5 py-4`}>
             <p className="text-[11px] uppercase tracking-[0.18em] text-white/70 mb-1">Goal</p>
 
             {profile.milestone_text && <p className="text-sm font-semibold mb-1">{profile.milestone_text}</p>}
@@ -537,9 +538,7 @@ export default function CreatorClient({ username: propUsername }: { username?: s
             </div>
 
             <p className="mt-1 text-[11px] text-white/65">
-              {displayMilestonePercent >= 100
-                ? "Goal reached 🎉 — you smashed it!"
-                : `${displayMilestonePercent}% complete`}
+              {displayMilestonePercent >= 100 ? "Goal reached 🎉 — you smashed it!" : `${displayMilestonePercent}% complete`}
             </p>
           </section>
         )}
@@ -547,8 +546,8 @@ export default function CreatorClient({ username: propUsername }: { username?: s
         {/* Two-column layout */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 sm:gap-6 items-start lg:items-stretch">
           {/* LEFT — Send Gift */}
-          <section className="bg-black/30 rounded-3xl border border-white/20 backdrop-blur-xl p-5 sm:p-8 shadow-2xl flex flex-col min-h-0 h-auto max-h-[360px] lg:h-[670px] lg:max-h-none overflow-hidden">
-            <h2 className="text-lg sm:text-xl font-semibold mb-4 flex items-center gap-2">Send a Gift</h2>
+          <section className={`${panelClass} p-5 sm:p-8 flex flex-col min-h-0 h-auto max-h-[380px] lg:h-[720px] lg:max-h-none overflow-hidden`}>
+            <h2 className="text-lg sm:text-xl font-semibold mb-4">Send a Gift</h2>
 
             {/* Amount */}
             <div className="flex items-center gap-3 mb-3">
@@ -567,7 +566,7 @@ export default function CreatorClient({ username: propUsername }: { username?: s
               />
             </div>
 
-            {/* Preset amounts (bigger, clearer, no custom) */}
+            {/* Preset amounts */}
             <div className="flex flex-wrap gap-2 mb-4">
               {presetAmounts.map((v) => {
                 const selected = Number(amount) === v;
@@ -577,9 +576,7 @@ export default function CreatorClient({ username: propUsername }: { username?: s
                     type="button"
                     onClick={() => setAmount(String(v))}
                     className={`px-4 py-2 rounded-full border text-sm font-semibold transition ${
-                      selected
-                        ? "bg-white text-black border-white/70"
-                        : "bg-white/10 text-white border-white/20 hover:bg-white/15"
+                      selected ? "bg-white text-black border-white/70" : "bg-white/10 text-white border-white/20 hover:bg-white/15"
                     }`}
                   >
                     £{v}
@@ -609,7 +606,7 @@ export default function CreatorClient({ username: propUsername }: { username?: s
               <span>Gift anonymously</span>
             </label>
 
-            {/* Branded CTA */}
+            {/* CTA */}
             <button
               className="w-full py-3 rounded-xl text-white font-semibold active:scale-[0.98] transition mb-2 shadow-xl border border-white/15 hover:opacity-[0.96]"
               style={ctaStyle}
@@ -619,28 +616,23 @@ export default function CreatorClient({ username: propUsername }: { username?: s
               {loading ? "Redirecting…" : "Send Gift 🎁"}
             </button>
 
-            {/* Trust copy tuned for Pay by Bank */}
+            {/* Trust copy */}
             <p className="text-center text-[11px] text-white/80">Pay by bank • No card details needed</p>
             <p className="text-center text-[11px] text-white/60 mt-1 tracking-wide">Secure checkout powered by Stripe</p>
 
-            {/* Desktop QR (slightly less dominant) */}
+            {/* Desktop QR (premium card look) */}
             <div className="mt-auto pt-4 pb-2 hidden lg:flex flex-col items-center gap-2">
-              <div className="w-[170px] h-[170px] bg-white rounded-2xl p-3 border border-black/20 shadow-xl flex items-center justify-center">
-                {pageUrl ? (
-                  <QRCode value={pageUrl} size={140} bgColor="#ffffff" fgColor="#000000" />
-                ) : (
-                  <span className="text-black/70 text-xs">QR unavailable</span>
-                )}
+              <div className="bg-white rounded-2xl p-3 border border-black/20 shadow-xl flex items-center justify-center">
+                {pageUrl ? <QRCode value={pageUrl} size={138} bgColor="#ffffff" fgColor="#000000" /> : <span className="text-black/70 text-xs">QR unavailable</span>}
               </div>
 
-              <p className="text-xs text-white/80">Scan to support me</p>
-              <p className="text-[11px] text-white/65 tracking-wide">Powered by EverPay</p>
+              <p className="text-[12px] text-white/80">Scan to gift</p>
+              <p className="text-[11px] text-white/60 tracking-wide">Powered by EverPay</p>
             </div>
           </section>
 
-          {/* RIGHT — Recent Gifts (first) + Top Supporters */}
-          <section className="bg-black/30 rounded-3xl border border-white/20 backdrop-blur-xl p-5 sm:p-8 shadow-2xl flex flex-col min-h-0 h-auto max-h-[360px] lg:h-[670px] lg:max-h-none">
-            {/* Recent Gifts FIRST (trust) */}
+          {/* RIGHT — Recent Gifts + Top Supporters */}
+          <section className={`${panelClass} p-5 sm:p-8 flex flex-col min-h-0 h-auto max-h-[380px] lg:h-[720px] lg:max-h-none`}>
             <div className="mb-4 flex items-center justify-start lg:justify-between">
               <h2 className="text-lg sm:text-xl font-semibold">Recent Gifts 🎁</h2>
             </div>
@@ -652,36 +644,24 @@ export default function CreatorClient({ username: propUsername }: { username?: s
             ) : (
               <div className="flex-1 min-h-0 space-y-3 overflow-y-auto pr-1 everpay-scroll mb-4">
                 {payments.map((p) => {
-                  const displayName = p.anonymous
-                    ? "Anonymous"
-                    : p.gift_name?.trim()
-                    ? p.gift_name!
-                    : "Someone";
+                  const displayName = p.anonymous ? "Anonymous" : p.gift_name?.trim() ? p.gift_name : "Someone";
 
                   return (
-                    <div
-                      key={p.id}
-                      className="bg-white/6 border border-white/10 rounded-xl px-4 py-3 text-sm flex justify-between gap-3 shadow-sm"
-                    >
+                    <div key={p.id} className="bg-white/6 border border-white/10 rounded-xl px-4 py-3 text-sm flex justify-between gap-3 shadow-sm">
                       <div className="flex-1">
                         <p className="font-semibold text-[13px] sm:text-sm">
                           {displayName} gifted {formatGBP(p.amount)}
                         </p>
-                        {p.gift_message && (
-                          <p className="text-[11px] sm:text-xs opacity-80 mt-1 italic">“{p.gift_message}”</p>
-                        )}
+                        {p.gift_message && <p className="text-[11px] sm:text-xs opacity-80 mt-1 italic">“{p.gift_message}”</p>}
                       </div>
 
-                      <p className="text-[10px] opacity-60 whitespace-nowrap mt-1">
-                        {new Date(p.created_at).toLocaleDateString()}
-                      </p>
+                      <p className="text-[10px] opacity-60 whitespace-nowrap mt-1">{new Date(p.created_at).toLocaleDateString()}</p>
                     </div>
                   );
                 })}
               </div>
             )}
 
-            {/* Top Supporters SECOND */}
             {!loadingPayments && topSupporters.length > 0 && (
               <div className="rounded-2xl bg-white/6 border border-white/15 p-4">
                 <div className="flex items-center justify-between mb-3">
@@ -691,10 +671,7 @@ export default function CreatorClient({ username: propUsername }: { username?: s
 
                 <div className="space-y-2">
                   {topSupporters.map((s, idx) => (
-                    <div
-                      key={`${s.label}-${idx}`}
-                      className="flex items-center justify-between gap-3 rounded-xl bg-white/6 border border-white/10 px-3 py-2"
-                    >
+                    <div key={`${s.label}-${idx}`} className="flex items-center justify-between gap-3 rounded-xl bg-white/6 border border-white/10 px-3 py-2">
                       <div className="flex items-center gap-3 min-w-0">
                         <div className="w-7 h-7 rounded-full bg-white/10 border border-white/15 flex items-center justify-center text-[12px] font-bold text-white/85 shrink-0">
                           {idx + 1}
@@ -717,8 +694,8 @@ export default function CreatorClient({ username: propUsername }: { username?: s
           </section>
         </div>
 
-        {/* ✅ MOBILE QR — collapsible (default collapsed) */}
-        <section className="lg:hidden bg-black/30 rounded-3xl border border-white/20 backdrop-blur-xl px-5 py-4 shadow-2xl">
+        {/* MOBILE QR — collapsible */}
+        <section className={`lg:hidden ${panelClass} px-5 py-4`}>
           <button
             type="button"
             onClick={() => setShowMobileQR((v) => !v)}
@@ -735,21 +712,17 @@ export default function CreatorClient({ username: propUsername }: { username?: s
 
           {showMobileQR && (
             <>
-              <div className="mt-4 mx-auto w-full max-w-[220px] bg-white rounded-2xl p-3 border border-black/20 shadow-xl flex items-center justify-center">
-                {pageUrl ? (
-                  <QRCode value={pageUrl} size={170} bgColor="#ffffff" fgColor="#000000" />
-                ) : (
-                  <span className="text-black/70 text-xs">QR unavailable</span>
-                )}
+              <div className="mt-4 mx-auto w-full max-w-[240px] bg-white rounded-2xl p-3 border border-black/20 shadow-xl flex items-center justify-center">
+                {pageUrl ? <QRCode value={pageUrl} size={185} bgColor="#ffffff" fgColor="#000000" /> : <span className="text-black/70 text-xs">QR unavailable</span>}
               </div>
 
-              <p className="mt-3 text-center text-xs text-white/80">Scan to support me</p>
-              <p className="mt-1 text-center text-[11px] text-white/65 tracking-wide">Powered by EverPay</p>
+              <p className="mt-3 text-center text-xs text-white/80">Scan to gift</p>
+              <p className="mt-1 text-center text-[11px] text-white/60 tracking-wide">Powered by EverPay</p>
             </>
           )}
         </section>
 
-        {/* ✅ Avatar modal */}
+        {/* Avatar modal */}
         {showAvatar && profile.avatar_url && (
           <div
             className="fixed inset-0 z-[100] bg-black/75 backdrop-blur-sm flex items-center justify-center p-6"
@@ -758,7 +731,7 @@ export default function CreatorClient({ username: propUsername }: { username?: s
             aria-modal="true"
           >
             <div
-              className="relative w-full max-w-md sm:max-w-lg rounded-3xl border border-white/15 bg-black/30 shadow-2xl overflow-hidden"
+              className="relative w-full max-w-md sm:max-w-lg rounded-3xl border border-white/15 bg-black/40 shadow-2xl overflow-hidden"
               onClick={(e) => e.stopPropagation()}
             >
               <button
@@ -780,7 +753,7 @@ export default function CreatorClient({ username: propUsername }: { username?: s
           </div>
         )}
 
-        {/* ✅ Local thin scrollbar styling (scoped) */}
+        {/* Local thin scrollbar styling */}
         <style jsx global>{`
           .everpay-scroll {
             scrollbar-width: thin; /* Firefox */
