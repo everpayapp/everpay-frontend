@@ -4,7 +4,6 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { HexColorPicker } from "react-colorful";
 
 type CreatorProfile = {
   username: string;
@@ -21,6 +20,13 @@ type CreatorProfile = {
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL!;
 
+// ✅ Locked EverPay identity (Premium Graphite)
+const LOCKED_THEME = {
+  start: "#0A0D14",
+  mid: "#0F1623",
+  end: "#1B2433",
+};
+
 export default function CreatorSettingsPage() {
   const { status, data: session } = useSession();
   const router = useRouter();
@@ -35,10 +41,6 @@ export default function CreatorSettingsPage() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
-
-  const [themeStart, setThemeStart] = useState("#ec4899");
-  const [themeMid, setThemeMid] = useState("#8b5cf6");
-  const [themeEnd, setThemeEnd] = useState("#3b82f6");
 
   const [milestoneEnabled, setMilestoneEnabled] = useState(false);
   const [milestoneAmount, setMilestoneAmount] = useState("");
@@ -62,8 +64,7 @@ export default function CreatorSettingsPage() {
   } | null>(null);
 
   // Shared “EverPay glass panel” styles (match Dashboard)
-  const PANEL =
-    "rounded-3xl border border-white/15 bg-black/25 backdrop-blur-xl shadow-2xl";
+  const PANEL = "rounded-3xl border border-white/15 bg-black/25 backdrop-blur-xl shadow-2xl";
   const SUBPANEL = "rounded-2xl border border-white/10 bg-black/20";
   const INPUT =
     "w-full mt-1 rounded-xl bg-white/10 border border-white/20 px-3 py-2 text-sm text-white placeholder-white/50 outline-none";
@@ -92,9 +93,7 @@ export default function CreatorSettingsPage() {
       setError(null);
 
       try {
-        const res = await fetch(
-          `${API_URL}/api/creator/profile?username=${encodeURIComponent(username)}`
-        );
+        const res = await fetch(`${API_URL}/api/creator/profile?username=${encodeURIComponent(username)}`);
         const data = await res.json().catch(() => ({} as any));
 
         const loadedProfile: CreatorProfile = {
@@ -113,14 +112,8 @@ export default function CreatorSettingsPage() {
         setProfile(loadedProfile);
         setSocialLinksText((loadedProfile.social_links || []).join("\n"));
 
-        setThemeStart(data.theme_start || "#ec4899");
-        setThemeMid(data.theme_mid || "#8b5cf6");
-        setThemeEnd(data.theme_end || "#3b82f6");
-
         setMilestoneEnabled(!!data.milestone_enabled);
-        setMilestoneAmount(
-          data.milestone_amount ? String(data.milestone_amount) : ""
-        );
+        setMilestoneAmount(data.milestone_amount ? String(data.milestone_amount) : "");
         setMilestoneText(data.milestone_text || "");
       } catch {
         setError("Failed to load creator profile");
@@ -153,9 +146,12 @@ export default function CreatorSettingsPage() {
         profile_name: profile?.profile_name ?? "",
         avatar_url: newUrl,
         social_links: socialLinksArray,
-        theme_start: themeStart,
-        theme_mid: themeMid,
-        theme_end: themeEnd,
+
+        // ✅ LOCKED THEME
+        theme_start: LOCKED_THEME.start,
+        theme_mid: LOCKED_THEME.mid,
+        theme_end: LOCKED_THEME.end,
+
         milestone_enabled: milestoneEnabled ? 1 : 0,
         milestone_amount: Number(milestoneAmount) || 0,
         milestone_text: milestoneText,
@@ -241,9 +237,12 @@ export default function CreatorSettingsPage() {
           profile_name: profile.profile_name,
           avatar_url: profile.avatar_url,
           social_links: socialLinksArray,
-          theme_start: themeStart,
-          theme_mid: themeMid,
-          theme_end: themeEnd,
+
+          // ✅ LOCKED THEME
+          theme_start: LOCKED_THEME.start,
+          theme_mid: LOCKED_THEME.mid,
+          theme_end: LOCKED_THEME.end,
+
           milestone_enabled: milestoneEnabled ? 1 : 0,
           milestone_amount: Number(milestoneAmount) || 0,
           milestone_text: milestoneText,
@@ -268,9 +267,7 @@ export default function CreatorSettingsPage() {
     if (!username) return;
     try {
       setConnectError(null);
-      const res = await fetch(
-        `${API_URL}/api/stripe/connect/status?username=${encodeURIComponent(username)}`
-      );
+      const res = await fetch(`${API_URL}/api/stripe/connect/status?username=${encodeURIComponent(username)}`);
       const data = await res.json().catch(() => ({} as any));
       if (!res.ok) throw new Error(data?.error || "Failed to load Connect status");
       setConnectStatus(data);
@@ -345,8 +342,8 @@ export default function CreatorSettingsPage() {
           <div className={`${PANEL} p-6`}>
             <div className="text-lg font-semibold text-white">Profile not linked</div>
             <p className="mt-2 text-sm text-white/70">
-              Your session does not include a creator username. Log out and log back
-              in, and make sure the backend login returns a creator with a username.
+              Your session does not include a creator username. Log out and log back in, and make sure the backend login
+              returns a creator with a username.
             </p>
           </div>
         </div>
@@ -361,10 +358,9 @@ export default function CreatorSettingsPage() {
   return (
     <main
       className="min-h-screen text-slate-50 px-6 py-12 flex justify-center"
-      // ✅ “lighter wash” across the WHOLE settings page
+      // ✅ lighter wash across the WHOLE settings page
       style={{
-        background:
-          "linear-gradient(180deg, rgba(14,34,56,0.55) 0%, rgba(14,34,56,0.15) 45%, rgba(0,0,0,0) 100%)",
+        background: "linear-gradient(180deg, rgba(14,34,56,0.55) 0%, rgba(14,34,56,0.15) 45%, rgba(0,0,0,0) 100%)",
       }}
     >
       <div className="w-full max-w-3xl space-y-6">
@@ -378,11 +374,7 @@ export default function CreatorSettingsPage() {
         <form className={`${PANEL} p-6 space-y-6`} onSubmit={handleSubmit}>
           <div>
             <label className="text-sm font-medium">Profile Name</label>
-            <input
-              className={INPUT}
-              value={profile?.profile_name || ""}
-              onChange={(e) => handleChange("profile_name", e.target.value)}
-            />
+            <input className={INPUT} value={profile?.profile_name || ""} onChange={(e) => handleChange("profile_name", e.target.value)} />
           </div>
 
           {/* Profile Picture Upload (Cloudinary) */}
@@ -390,9 +382,7 @@ export default function CreatorSettingsPage() {
             <div className="flex items-start justify-between gap-4 flex-col sm:flex-row">
               <div className="space-y-1">
                 <div className="text-sm font-medium">Profile Picture</div>
-                <div className="text-xs text-white/60">
-                  Upload a profile picture (we auto-crop + optimize).
-                </div>
+                <div className="text-xs text-white/60">Upload a profile picture (we auto-crop + optimize).</div>
               </div>
 
               <div className="w-full sm:w-auto flex items-center gap-2">
@@ -414,38 +404,22 @@ export default function CreatorSettingsPage() {
               </div>
             </div>
 
-            {uploadError && (
-              <p className="mt-3 text-red-400 bg-red-950/40 p-2 rounded-lg text-sm">
-                {uploadError}
-              </p>
-            )}
+            {uploadError && <p className="mt-3 text-red-400 bg-red-950/40 p-2 rounded-lg text-sm">{uploadError}</p>}
 
             <div className="flex justify-center mt-4">
               <div className="w-36 h-36 rounded-full border border-white/20 overflow-hidden bg-white/10">
                 {profile?.avatar_url ? (
-                  <img
-                    src={profile.avatar_url}
-                    className="w-full h-full object-cover"
-                    alt="Profile picture preview"
-                  />
+                  <img src={profile.avatar_url} className="w-full h-full object-cover" alt="Profile picture preview" />
                 ) : null}
               </div>
             </div>
 
             <details className="mt-4">
-              <summary className="text-xs font-medium text-white/60 cursor-pointer select-none">
-                Advanced · Profile Picture URL
-              </summary>
+              <summary className="text-xs font-medium text-white/60 cursor-pointer select-none">Advanced · Profile Picture URL</summary>
 
               <div className="mt-2">
-                <input
-                  className={INPUT + " text-white/70"}
-                  value={profile?.avatar_url || ""}
-                  readOnly
-                />
-                <p className="mt-1 text-[11px] text-white/40">
-                  System-managed. Auto-filled after upload.
-                </p>
+                <input className={INPUT + " text-white/70"} value={profile?.avatar_url || ""} readOnly />
+                <p className="mt-1 text-[11px] text-white/40">System-managed. Auto-filled after upload.</p>
               </div>
             </details>
           </section>
@@ -475,33 +449,31 @@ export default function CreatorSettingsPage() {
                       className="px-3 py-1 rounded-full bg-white/10 border border-white/20 text-xs text-white/85 hover:bg-white/15 transition"
                       title={url}
                     >
-                      {url
-                        .replace(/^https?:\/\//, "")
-                        .replace(/^www\./, "")
-                        .slice(0, 26)}
+                      {url.replace(/^https?:\/\//, "").replace(/^www\./, "").slice(0, 26)}
                     </a>
                   ))}
               </div>
             )}
           </div>
 
+          {/* ✅ Locked theme notice (no selector) */}
           <section className="border-t border-white/10 pt-6">
-            <h2 className="text-lg font-semibold mb-1">Page Colours 🎨</h2>
+            <h2 className="text-lg font-semibold mb-1">Theme</h2>
+            <p className="text-xs text-white/60">EverPay uses a single premium identity to keep trust high.</p>
 
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-6 mt-4">
-              <div>
-                <p className="text-xs mb-2">Start</p>
-                <HexColorPicker color={themeStart} onChange={setThemeStart} />
-              </div>
+            <div className="mt-4 rounded-2xl border border-white/10 bg-black/20 p-4">
+              <div className="flex items-start justify-between gap-4 flex-col sm:flex-row">
+                <div>
+                  <div className="text-sm font-semibold text-white">Premium Graphite</div>
+                  <div className="text-[11px] text-white/60 mt-0.5">Luxury • Minimal • High trust</div>
+                </div>
 
-              <div>
-                <p className="text-xs mb-2">Middle</p>
-                <HexColorPicker color={themeMid} onChange={setThemeMid} />
-              </div>
-
-              <div>
-                <p className="text-xs mb-2">End</p>
-                <HexColorPicker color={themeEnd} onChange={setThemeEnd} />
+                <div
+                  className="h-10 w-full sm:w-48 rounded-xl border border-white/10"
+                  style={{
+                    background: `linear-gradient(90deg, ${LOCKED_THEME.start}, ${LOCKED_THEME.mid}, ${LOCKED_THEME.end})`,
+                  }}
+                />
               </div>
             </div>
           </section>
@@ -510,11 +482,7 @@ export default function CreatorSettingsPage() {
             <h2 className="text-lg font-semibold mb-2">Milestone Goal 🎯</h2>
 
             <label className="flex items-center gap-3 text-sm cursor-pointer">
-              <input
-                type="checkbox"
-                checked={milestoneEnabled}
-                onChange={(e) => setMilestoneEnabled(e.target.checked)}
-              />
+              <input type="checkbox" checked={milestoneEnabled} onChange={(e) => setMilestoneEnabled(e.target.checked)} />
               <span>Enable milestone</span>
             </label>
 
@@ -522,22 +490,12 @@ export default function CreatorSettingsPage() {
               <div className="mt-4 space-y-4">
                 <div>
                   <label className="text-sm">Target Amount (£)</label>
-                  <input
-                    type="number"
-                    className={INPUT}
-                    value={milestoneAmount}
-                    onChange={(e) => setMilestoneAmount(e.target.value)}
-                  />
+                  <input type="number" className={INPUT} value={milestoneAmount} onChange={(e) => setMilestoneAmount(e.target.value)} />
                 </div>
 
                 <div>
                   <label className="text-sm">Milestone Description</label>
-                  <input
-                    type="text"
-                    className={INPUT}
-                    value={milestoneText}
-                    onChange={(e) => setMilestoneText(e.target.value)}
-                  />
+                  <input type="text" className={INPUT} value={milestoneText} onChange={(e) => setMilestoneText(e.target.value)} />
                 </div>
               </div>
             )}
@@ -547,38 +505,30 @@ export default function CreatorSettingsPage() {
           <section className="mt-8 border-t border-white/10 pt-6">
             <h3 className="text-sm font-semibold text-white mb-2">Payouts</h3>
             <p className="text-[11px] text-white/60 mb-4">
-              Connect your Stripe account so gifts can be paid out to your bank.
-              EverPay never stores your bank details.
+              Connect your Stripe account so gifts can be paid out to your bank. EverPay never stores your bank details.
             </p>
 
             <div className={`${SUBPANEL} p-4 space-y-3`}>
               <div className="flex items-start justify-between gap-3 flex-col sm:flex-row">
                 <div>
                   <div className="text-sm font-medium">
-                    {connectStatus?.connected
-                      ? "Stripe account connected ✅"
-                      : "Stripe account not connected"}
+                    {connectStatus?.connected ? "Stripe account connected ✅" : "Stripe account not connected"}
                   </div>
 
                   <div className="text-xs text-white/60 mt-1">
                     {connectStatus?.connected ? (
                       <>
                         Payouts:{" "}
-                        <span className="text-white/80">
-                          {connectStatus?.payoutsEnabled ? "Enabled" : "Not enabled yet"}
-                        </span>
+                        <span className="text-white/80">{connectStatus?.payoutsEnabled ? "Enabled" : "Not enabled yet"}</span>
                       </>
                     ) : (
                       "Set up payouts to receive money."
                     )}
                   </div>
 
-                  {Array.isArray(connectStatus?.requirementsDue) &&
-                    connectStatus!.requirementsDue!.length > 0 && (
-                      <div className="mt-2 text-xs text-amber-200/90">
-                        Required: {connectStatus!.requirementsDue!.join(", ")}
-                      </div>
-                    )}
+                  {Array.isArray(connectStatus?.requirementsDue) && connectStatus!.requirementsDue!.length > 0 && (
+                    <div className="mt-2 text-xs text-amber-200/90">Required: {connectStatus!.requirementsDue!.join(", ")}</div>
+                  )}
                 </div>
 
                 <div className="flex gap-2 w-full sm:w-auto">
@@ -613,22 +563,12 @@ export default function CreatorSettingsPage() {
                 </div>
               </div>
 
-              {connectError && (
-                <p className="text-red-300 bg-red-950/40 p-2 rounded-lg text-sm">
-                  {connectError}
-                </p>
-              )}
+              {connectError && <p className="text-red-300 bg-red-950/40 p-2 rounded-lg text-sm">{connectError}</p>}
             </div>
           </section>
 
-          {error && (
-            <p className="text-red-400 bg-red-950/40 p-2 rounded-lg text-sm">{error}</p>
-          )}
-          {success && (
-            <p className="text-emerald-400 bg-emerald-950/40 p-2 rounded-lg text-sm">
-              {success}
-            </p>
-          )}
+          {error && <p className="text-red-400 bg-red-950/40 p-2 rounded-lg text-sm">{error}</p>}
+          {success && <p className="text-emerald-400 bg-emerald-950/40 p-2 rounded-lg text-sm">{success}</p>}
 
           <section className="mt-8 border-t border-white/10 pt-6">
             <h3 className="text-sm font-semibold text-white mb-3">Security</h3>
@@ -641,9 +581,7 @@ export default function CreatorSettingsPage() {
               Change password
             </button>
 
-            <p className="mt-2 text-[11px] text-white/50">
-              We’ll email you a secure link to reset your password.
-            </p>
+            <p className="mt-2 text-[11px] text-white/50">We’ll email you a secure link to reset your password.</p>
           </section>
 
           {/* DANGER ZONE */}
@@ -675,4 +613,3 @@ export default function CreatorSettingsPage() {
     </main>
   );
 }
-
