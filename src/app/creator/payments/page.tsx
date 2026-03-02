@@ -29,13 +29,8 @@ export default function CreatorPaymentsPage() {
   const { status, data: session } = useSession();
   const router = useRouter();
 
-  // ✅ STRICT: only use real username from session
+  // ✅ STRICT: only use real username from session (no fallback to lee/email)
   const username = (session?.user as any)?.username as string | undefined;
-
-  // Premium Graphite panel styles (match Settings/Dashboard)
-  const PANEL =
-    "rounded-3xl border border-white/18 bg-black/25 backdrop-blur-xl shadow-[0_18px_60px_rgba(0,0,0,0.55)] ring-1 ring-white/10";
-  const SUBPANEL = "rounded-2xl border border-white/12 bg-black/20";
 
   // STATE
   const [payments, setPayments] = useState<Payment[]>([]);
@@ -62,7 +57,7 @@ export default function CreatorPaymentsPage() {
     }
   }, [status, router]);
 
-  // Load payments (creator endpoint)
+  // Load payments
   useEffect(() => {
     if (status !== "authenticated") return;
     if (!username) return;
@@ -88,20 +83,24 @@ export default function CreatorPaymentsPage() {
     load();
   }, [status, username]);
 
-  // ⛔ Wait for auth resolution (after hooks are declared)
+  // ⛔ Wait for auth resolution
   if (status === "loading") return null;
 
-  // Authenticated but missing username → clear message
+  // Authenticated but missing username → show a clear message instead of loading wrong person
   if (status === "authenticated" && !username) {
     return (
-      <main className="max-w-4xl mx-auto mt-10 px-4 text-white">
-        <div className={`${PANEL} p-6`}>
+      <div className="max-w-3xl mx-auto px-4 text-white mt-10">
+        <div className="bg-black/60 border border-white/10 rounded-3xl p-6">
           <p className="text-lg font-semibold mb-2">Session missing username</p>
           <p className="text-white/70 text-sm">
-            Your login session doesn’t include <code>user.username</code>, so Payments can’t load safely.
+            Your login session doesn’t include <code>user.username</code>, so the
+            Payments page can’t load safely.
+          </p>
+          <p className="text-white/60 text-sm mt-2">
+            Fix: update NextAuth to include <code>username</code> in JWT/session.
           </p>
         </div>
-      </main>
+      </div>
     );
   }
 
@@ -136,7 +135,9 @@ export default function CreatorPaymentsPage() {
     const q = search.trim().toLowerCase();
     if (!q) return true;
 
-    const supporter = (p.anonymous ? "anonymous" : p.gift_name || "someone").toLowerCase();
+    const supporter = (
+      p.anonymous ? "anonymous" : p.gift_name || "someone"
+    ).toLowerCase();
     const message = (p.gift_message || "").toLowerCase();
     const amount = (p.amount / 100).toFixed(2);
 
@@ -162,6 +163,8 @@ export default function CreatorPaymentsPage() {
       .reduce((sum, p) => sum + p.amount, 0) / 100;
 
   const exportCSV = () => {
+    const u = username ?? "creator";
+
     const rows = [
       ["date", "supporter", "amount_gbp", "message", "status"],
       ...filtered.map((p) => [
@@ -181,21 +184,22 @@ export default function CreatorPaymentsPage() {
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `everpay-payments-${username}.csv`;
+    a.download = `everpay-payments-${u}.csv`;
     a.click();
     window.URL.revokeObjectURL(url);
   };
 
   const chipBase = "shrink-0 px-3 py-1.5 rounded-lg text-xs border transition";
   const chipOn = "bg-white/10 border-white/20";
-  const chipOff = "bg-transparent border-white/12 text-white/70 hover:text-white";
+  const chipOff =
+    "bg-transparent border-white/10 text-white/70 hover:text-white";
 
   return (
-    <main className="max-w-6xl mx-auto mt-6 sm:mt-10 px-3 sm:px-6 text-white pb-24">
+    <main className="max-w-4xl mx-auto mt-6 sm:mt-10 px-3 sm:px-0 text-white">
       <h1 className="text-2xl font-semibold mb-6">Creator Payments</h1>
 
       {/* SUMMARY / CONTROLS */}
-      <div className={`mb-8 ${PANEL} p-6`}>
+      <div className="mb-8 bg-black/40 border border-white/10 rounded-2xl p-6">
         <div className="flex flex-col gap-4">
           <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
             <div>
@@ -205,34 +209,52 @@ export default function CreatorPaymentsPage() {
 
             {/* Mobile: scrollable filter chips */}
             <div className="flex items-center gap-2 overflow-x-auto whitespace-nowrap -mx-2 px-2 pb-1">
-              <button onClick={() => setRange("today")} className={`${chipBase} ${range === "today" ? chipOn : chipOff}`}>
+              <button
+                onClick={() => setRange("today")}
+                className={`${chipBase} ${range === "today" ? chipOn : chipOff}`}
+              >
                 Today
               </button>
-              <button onClick={() => setRange("7d")} className={`${chipBase} ${range === "7d" ? chipOn : chipOff}`}>
+              <button
+                onClick={() => setRange("7d")}
+                className={`${chipBase} ${range === "7d" ? chipOn : chipOff}`}
+              >
                 7 Days
               </button>
-              <button onClick={() => setRange("30d")} className={`${chipBase} ${range === "30d" ? chipOn : chipOff}`}>
+              <button
+                onClick={() => setRange("30d")}
+                className={`${chipBase} ${range === "30d" ? chipOn : chipOff}`}
+              >
                 30 Days
               </button>
-              <button onClick={() => setRange("all")} className={`${chipBase} ${range === "all" ? chipOn : chipOff}`}>
+              <button
+                onClick={() => setRange("all")}
+                className={`${chipBase} ${range === "all" ? chipOn : chipOff}`}
+              >
                 All
               </button>
             </div>
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            <div className={`${SUBPANEL} p-4`}>
-              <p className="text-[11px] uppercase text-white/60 mb-1">Total (range)</p>
+            <div className="bg-black/30 border border-white/10 rounded-xl p-4">
+              <p className="text-[11px] uppercase text-white/60 mb-1">
+                Total (range)
+              </p>
               <p className="text-lg font-semibold">{formatGBP(totalRange)}</p>
             </div>
 
-            <div className={`${SUBPANEL} p-4`}>
-              <p className="text-[11px] uppercase text-white/60 mb-1">Payments</p>
+            <div className="bg-black/30 border border-white/10 rounded-xl p-4">
+              <p className="text-[11px] uppercase text-white/60 mb-1">
+                Payments
+              </p>
               <p className="text-lg font-semibold">{filtered.length}</p>
             </div>
 
-            <div className={`${SUBPANEL} p-4`}>
-              <p className="text-[11px] uppercase text-white/60 mb-1">Average</p>
+            <div className="bg-black/30 border border-white/10 rounded-xl p-4">
+              <p className="text-[11px] uppercase text-white/60 mb-1">
+                Average
+              </p>
               <p className="text-lg font-semibold">{formatGBP(avg)}</p>
             </div>
           </div>
@@ -242,15 +264,16 @@ export default function CreatorPaymentsPage() {
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search supporter, message, amount…"
-              className={`w-full sm:flex-1 ${SUBPANEL} px-4 py-2 text-sm text-white placeholder:text-white/40 outline-none`}
+              className="w-full sm:flex-1 bg-black/30 border border-white/10 rounded-xl px-4 py-2 text-sm text-white placeholder:text-white/40 outline-none"
             />
 
-            {/* Mobile: actions scroll instead of wrap */}
             <div className="flex items-center gap-2 overflow-x-auto whitespace-nowrap -mx-2 px-2 pb-1 sm:overflow-visible sm:whitespace-normal sm:mx-0 sm:px-0 sm:pb-0">
               <button
                 onClick={() => setAnonymousOnly((v) => !v)}
                 className={`shrink-0 px-3 py-2 rounded-xl text-xs border ${
-                  anonymousOnly ? "bg-white/10 border-white/20" : "bg-transparent border-white/12 text-white/70 hover:text-white"
+                  anonymousOnly
+                    ? "bg-white/10 border-white/20"
+                    : "bg-black/30 border-white/10 text-white/70 hover:text-white"
                 }`}
               >
                 Anonymous: {anonymousOnly ? "ON" : "OFF"}
@@ -266,7 +289,8 @@ export default function CreatorPaymentsPage() {
           </div>
 
           <p className="text-[11px] text-white/40">
-            Status is shown as Completed (Stripe-confirmed). Payout status can be added later.
+            Status is shown as Completed (Stripe-confirmed). Payout status can be
+            added later.
           </p>
         </div>
       </div>
@@ -281,9 +305,9 @@ export default function CreatorPaymentsPage() {
           {filtered.map((p) => (
             <div
               key={p.id}
-              className={`${SUBPANEL} p-4 flex justify-between gap-4`}
+              className="bg-black/40 border border-white/10 rounded-xl p-4 flex justify-between gap-4"
             >
-              <div className="min-w-0 w-full">
+              <div className="min-w-0">
                 <div className="flex items-center justify-between gap-2">
                   <p className="font-semibold">{formatGBP(p.amount / 100)}</p>
 
@@ -292,7 +316,7 @@ export default function CreatorPaymentsPage() {
                   </span>
                 </div>
 
-                <p className="text-xs text-white/70 truncate mt-1">
+                <p className="text-xs text-white/70 truncate">
                   {p.anonymous ? "Anonymous" : p.gift_name || "Someone"}
                   {p.gift_message ? ` — “${p.gift_message}”` : ""}
                 </p>
