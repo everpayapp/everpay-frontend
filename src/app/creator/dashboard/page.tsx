@@ -37,6 +37,12 @@ export default function CreatorDashboard() {
   // ✅ STRICT: only use real username from session
   const username = (session?.user as any)?.username as string | undefined;
 
+  // ✅ UI constants (Premium Graphite / white border)
+  const PANEL =
+    "rounded-3xl border border-white/18 bg-black/25 backdrop-blur-xl shadow-[0_18px_60px_rgba(0,0,0,0.55)] ring-1 ring-white/10";
+  const SUBPANEL = "rounded-2xl border border-white/12 bg-black/20";
+  const SOFT = "text-white/60";
+
   // ✅ STATE
   const [payments, setPayments] = useState<Payment[]>([]);
   const [profile, setProfile] = useState<CreatorProfile | null>(null);
@@ -55,9 +61,7 @@ export default function CreatorDashboard() {
 
   // 🔐 Redirect if logged out
   useEffect(() => {
-    if (status === "unauthenticated") {
-      router.replace("/login");
-    }
+    if (status === "unauthenticated") router.replace("/login");
   }, [status, router]);
 
   // 🛑 If authenticated but missing username, don’t load the wrong person
@@ -78,7 +82,7 @@ export default function CreatorDashboard() {
     const loadPayments = async () => {
       try {
         const res = await fetch(
-        `${apiUrl}/api/payments/creator/${encodeURIComponent(username)}`
+          `${apiUrl}/api/payments/creator/${encodeURIComponent(username)}`
         );
         const data = await res.json();
         if (isMounted) setPayments(Array.isArray(data) ? data : []);
@@ -105,7 +109,7 @@ export default function CreatorDashboard() {
     async function loadProfile() {
       try {
         const res = await fetch(
-          `${apiUrl}/api/creator/profile?username=${encodeURIComponent(username ?? "")}`
+          `${apiUrl}/api/creator/profile?username=${encodeURIComponent(username)}`
         );
         const data = await res.json();
 
@@ -166,11 +170,10 @@ export default function CreatorDashboard() {
   if (status === "authenticated" && !username) {
     return (
       <div className="max-w-3xl mx-auto px-4 text-white mt-10">
-        <div className="bg-black/60 border border-white/10 rounded-3xl p-6">
+        <div className={`${PANEL} p-6`}>
           <p className="text-lg font-semibold mb-2">Session missing username</p>
           <p className="text-white/70 text-sm">
-            Your login session doesn’t include <code>user.username</code>, so the dashboard
-            can’t load safely.
+            Your login session doesn’t include <code>user.username</code>, so the dashboard can’t load safely.
           </p>
           <p className="text-white/60 text-sm mt-2">
             Fix: update NextAuth to include <code>username</code> in JWT/session.
@@ -184,22 +187,22 @@ export default function CreatorDashboard() {
     <>
       <div className="max-w-6xl mx-auto px-4 text-white mt-10 pb-32">
         {profile && (
-          <div className="w-full bg-black/60 border border-white/10 rounded-3xl p-8 shadow-2xl flex items-center gap-6 mb-10">
-            <div className="w-24 h-24 rounded-full border-[5px] border-white/30 overflow-hidden shadow-xl">
-              {profile.avatar_url && (
+          <div className={`w-full ${PANEL} p-8 flex items-center gap-6 mb-10`}>
+            <div className="w-24 h-24 rounded-full border-[5px] border-white/25 overflow-hidden shadow-xl bg-white/5">
+              {profile.avatar_url ? (
                 <img
                   src={profile.avatar_url}
                   alt="Creator avatar"
                   className="w-full h-full object-cover"
                 />
-              )}
+              ) : null}
             </div>
 
-            <div>
-              <h1 className="text-3xl font-bold uppercase">
+            <div className="min-w-0">
+              <h1 className="text-3xl font-bold uppercase truncate">
                 {profile.profile_name}
               </h1>
-              <p className="text-sm text-white/60">@{username}</p>
+              <p className={`text-sm ${SOFT}`}>@{username}</p>
             </div>
           </div>
         )}
@@ -208,8 +211,8 @@ export default function CreatorDashboard() {
           {/* LEFT */}
           <div className="space-y-8">
             {milestoneEnabled && (
-              <div className="bg-black/40 border border-white/10 rounded-3xl px-6 py-5">
-                <p className="text-xs uppercase text-white/70 mb-1">
+              <div className={`${PANEL} px-6 py-5`}>
+                <p className={`text-xs uppercase ${SOFT} mb-1`}>
                   Current goal
                 </p>
 
@@ -227,33 +230,33 @@ export default function CreatorDashboard() {
                   raised
                 </p>
 
-                <div className="w-full h-2.5 rounded-full bg-white/10 overflow-hidden">
+                <div className="w-full h-2.5 rounded-full bg-white/10 overflow-hidden border border-white/10">
                   <div
                     className="h-full bg-gradient-to-r from-cyan-400 to-emerald-400"
                     style={{ width: `${progressPercent}%` }}
                   />
                 </div>
+
+                <p className={`mt-2 text-xs ${SOFT}`}>{progressPercent}% complete</p>
               </div>
             )}
 
-            <div className="bg-black/40 border border-white/10 rounded-3xl p-6">
+            <div className={`${PANEL} p-6`}>
               {loadingProfile ? (
-                <p className="text-white/60">Loading…</p>
+                <p className={SOFT}>Loading…</p>
               ) : (
                 <>
-                  <p className="text-sm uppercase text-white/60">
-                    Total Earnings
-                  </p>
-                  <p className="text-5xl font-bold">£{formattedTotal}</p>
+                  <p className={`text-sm uppercase ${SOFT}`}>Total Earnings</p>
+                  <p className="text-5xl font-bold mt-1">£{formattedTotal}</p>
                 </>
               )}
             </div>
 
             {/* SHARE */}
-            <div className="bg-black/40 border border-white/10 rounded-3xl p-6 space-y-4">
+            <div className={`${PANEL} p-6 space-y-4`}>
               <p className="text-sm text-center">Share your gift page 🌍</p>
 
-              <div className="bg-black/60 rounded-xl px-4 py-2 text-sm text-white/70">
+              <div className={`${SUBPANEL} px-4 py-2 text-sm text-white/70 break-all`}>
                 {pageUrl}
               </div>
 
@@ -274,40 +277,54 @@ export default function CreatorDashboard() {
           </div>
 
           {/* RIGHT */}
-          <div className="bg-black/40 border border-white/10 rounded-3xl p-6">
+          <div className={`${PANEL} p-6`}>
             <h2 className="text-2xl font-semibold mb-5 text-center">
               Recent Supporters
             </h2>
 
-            {payments.slice(0, 5).map((p) => (
-              <div
-                key={p.id}
-                className="bg-white/5 rounded-xl p-4 mb-2 flex justify-between"
-              >
-                <div>
-                  <p className="text-sm">
-                    {p.anonymous ? "Anonymous" : p.gift_name || "Someone"}
-                  </p>
-                  <p className="font-semibold">
-                    £
-                    {(p.amount / 100).toLocaleString("en-GB", {
-                      minimumFractionDigits: 2,
-                    })}
-                  </p>
-                </div>
-                <div className="text-xs opacity-60">
-                  {new Date(p.created_at).toLocaleDateString()}
-                </div>
+            {payments.length === 0 ? (
+              <div className={`${SUBPANEL} p-4 text-white/70 text-sm`}>
+                No gifts yet.
               </div>
-            ))}
+            ) : (
+              payments.slice(0, 5).map((p) => (
+                <div
+                  key={p.id}
+                  className={`${SUBPANEL} p-4 mb-2 flex justify-between gap-4`}
+                >
+                  <div className="min-w-0">
+                    <p className="text-sm font-medium truncate">
+                      {p.anonymous ? "Anonymous" : p.gift_name || "Someone"}
+                    </p>
+
+                    <p className="font-semibold mt-0.5">
+                      £
+                      {(p.amount / 100).toLocaleString("en-GB", {
+                        minimumFractionDigits: 2,
+                      })}
+                    </p>
+
+                    {p.gift_message ? (
+                      <p className="text-xs text-white/60 mt-1 truncate">
+                        “{p.gift_message}”
+                      </p>
+                    ) : null}
+                  </div>
+
+                  <div className="text-xs opacity-60 whitespace-nowrap">
+                    {new Date(p.created_at).toLocaleDateString()}
+                  </div>
+                </div>
+              ))
+            )}
           </div>
         </div>
       </div>
 
       {/* QR MODAL */}
       {showQRModal && (
-        <div className="fixed inset-0 bg-black flex items-center justify-center z-50">
-          <div className="bg-white rounded-3xl p-6 shadow-2xl text-center">
+        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 px-4">
+          <div className="bg-white rounded-3xl p-6 shadow-2xl text-center max-w-sm w-full">
             <QRCode value={pageUrl} size={220} />
             <p className="mt-3 text-xs text-slate-500">
               Powered by <strong>EverPay</strong> · Scan to support live

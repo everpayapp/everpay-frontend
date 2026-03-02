@@ -20,11 +20,11 @@ type CreatorProfile = {
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL!;
 
-// ✅ Locked EverPay identity (Premium Graphite)
+// ✅ Locked EverPay identity (Premium Graphite) — matches your desired look
 const LOCKED_THEME = {
-  start: "#0A0D14",
-  mid: "#0F1623",
-  end: "#1B2433",
+  start: "#0B0D12",
+  mid: "#121826",
+  end: "#0B0D12",
 };
 
 export default function CreatorSettingsPage() {
@@ -63,9 +63,10 @@ export default function CreatorSettingsPage() {
     requirementsDue?: string[];
   } | null>(null);
 
-  // Shared “EverPay glass panel” styles (match Dashboard)
-  const PANEL = "rounded-3xl border border-white/15 bg-black/25 backdrop-blur-xl shadow-2xl";
-  const SUBPANEL = "rounded-2xl border border-white/10 bg-black/20";
+  // Shared “EverPay glass panel” styles (match Gift page feel)
+  const PANEL =
+    "rounded-3xl border border-white/18 bg-black/25 backdrop-blur-xl shadow-[0_18px_60px_rgba(0,0,0,0.55)] ring-1 ring-white/10";
+  const SUBPANEL = "rounded-2xl border border-white/12 bg-black/20";
   const INPUT =
     "w-full mt-1 rounded-xl bg-white/10 border border-white/20 px-3 py-2 text-sm text-white placeholder-white/50 outline-none";
   const TEXTAREA =
@@ -93,7 +94,9 @@ export default function CreatorSettingsPage() {
       setError(null);
 
       try {
-        const res = await fetch(`${API_URL}/api/creator/profile?username=${encodeURIComponent(username)}`);
+        const res = await fetch(
+          `${API_URL}/api/creator/profile?username=${encodeURIComponent(username)}`
+        );
         const data = await res.json().catch(() => ({} as any));
 
         const loadedProfile: CreatorProfile = {
@@ -267,7 +270,9 @@ export default function CreatorSettingsPage() {
     if (!username) return;
     try {
       setConnectError(null);
-      const res = await fetch(`${API_URL}/api/stripe/connect/status?username=${encodeURIComponent(username)}`);
+      const res = await fetch(
+        `${API_URL}/api/stripe/connect/status?username=${encodeURIComponent(username)}`
+      );
       const data = await res.json().catch(() => ({} as any));
       if (!res.ok) throw new Error(data?.error || "Failed to load Connect status");
       setConnectStatus(data);
@@ -330,10 +335,8 @@ export default function CreatorSettingsPage() {
     }
   };
 
-  // Wait for auth resolution
   if (status === "loading") return null;
 
-  // Authenticated but username missing
   if (status === "authenticated" && !username) {
     return (
       <main className="min-h-screen text-slate-50 px-6 py-12 flex justify-center">
@@ -358,10 +361,8 @@ export default function CreatorSettingsPage() {
   return (
     <main
       className="min-h-screen text-slate-50 px-6 py-12 flex justify-center"
-      // ✅ lighter wash across the WHOLE settings page
-      style={{
-        background: "linear-gradient(180deg, rgba(14,34,56,0.55) 0%, rgba(14,34,56,0.15) 45%, rgba(0,0,0,0) 100%)",
-      }}
+      // ✅ Solid graphite — no blue wash
+      style={{ backgroundColor: LOCKED_THEME.start }}
     >
       <div className="w-full max-w-3xl space-y-6">
         <div className="space-y-1">
@@ -374,7 +375,11 @@ export default function CreatorSettingsPage() {
         <form className={`${PANEL} p-6 space-y-6`} onSubmit={handleSubmit}>
           <div>
             <label className="text-sm font-medium">Profile Name</label>
-            <input className={INPUT} value={profile?.profile_name || ""} onChange={(e) => handleChange("profile_name", e.target.value)} />
+            <input
+              className={INPUT}
+              value={profile?.profile_name || ""}
+              onChange={(e) => handleChange("profile_name", e.target.value)}
+            />
           </div>
 
           {/* Profile Picture Upload (Cloudinary) */}
@@ -415,7 +420,9 @@ export default function CreatorSettingsPage() {
             </div>
 
             <details className="mt-4">
-              <summary className="text-xs font-medium text-white/60 cursor-pointer select-none">Advanced · Profile Picture URL</summary>
+              <summary className="text-xs font-medium text-white/60 cursor-pointer select-none">
+                Advanced · Profile Picture URL
+              </summary>
 
               <div className="mt-2">
                 <input className={INPUT + " text-white/70"} value={profile?.avatar_url || ""} readOnly />
@@ -490,7 +497,12 @@ export default function CreatorSettingsPage() {
               <div className="mt-4 space-y-4">
                 <div>
                   <label className="text-sm">Target Amount (£)</label>
-                  <input type="number" className={INPUT} value={milestoneAmount} onChange={(e) => setMilestoneAmount(e.target.value)} />
+                  <input
+                    type="number"
+                    className={INPUT}
+                    value={milestoneAmount}
+                    onChange={(e) => setMilestoneAmount(e.target.value)}
+                  />
                 </div>
 
                 <div>
@@ -518,8 +530,7 @@ export default function CreatorSettingsPage() {
                   <div className="text-xs text-white/60 mt-1">
                     {connectStatus?.connected ? (
                       <>
-                        Payouts:{" "}
-                        <span className="text-white/80">{connectStatus?.payoutsEnabled ? "Enabled" : "Not enabled yet"}</span>
+                        Payouts: <span className="text-white/80">{connectStatus?.payoutsEnabled ? "Enabled" : "Not enabled yet"}</span>
                       </>
                     ) : (
                       "Set up payouts to receive money."

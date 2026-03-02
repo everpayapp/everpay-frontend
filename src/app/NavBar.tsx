@@ -39,7 +39,7 @@ export default function NavBar() {
   const username = (session?.user as any)?.username ?? "creator";
 
   return (
-    <nav className="sticky top-0 z-50 w-full bg-[#151923] border-b border-white/15 shadow-[0_10px_30px_rgba(0,0,0,0.45)]">
+    <nav className="sticky top-0 z-50 w-full bg-black/25 backdrop-blur-xl border-b border-white/15 shadow-[0_10px_30px_rgba(0,0,0,0.45)]">
       <div className="mx-auto max-w-6xl px-3 sm:px-6 py-3 sm:py-5">
         {/* Row 1: main links (scrollable on mobile so nothing gets cut off) */}
         <div className="flex items-center gap-6 overflow-x-auto whitespace-nowrap [-webkit-overflow-scrolling:touch]">
