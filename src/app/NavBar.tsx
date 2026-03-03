@@ -1,3 +1,4 @@
+// ~/everpay-frontend/src/app/NavBar.tsx
 "use client";
 
 import Link from "next/link";
@@ -39,9 +40,8 @@ export default function NavBar() {
   const username = (session?.user as any)?.username ?? "creator";
 
   return (
-    <nav className="sticky top-0 z-50 w-full bg-black/25 backdrop-blur-xl border-b border-white/15 shadow-[0_10px_30px_rgba(0,0,0,0.45)]">
+    <nav className="sticky top-0 z-50 w-full bg-[#151923] border-b border-white/15 shadow-[0_10px_30px_rgba(0,0,0,0.45)]">
       <div className="mx-auto max-w-6xl px-3 sm:px-6 py-3 sm:py-5">
-        {/* Row 1: main links (scrollable on mobile so nothing gets cut off) */}
         <div className="flex items-center gap-6 overflow-x-auto whitespace-nowrap [-webkit-overflow-scrolling:touch]">
           <Link href="/creator/dashboard" className={linkClass("/creator/dashboard")}>
             Dashboard
@@ -55,7 +55,6 @@ export default function NavBar() {
             Settings
           </Link>
 
-          {/* Spacer on desktop so right-side items sit on the right */}
           <div className="hidden sm:block flex-1" />
 
           {status === "authenticated" && (
@@ -74,7 +73,6 @@ export default function NavBar() {
           )}
         </div>
 
-        {/* Row 2 (mobile only): user + logout ALWAYS visible */}
         {status === "authenticated" && (
           <div className="sm:hidden mt-2 flex items-center justify-between">
             <span className="text-white/60 text-sm">

@@ -25,23 +25,28 @@ const formatGBP = (value: number) =>
 type RangeKey = "today" | "7d" | "30d" | "all";
 
 export default function CreatorPaymentsPage() {
-  // 🔐 AUTH (hooks must always run)
   const { status, data: session } = useSession();
   const router = useRouter();
 
-  // ✅ STRICT: only use real username from session (no fallback to lee/email)
-  const username = (session?.user as any)?.username as string | undefined;
+  // ✅ Force a real string (prevents encodeURIComponent string|undefined build error)
+  const username: string = String(
+    (session?.user as any)?.username ||
+      session?.user?.email?.split("@")?.[0] ||
+      "lee"
+  );
 
-  // STATE
+  // ✅ STYLE (Premium Graphite + stronger white border)
+  const PAGE_BG = "#0B0D12";
+  const PANEL =
+    "bg-[#151923] rounded-3xl border border-white/20 shadow-[0_18px_60px_rgba(0,0,0,0.55)] ring-1 ring-white/10";
+
   const [payments, setPayments] = useState<Payment[]>([]);
   const [loading, setLoading] = useState(true);
 
-  // UI state (filters/search/export)
   const [range, setRange] = useState<RangeKey>("today");
   const [search, setSearch] = useState("");
   const [anonymousOnly, setAnonymousOnly] = useState(false);
 
-  // Avoid setting state after unmount
   const mountedRef = useRef(true);
   useEffect(() => {
     mountedRef.current = true;
@@ -50,17 +55,14 @@ export default function CreatorPaymentsPage() {
     };
   }, []);
 
-  // Redirect if logged out
   useEffect(() => {
     if (status === "unauthenticated") {
       router.replace("/login");
     }
   }, [status, router]);
 
-  // Load payments
   useEffect(() => {
     if (status !== "authenticated") return;
-    if (!username) return;
 
     async function load() {
       try {
@@ -72,8 +74,6 @@ export default function CreatorPaymentsPage() {
         setPayments(Array.isArray(data) ? data : []);
       } catch (e) {
         console.error("Failed to load creator payments", e);
-        if (!mountedRef.current) return;
-        setPayments([]);
       } finally {
         if (!mountedRef.current) return;
         setLoading(false);
@@ -83,28 +83,8 @@ export default function CreatorPaymentsPage() {
     load();
   }, [status, username]);
 
-  // ⛔ Wait for auth resolution
   if (status === "loading") return null;
 
-  // Authenticated but missing username → show a clear message instead of loading wrong person
-  if (status === "authenticated" && !username) {
-    return (
-      <div className="max-w-3xl mx-auto px-4 text-white mt-10">
-        <div className="bg-black/60 border border-white/10 rounded-3xl p-6">
-          <p className="text-lg font-semibold mb-2">Session missing username</p>
-          <p className="text-white/70 text-sm">
-            Your login session doesn’t include <code>user.username</code>, so the
-            Payments page can’t load safely.
-          </p>
-          <p className="text-white/60 text-sm mt-2">
-            Fix: update NextAuth to include <code>username</code> in JWT/session.
-          </p>
-        </div>
-      </div>
-    );
-  }
-
-  // ---- Derived values ----
   const now = new Date();
 
   const startOfToday = new Date(now);
@@ -163,8 +143,6 @@ export default function CreatorPaymentsPage() {
       .reduce((sum, p) => sum + p.amount, 0) / 100;
 
   const exportCSV = () => {
-    const u = username ?? "creator";
-
     const rows = [
       ["date", "supporter", "amount_gbp", "message", "status"],
       ...filtered.map((p) => [
@@ -184,7 +162,7 @@ export default function CreatorPaymentsPage() {
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = `everpay-payments-${u}.csv`;
+    a.download = `everpay-payments-${username}.csv`;
     a.click();
     window.URL.revokeObjectURL(url);
   };
@@ -195,140 +173,140 @@ export default function CreatorPaymentsPage() {
     "bg-transparent border-white/10 text-white/70 hover:text-white";
 
   return (
-    <main className="max-w-4xl mx-auto mt-6 sm:mt-10 px-3 sm:px-0 text-white">
-      <h1 className="text-2xl font-semibold mb-6">Creator Payments</h1>
+    <div className="min-h-screen" style={{ backgroundColor: PAGE_BG }}>
+      <main className="max-w-4xl mx-auto pt-6 sm:pt-10 px-3 sm:px-0 text-white pb-24">
+        <h1 className="text-2xl font-semibold mb-6">Creator Payments</h1>
 
-      {/* SUMMARY / CONTROLS */}
-      <div className="mb-8 bg-black/40 border border-white/10 rounded-2xl p-6">
-        <div className="flex flex-col gap-4">
-          <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
-            <div>
-              <p className="text-sm uppercase text-white/60 mb-1">Today</p>
-              <p className="text-4xl font-bold">{formatGBP(todaysTotal)}</p>
+        {/* SUMMARY / CONTROLS */}
+        <div className={`mb-8 ${PANEL} p-6`}>
+          <div className="flex flex-col gap-4">
+            <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+              <div>
+                <p className="text-sm uppercase text-white/60 mb-1">Today</p>
+                <p className="text-4xl font-bold">{formatGBP(todaysTotal)}</p>
+              </div>
+
+              <div className="flex items-center gap-2 overflow-x-auto whitespace-nowrap -mx-2 px-2 pb-1">
+                <button
+                  onClick={() => setRange("today")}
+                  className={`${chipBase} ${range === "today" ? chipOn : chipOff}`}
+                >
+                  Today
+                </button>
+                <button
+                  onClick={() => setRange("7d")}
+                  className={`${chipBase} ${range === "7d" ? chipOn : chipOff}`}
+                >
+                  7 Days
+                </button>
+                <button
+                  onClick={() => setRange("30d")}
+                  className={`${chipBase} ${range === "30d" ? chipOn : chipOff}`}
+                >
+                  30 Days
+                </button>
+                <button
+                  onClick={() => setRange("all")}
+                  className={`${chipBase} ${range === "all" ? chipOn : chipOff}`}
+                >
+                  All
+                </button>
+              </div>
             </div>
 
-            {/* Mobile: scrollable filter chips */}
-            <div className="flex items-center gap-2 overflow-x-auto whitespace-nowrap -mx-2 px-2 pb-1">
-              <button
-                onClick={() => setRange("today")}
-                className={`${chipBase} ${range === "today" ? chipOn : chipOff}`}
-              >
-                Today
-              </button>
-              <button
-                onClick={() => setRange("7d")}
-                className={`${chipBase} ${range === "7d" ? chipOn : chipOff}`}
-              >
-                7 Days
-              </button>
-              <button
-                onClick={() => setRange("30d")}
-                className={`${chipBase} ${range === "30d" ? chipOn : chipOff}`}
-              >
-                30 Days
-              </button>
-              <button
-                onClick={() => setRange("all")}
-                className={`${chipBase} ${range === "all" ? chipOn : chipOff}`}
-              >
-                All
-              </button>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <div className="bg-black/35 border border-white/15 rounded-xl p-4">
+                <p className="text-[11px] uppercase text-white/60 mb-1">
+                  Total (range)
+                </p>
+                <p className="text-lg font-semibold">{formatGBP(totalRange)}</p>
+              </div>
+
+              <div className="bg-black/35 border border-white/15 rounded-xl p-4">
+                <p className="text-[11px] uppercase text-white/60 mb-1">
+                  Payments
+                </p>
+                <p className="text-lg font-semibold">{filtered.length}</p>
+              </div>
+
+              <div className="bg-black/35 border border-white/15 rounded-xl p-4">
+                <p className="text-[11px] uppercase text-white/60 mb-1">
+                  Average
+                </p>
+                <p className="text-lg font-semibold">{formatGBP(avg)}</p>
+              </div>
             </div>
+
+            <div className="flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between">
+              <input
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Search supporter, message, amount…"
+                className="w-full sm:flex-1 bg-black/35 border border-white/15 rounded-xl px-4 py-2 text-sm text-white placeholder:text-white/40 outline-none"
+              />
+
+              <div className="flex items-center gap-2 overflow-x-auto whitespace-nowrap -mx-2 px-2 pb-1 sm:overflow-visible sm:whitespace-normal sm:mx-0 sm:px-0 sm:pb-0">
+                <button
+                  onClick={() => setAnonymousOnly((v) => !v)}
+                  className={`shrink-0 px-3 py-2 rounded-xl text-xs border ${
+                    anonymousOnly
+                      ? "bg-white/10 border-white/20"
+                      : "bg-black/35 border-white/15 text-white/70 hover:text-white"
+                  }`}
+                >
+                  Anonymous: {anonymousOnly ? "ON" : "OFF"}
+                </button>
+
+                <button
+                  onClick={exportCSV}
+                  className="shrink-0 px-3 py-2 rounded-xl text-xs bg-gradient-to-r from-cyan-400 to-emerald-400 text-black font-semibold"
+                >
+                  Export CSV
+                </button>
+              </div>
+            </div>
+
+            <p className="text-[11px] text-white/40">
+              Status is shown as Completed (Stripe-confirmed). Payout status can be added later.
+            </p>
           </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            <div className="bg-black/30 border border-white/10 rounded-xl p-4">
-              <p className="text-[11px] uppercase text-white/60 mb-1">
-                Total (range)
-              </p>
-              <p className="text-lg font-semibold">{formatGBP(totalRange)}</p>
-            </div>
-
-            <div className="bg-black/30 border border-white/10 rounded-xl p-4">
-              <p className="text-[11px] uppercase text-white/60 mb-1">
-                Payments
-              </p>
-              <p className="text-lg font-semibold">{filtered.length}</p>
-            </div>
-
-            <div className="bg-black/30 border border-white/10 rounded-xl p-4">
-              <p className="text-[11px] uppercase text-white/60 mb-1">
-                Average
-              </p>
-              <p className="text-lg font-semibold">{formatGBP(avg)}</p>
-            </div>
-          </div>
-
-          <div className="flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between">
-            <input
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search supporter, message, amount…"
-              className="w-full sm:flex-1 bg-black/30 border border-white/10 rounded-xl px-4 py-2 text-sm text-white placeholder:text-white/40 outline-none"
-            />
-
-            <div className="flex items-center gap-2 overflow-x-auto whitespace-nowrap -mx-2 px-2 pb-1 sm:overflow-visible sm:whitespace-normal sm:mx-0 sm:px-0 sm:pb-0">
-              <button
-                onClick={() => setAnonymousOnly((v) => !v)}
-                className={`shrink-0 px-3 py-2 rounded-xl text-xs border ${
-                  anonymousOnly
-                    ? "bg-white/10 border-white/20"
-                    : "bg-black/30 border-white/10 text-white/70 hover:text-white"
-                }`}
-              >
-                Anonymous: {anonymousOnly ? "ON" : "OFF"}
-              </button>
-
-              <button
-                onClick={exportCSV}
-                className="shrink-0 px-3 py-2 rounded-xl text-xs bg-gradient-to-r from-cyan-400 to-emerald-400 text-black font-semibold"
-              >
-                Export CSV
-              </button>
-            </div>
-          </div>
-
-          <p className="text-[11px] text-white/40">
-            Status is shown as Completed (Stripe-confirmed). Payout status can be
-            added later.
-          </p>
         </div>
-      </div>
 
-      {/* LIST */}
-      {loading ? (
-        <p className="text-white/70">Loading payments…</p>
-      ) : filtered.length === 0 ? (
-        <p className="text-white/70">No payments found for this filter.</p>
-      ) : (
-        <div className="space-y-3">
-          {filtered.map((p) => (
-            <div
-              key={p.id}
-              className="bg-black/40 border border-white/10 rounded-xl p-4 flex justify-between gap-4"
-            >
-              <div className="min-w-0">
-                <div className="flex items-center justify-between gap-2">
-                  <p className="font-semibold">{formatGBP(p.amount / 100)}</p>
+        {/* LIST */}
+        {loading ? (
+          <p className="text-white/70">Loading payments…</p>
+        ) : filtered.length === 0 ? (
+          <p className="text-white/70">No payments found for this filter.</p>
+        ) : (
+          <div className="space-y-3">
+            {filtered.map((p) => (
+              <div
+                key={p.id}
+                className="bg-[#151923] border border-white/20 rounded-xl p-4 flex justify-between gap-4 shadow-[0_12px_40px_rgba(0,0,0,0.45)] ring-1 ring-white/10"
+              >
+                <div className="min-w-0">
+                  <div className="flex items-center justify-between gap-2">
+                    <p className="font-semibold">{formatGBP(p.amount / 100)}</p>
 
-                  <span className="shrink-0 text-[11px] px-2 py-0.5 rounded-full bg-white/10 border border-white/10 text-white/70">
-                    Completed
-                  </span>
+                    <span className="shrink-0 text-[11px] px-2 py-0.5 rounded-full bg-white/10 border border-white/10 text-white/70">
+                      Completed
+                    </span>
+                  </div>
+
+                  <p className="text-xs text-white/70 truncate">
+                    {p.anonymous ? "Anonymous" : p.gift_name || "Someone"}
+                    {p.gift_message ? ` — “${p.gift_message}”` : ""}
+                  </p>
                 </div>
 
-                <p className="text-xs text-white/70 truncate">
-                  {p.anonymous ? "Anonymous" : p.gift_name || "Someone"}
-                  {p.gift_message ? ` — “${p.gift_message}”` : ""}
-                </p>
+                <div className="text-xs text-white/60 whitespace-nowrap">
+                  {new Date(p.created_at).toLocaleDateString()}
+                </div>
               </div>
-
-              <div className="text-xs text-white/60 whitespace-nowrap">
-                {new Date(p.created_at).toLocaleDateString()}
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
-    </main>
+            ))}
+          </div>
+        )}
+      </main>
+    </div>
   );
 }
