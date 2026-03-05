@@ -38,7 +38,6 @@ function getSocialMeta(url: string) {
   return { label: "Website", short: "WWW" };
 }
 
-// Normalize social links from API into a clean clickable array
 function normalizeSocialLinks(input: unknown): string[] {
   let arr: string[] = [];
 
@@ -125,13 +124,6 @@ export default function CreatorClient({ username: propUsername }: { username?: s
   const [profile, setProfile] = useState<CreatorProfile | null>(null);
   const [profileLoaded, setProfileLoaded] = useState(false);
 
-  const [celebration, setCelebration] = useState<{
-    amount: number;
-    name: string;
-    message?: string | null;
-  } | null>(null);
-  const [showCelebration, setShowCelebration] = useState(false);
-
   // Profile picture modal
   const [showAvatar, setShowAvatar] = useState(false);
 
@@ -141,7 +133,10 @@ export default function CreatorClient({ username: propUsername }: { username?: s
   // Mobile QR collapsible (default collapsed)
   const [showMobileQR, setShowMobileQR] = useState(false);
 
-  // Preset amounts (GBP) — no Custom
+  // Mobile Top Supporters toggle
+  const [showTopSupportersMobile, setShowTopSupportersMobile] = useState(false);
+
+  // Preset amounts (GBP)
   const presetAmounts = [2, 5, 10, 20, 50];
 
   // Load creator profile (+ milestone)
@@ -311,43 +306,6 @@ export default function CreatorClient({ username: propUsername }: { username?: s
     }
   }
 
-  // Celebration logic – runs after we have payments
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    if (!username) return;
-    if (!Array.isArray(payments) || payments.length === 0) return;
-
-    const pendingKey = `everpay_pending_gift_${username}`;
-    const lastKey = `everpay_last_celebrated_${username}`;
-
-    const pending = window.localStorage.getItem(pendingKey);
-    if (pending !== "1") return;
-
-    const latest = payments[0] ?? null;
-    if (!latest) return;
-
-    const lastCelebratedId = window.localStorage.getItem(lastKey);
-    if (lastCelebratedId === latest.id) {
-      window.localStorage.removeItem(pendingKey);
-      return;
-    }
-
-    const displayName = latest.anonymous ? "Anonymous" : latest.gift_name && latest.gift_name.trim().length ? latest.gift_name : "Someone";
-
-    setCelebration({
-      amount: latest.amount,
-      name: displayName,
-      message: latest.gift_message,
-    });
-    setShowCelebration(true);
-
-    window.localStorage.setItem(lastKey, latest.id);
-    window.localStorage.removeItem(pendingKey);
-
-    const timeout = setTimeout(() => setShowCelebration(false), 3500);
-    return () => clearTimeout(timeout);
-  }, [payments, username]);
-
   const bgStart = profile?.theme_start;
   const bgMid = profile?.theme_mid;
   const bgEnd = profile?.theme_end;
@@ -417,7 +375,7 @@ export default function CreatorClient({ username: propUsername }: { username?: s
   }
 
   if (!profileLoaded) {
-    return <div className="min-h-screen flex items-center justify-center text-white">Loading creator…</div>;
+    return <div className="min-h-screen flex items-center justify-center text-white">Loading creator...</div>;
   }
 
   if (!profile) {
@@ -428,44 +386,50 @@ export default function CreatorClient({ username: propUsername }: { username?: s
     background: `linear-gradient(90deg, ${bgStart}, ${bgMid}, ${bgEnd})`,
   };
 
-  // Premium panel styles (fix “double colour behind panels”)
+  // Premium panel styles
   const panelClass = "bg-black/45 backdrop-blur-md rounded-3xl border border-white/18 shadow-2xl";
 
   return (
     <div
-      className="min-h-screen text-white flex justify-center px-4 py-6 sm:py-8 transition-[background] duration-[600ms]"
-      style={{
-        background: `linear-gradient(to bottom right, ${bgStart}, ${bgMid}, ${bgEnd})`,
-      }}
+      className="min-h-screen text-white flex justify-center px-4 py-6 sm:py-8 transition-[background] duration-[600ms] overflow-x-hidden"
+      style={{ background: `linear-gradient(to bottom right, ${bgStart}, ${bgMid}, ${bgEnd})` }}
     >
       <div className="w-full max-w-6xl space-y-4 sm:space-y-6 px-1 sm:px-0 overflow-x-hidden">
         {/* Header */}
-        <section className={`w-full ${panelClass} px-5 sm:px-8 py-4 sm:py-6`}>
+        <section className={`w-full ${panelClass} px-5 sm:px-8 py-4 sm:py-6 overflow-x-hidden`}>
           <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 sm:gap-6">
-            <div className="flex items-center gap-4 sm:gap-6 min-w-0">
-              <div
-                className="w-14 h-14 sm:w-20 sm:h-20 rounded-full border-[4px] border-white/35 bg-white/10 flex items-center justify-center overflow-hidden shadow-xl shrink-0 cursor-pointer hover:opacity-90 transition"
+            <div className="flex items-center gap-4 sm:gap-6 min-w-0 flex-1">
+              {/* Bigger + clearly clickable profile picture */}
+              <button
+                type="button"
                 onClick={() => profile.avatar_url && setShowAvatar(true)}
                 title="View profile picture"
+                className="w-16 h-16 sm:w-20 sm:h-20 rounded-full border-[4px] border-white/35 bg-white/10 flex items-center justify-center overflow-hidden shadow-xl shrink-0 cursor-pointer hover:opacity-90 transition active:scale-[0.98]"
               >
                 {profile.avatar_url ? (
                   <img src={profile.avatar_url} alt="Profile picture" className="w-full h-full object-contain" />
                 ) : (
-                  <span className="text-xl sm:text-2xl font-bold">{firstChar(profile.profile_name) || firstChar(username)}</span>
+                  <span className="text-2xl sm:text-2xl font-bold">{firstChar(profile.profile_name) || firstChar(username)}</span>
                 )}
-              </div>
+              </button>
 
-              <div className="flex flex-col min-w-0">
-                <div className="flex items-center gap-3 min-w-0">
-                  <h1 className="text-2xl sm:text-3xl font-bold tracking-tight truncate">{profile.profile_name || username}</h1>
-                  <VerifiedBadge />
+              <div className="flex flex-col min-w-0 flex-1">
+                {/* Full name on mobile (no cut off) + badge stays within the panel */}
+                <div className="flex flex-wrap items-start gap-2 min-w-0">
+                  <h1 className="text-2xl sm:text-3xl font-bold tracking-tight leading-tight whitespace-normal break-words sm:truncate">
+                    {profile.profile_name || username}
+                  </h1>
+                  <div className="pt-1">
+                    <VerifiedBadge />
+                  </div>
                 </div>
 
                 {/* Socials */}
                 {Array.isArray(profile.social_links) && profile.social_links.length > 0 && (
                   <>
-                    <div className="sm:hidden mt-2 -mx-1 px-1 overflow-x-auto whitespace-nowrap">
-                      <div className="inline-flex gap-2">
+                    {/* Mobile: scroll pills INSIDE container (no negative margins to avoid page scroll) */}
+                    <div className="sm:hidden mt-2 w-full overflow-x-auto whitespace-nowrap">
+                      <div className="inline-flex gap-2 pr-1">
                         {profile.social_links.map((url) => {
                           const meta = getSocialMeta(url);
                           return (
@@ -504,14 +468,14 @@ export default function CreatorClient({ username: propUsername }: { username?: s
                   </>
                 )}
 
-                {/* Mobile brand (tiny, tucked away) */}
-                <div className="sm:hidden mt-3">
-                  <span className="text-[11px] text-white/55 tracking-wide">Powered by EverPay</span>
+                {/* Mobile brand (CENTERED within top panel) */}
+                <div className="sm:hidden mt-3 w-full flex justify-center">
+                  <span className="text-[11px] text-white/55 tracking-wide text-center">Powered by EverPay</span>
                 </div>
               </div>
             </div>
 
-            {/* Desktop brand (top-right, subtle but readable) */}
+            {/* Desktop brand (top-right) */}
             <div className="hidden sm:flex items-start justify-end pt-1">
               <span className="text-[12px] text-white/70 font-medium tracking-wide">Powered by EverPay</span>
             </div>
@@ -520,7 +484,7 @@ export default function CreatorClient({ username: propUsername }: { username?: s
 
         {/* Milestone bar */}
         {milestoneEnabled && (
-          <section className={`${panelClass} px-5 py-4`}>
+          <section className={`${panelClass} px-5 py-4 overflow-x-hidden`}>
             <p className="text-[11px] uppercase tracking-[0.18em] text-white/70 mb-1">Goal</p>
 
             {profile.milestone_text && <p className="text-sm font-semibold mb-1">{profile.milestone_text}</p>}
@@ -544,30 +508,13 @@ export default function CreatorClient({ username: propUsername }: { username?: s
         )}
 
         {/* Two-column layout */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 sm:gap-6 items-start lg:items-stretch">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 sm:gap-6 items-start lg:items-stretch overflow-x-hidden">
           {/* LEFT — Send Gift */}
-          <section className={`${panelClass} p-5 sm:p-8 flex flex-col min-h-0 h-auto max-h-[380px] lg:h-[720px] lg:max-h-none overflow-hidden`}>
-            <h2 className="text-lg sm:text-xl font-semibold mb-4">Send a Gift</h2>
+          <section className={`${panelClass} p-4 sm:p-8 flex flex-col min-h-0 overflow-hidden lg:h-[720px]`}>
+            <h2 className="text-lg sm:text-xl font-semibold mb-3">Send a Gift</h2>
 
-            {/* Amount */}
-            <div className="flex items-center gap-3 mb-3">
-              <span className="text-xl font-bold">£</span>
-              <input
-                type="text"
-                inputMode="decimal"
-                value={amount}
-                onChange={(e) => {
-                  const raw = e.target.value.replace(/,/g, ".");
-                  if (!/^\d*\.?\d{0,2}$/.test(raw)) return;
-                  setAmount(raw);
-                }}
-                placeholder="0.00"
-                className="flex-1 rounded-xl bg-white/10 border border-white/20 px-3 py-2 text-base text-white placeholder-white/60 outline-none focus:border-white/35"
-              />
-            </div>
-
-            {/* Preset amounts */}
-            <div className="flex flex-wrap gap-2 mb-4">
+            {/* Presets first */}
+            <div className="flex flex-wrap gap-2 mb-3">
               {presetAmounts.map((v) => {
                 const selected = Number(amount) === v;
                 return (
@@ -585,6 +532,23 @@ export default function CreatorClient({ username: propUsername }: { username?: s
               })}
             </div>
 
+            {/* Amount under presets — FIXED (stays inside panel, no sideways overflow) */}
+            <div className="flex items-center gap-3 mb-3 w-full min-w-0">
+              <span className="text-xl font-bold shrink-0">£</span>
+              <input
+                type="text"
+                inputMode="decimal"
+                value={amount}
+                onChange={(e) => {
+                  const raw = e.target.value.replace(/,/g, ".");
+                  if (!/^\d*\.?\d{0,2}$/.test(raw)) return;
+                  setAmount(raw);
+                }}
+                placeholder="0.00"
+                className="min-w-0 flex-1 rounded-xl bg-white/10 border border-white/20 px-3 py-2 text-base text-white placeholder-white/60 outline-none focus:border-white/35"
+              />
+            </div>
+
             <input
               type="text"
               value={supporterName}
@@ -594,36 +558,40 @@ export default function CreatorClient({ username: propUsername }: { username?: s
               className="w-full rounded-xl bg-white/10 border border-white/20 px-3 py-2 text-sm text-white placeholder-white/60 outline-none mb-3 focus:border-white/35"
             />
 
+            {/* Mobile shorter message box */}
             <textarea
               value={message}
               onChange={(e) => setMessage(e.target.value.slice(0, 120))}
               placeholder="Leave a message (optional)"
-              className="w-full rounded-xl bg-white/10 border border-white/20 px-3 py-2 text-sm text-white placeholder-white/60 outline-none h-24 resize-none mb-4 shrink-0 focus:border-white/35"
+              className="w-full rounded-xl bg-white/10 border border-white/20 px-3 py-2 text-sm text-white placeholder-white/60 outline-none h-12 sm:h-24 resize-none mb-3 focus:border-white/35"
             />
 
-            <label className="flex items-center gap-2 text-xs sm:text-sm mb-4 cursor-pointer">
+            <label className="flex items-center gap-2 text-xs sm:text-sm mb-3 cursor-pointer">
               <input type="checkbox" checked={anonymous} onChange={(e) => setAnonymous(e.target.checked)} />
               <span>Gift anonymously</span>
             </label>
 
-            {/* CTA */}
+            {/* CTA stays directly under checkbox (desktop + mobile) */}
             <button
               className="w-full py-3 rounded-xl text-white font-semibold active:scale-[0.98] transition mb-2 shadow-xl border border-white/15 hover:opacity-[0.96]"
               style={ctaStyle}
               onClick={handlePay}
               disabled={loading}
             >
-              {loading ? "Redirecting…" : "Send Gift 🎁"}
+              {loading ? "Redirecting..." : "Send Gift 🎁"}
             </button>
 
-            {/* Trust copy */}
             <p className="text-center text-[11px] text-white/80">Pay by bank • No card details needed</p>
             <p className="text-center text-[11px] text-white/60 mt-1 tracking-wide">Secure checkout powered by Stripe</p>
 
-            {/* Desktop QR (premium card look) */}
+            {/* Desktop QR (unchanged) */}
             <div className="mt-auto pt-4 pb-2 hidden lg:flex flex-col items-center gap-2">
               <div className="bg-white rounded-2xl p-3 border border-black/20 shadow-xl flex items-center justify-center">
-                {pageUrl ? <QRCode value={pageUrl} size={138} bgColor="#ffffff" fgColor="#000000" /> : <span className="text-black/70 text-xs">QR unavailable</span>}
+                {pageUrl ? (
+                  <QRCode value={pageUrl} size={138} bgColor="#ffffff" fgColor="#000000" />
+                ) : (
+                  <span className="text-black/70 text-xs">QR unavailable</span>
+                )}
               </div>
 
               <p className="text-[12px] text-white/80">Scan to gift</p>
@@ -632,27 +600,33 @@ export default function CreatorClient({ username: propUsername }: { username?: s
           </section>
 
           {/* RIGHT — Recent Gifts + Top Supporters */}
-          <section className={`${panelClass} p-5 sm:p-8 flex flex-col min-h-0 h-auto max-h-[380px] lg:h-[720px] lg:max-h-none`}>
+          <section className={`${panelClass} p-4 sm:p-8 flex flex-col min-h-0 overflow-hidden lg:h-[720px]`}>
             <div className="mb-4 flex items-center justify-start lg:justify-between">
               <h2 className="text-lg sm:text-xl font-semibold">Recent Gifts 🎁</h2>
             </div>
 
             {loadingPayments ? (
-              <p className="text-center text-white/70 text-sm">Loading…</p>
+              <p className="text-center text-white/70 text-sm">Loading...</p>
             ) : payments.length === 0 ? (
               <p className="text-center text-white/70 text-sm">No gifts yet — be the first! 🎁</p>
             ) : (
-              <div className="flex-1 min-h-0 space-y-3 overflow-y-auto pr-1 everpay-scroll mb-4">
+              // Mobile shows ~5/6 then scroll; desktop uses full height
+              <div className="w-full overflow-y-auto pr-1 everpay-scroll mb-4 space-y-2 max-h-[260px] sm:max-h-[360px] lg:max-h-none lg:flex-1 lg:min-h-0">
                 {payments.map((p) => {
                   const displayName = p.anonymous ? "Anonymous" : p.gift_name?.trim() ? p.gift_name : "Someone";
 
                   return (
-                    <div key={p.id} className="bg-white/6 border border-white/10 rounded-xl px-4 py-3 text-sm flex justify-between gap-3 shadow-sm">
-                      <div className="flex-1">
-                        <p className="font-semibold text-[13px] sm:text-sm">
+                    <div
+                      key={p.id}
+                      className="bg-white/6 border border-white/10 rounded-xl px-3 py-2 text-sm flex justify-between gap-3 shadow-sm overflow-hidden"
+                    >
+                      <div className="flex-1 min-w-0">
+                        <p className="font-semibold text-[13px] sm:text-sm truncate">
                           {displayName} gifted {formatGBP(p.amount)}
                         </p>
-                        {p.gift_message && <p className="text-[11px] sm:text-xs opacity-80 mt-1 italic">“{p.gift_message}”</p>}
+                        {p.gift_message && (
+                          <p className="text-[11px] sm:text-xs opacity-80 mt-1 italic line-clamp-2">“{p.gift_message}”</p>
+                        )}
                       </div>
 
                       <p className="text-[10px] opacity-60 whitespace-nowrap mt-1">{new Date(p.created_at).toLocaleDateString()}</p>
@@ -663,39 +637,89 @@ export default function CreatorClient({ username: propUsername }: { username?: s
             )}
 
             {!loadingPayments && topSupporters.length > 0 && (
-              <div className="rounded-2xl bg-white/6 border border-white/15 p-4">
-                <div className="flex items-center justify-between mb-3">
-                  <p className="text-[11px] uppercase tracking-[0.18em] text-white/70">Top Supporters</p>
-                  <p className="text-[11px] text-white/55">This month</p>
-                </div>
-
-                <div className="space-y-2">
-                  {topSupporters.map((s, idx) => (
-                    <div key={`${s.label}-${idx}`} className="flex items-center justify-between gap-3 rounded-xl bg-white/6 border border-white/10 px-3 py-2">
-                      <div className="flex items-center gap-3 min-w-0">
-                        <div className="w-7 h-7 rounded-full bg-white/10 border border-white/15 flex items-center justify-center text-[12px] font-bold text-white/85 shrink-0">
-                          {idx + 1}
-                        </div>
-
-                        <div className="min-w-0">
-                          <p className="text-sm font-semibold truncate">{s.label}</p>
-                          <p className="text-[11px] text-white/60">
-                            {s.gifts} gift{s.gifts === 1 ? "" : "s"}
-                          </p>
-                        </div>
-                      </div>
-
-                      <div className="shrink-0 text-sm font-semibold">{formatGBP(s.totalPence)}</div>
+              <>
+                {/* Mobile: toggle so it doesn't crush Recent Gifts */}
+                <div className="lg:hidden">
+                  <button
+                    type="button"
+                    onClick={() => setShowTopSupportersMobile((v) => !v)}
+                    className="w-full rounded-2xl bg-white/6 border border-white/15 px-4 py-3 flex items-center justify-between"
+                    aria-expanded={showTopSupportersMobile}
+                  >
+                    <div className="text-left">
+                      <p className="text-[11px] uppercase tracking-[0.18em] text-white/70">Top Supporters</p>
+                      <p className="text-[11px] text-white/55">This month</p>
                     </div>
-                  ))}
+                    <span className="text-sm text-white/80">{showTopSupportersMobile ? "Hide" : "Show"}</span>
+                  </button>
+
+                  {showTopSupportersMobile && (
+                    <div className="mt-3 rounded-2xl bg-white/6 border border-white/15 p-4">
+                      <div className="space-y-2">
+                        {topSupporters.map((s, idx) => (
+                          <div
+                            key={`${s.label}-${idx}`}
+                            className="flex items-center justify-between gap-3 rounded-xl bg-white/6 border border-white/10 px-3 py-2 overflow-hidden"
+                          >
+                            <div className="flex items-center gap-3 min-w-0">
+                              <div className="w-7 h-7 rounded-full bg-white/10 border border-white/15 flex items-center justify-center text-[12px] font-bold text-white/85 shrink-0">
+                                {idx + 1}
+                              </div>
+
+                              <div className="min-w-0">
+                                <p className="text-sm font-semibold truncate">{s.label}</p>
+                                <p className="text-[11px] text-white/60">
+                                  {s.gifts} gift{s.gifts === 1 ? "" : "s"}
+                                </p>
+                              </div>
+                            </div>
+
+                            <div className="shrink-0 text-sm font-semibold">{formatGBP(s.totalPence)}</div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
-              </div>
+
+                {/* Desktop: always visible */}
+                <div className="hidden lg:block rounded-2xl bg-white/6 border border-white/15 p-4">
+                  <div className="flex items-center justify-between mb-3">
+                    <p className="text-[11px] uppercase tracking-[0.18em] text-white/70">Top Supporters</p>
+                    <p className="text-[11px] text-white/55">This month</p>
+                  </div>
+
+                  <div className="space-y-2">
+                    {topSupporters.map((s, idx) => (
+                      <div
+                        key={`${s.label}-${idx}`}
+                        className="flex items-center justify-between gap-3 rounded-xl bg-white/6 border border-white/10 px-3 py-2"
+                      >
+                        <div className="flex items-center gap-3 min-w-0">
+                          <div className="w-7 h-7 rounded-full bg-white/10 border border-white/15 flex items-center justify-center text-[12px] font-bold text-white/85 shrink-0">
+                            {idx + 1}
+                          </div>
+
+                          <div className="min-w-0">
+                            <p className="text-sm font-semibold truncate">{s.label}</p>
+                            <p className="text-[11px] text-white/60">
+                              {s.gifts} gift{s.gifts === 1 ? "" : "s"}
+                            </p>
+                          </div>
+                        </div>
+
+                        <div className="shrink-0 text-sm font-semibold">{formatGBP(s.totalPence)}</div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </>
             )}
           </section>
         </div>
 
         {/* MOBILE QR — collapsible */}
-        <section className={`lg:hidden ${panelClass} px-5 py-4`}>
+        <section className={`lg:hidden ${panelClass} px-5 py-4 overflow-hidden`}>
           <button
             type="button"
             onClick={() => setShowMobileQR((v) => !v)}
@@ -704,7 +728,7 @@ export default function CreatorClient({ username: propUsername }: { username?: s
           >
             <div className="text-left">
               <p className="text-base font-semibold text-white">QR code</p>
-              <p className="text-[11px] text-white/70">Show to let someone scan and gift</p>
+              <p className="text-[11px] text-white/70">Show to let someone nearby scan and gift</p>
             </div>
 
             <span className="text-white/80 text-sm">{showMobileQR ? "Hide" : "Show"}</span>
@@ -713,7 +737,11 @@ export default function CreatorClient({ username: propUsername }: { username?: s
           {showMobileQR && (
             <>
               <div className="mt-4 mx-auto w-full max-w-[240px] bg-white rounded-2xl p-3 border border-black/20 shadow-xl flex items-center justify-center">
-                {pageUrl ? <QRCode value={pageUrl} size={185} bgColor="#ffffff" fgColor="#000000" /> : <span className="text-black/70 text-xs">QR unavailable</span>}
+                {pageUrl ? (
+                  <QRCode value={pageUrl} size={185} bgColor="#ffffff" fgColor="#000000" />
+                ) : (
+                  <span className="text-black/70 text-xs">QR unavailable</span>
+                )}
               </div>
 
               <p className="mt-3 text-center text-xs text-white/80">Scan to gift</p>
@@ -753,7 +781,7 @@ export default function CreatorClient({ username: propUsername }: { username?: s
           </div>
         )}
 
-        {/* Local thin scrollbar styling */}
+        {/* Local thin scrollbar styling + hard kill horizontal scroll */}
         <style jsx global>{`
           .everpay-scroll {
             scrollbar-width: thin; /* Firefox */
@@ -772,6 +800,16 @@ export default function CreatorClient({ username: propUsername }: { username?: s
           }
           .everpay-scroll::-webkit-scrollbar-thumb:hover {
             background: rgba(255, 255, 255, 0.32);
+          }
+
+          html,
+          body {
+            overflow-x: hidden;
+          }
+
+          /* prevent accidental sideways scroll from any child */
+          #__next {
+            overflow-x: hidden;
           }
         `}</style>
       </div>
