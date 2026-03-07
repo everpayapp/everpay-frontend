@@ -8,6 +8,9 @@ import QRCode from "react-qr-code";
 type Payment = {
   id: string;
   amount: number;
+  gift_amount?: number | null;
+  fee_amount?: number | null;
+  total_paid?: number | null;
   gift_name?: string | null;
   anonymous?: number;
   gift_message?: string | null;
@@ -80,6 +83,13 @@ function firstChar(s: string) {
 function formatGBP(pence: number) {
   const v = Number(pence || 0) / 100;
   return `£${v.toFixed(2)}`;
+}
+
+function getGiftPence(payment: Payment) {
+  if (typeof payment.gift_amount === "number" && Number.isFinite(payment.gift_amount)) {
+    return payment.gift_amount;
+  }
+  return Number(payment.amount || 0);
 }
 
 // TikTok-ish verified badge (subtle)
@@ -310,7 +320,7 @@ export default function CreatorClient({ username: propUsername }: { username?: s
   const bgMid = profile?.theme_mid;
   const bgEnd = profile?.theme_end;
 
-  const totalEarned = payments.reduce((sum, p) => sum + (p.amount || 0), 0) / 100;
+  const totalEarned = payments.reduce((sum, p) => sum + getGiftPence(p), 0) / 100;
 
   // Top Supporters — top 4
   const topSupporters = useMemo(() => {
@@ -321,6 +331,7 @@ export default function CreatorClient({ username: propUsername }: { username?: s
     for (const p of payments) {
       const isAnon = !!p.anonymous;
       const rawName = (p.gift_name || "").trim();
+      const giftPence = getGiftPence(p);
 
       let label = "Someone";
       if (isAnon) label = "Anonymous";
@@ -330,10 +341,10 @@ export default function CreatorClient({ username: propUsername }: { username?: s
 
       const prev = map.get(key);
       if (prev) {
-        prev.totalPence += p.amount || 0;
+        prev.totalPence += giftPence;
         prev.gifts += 1;
       } else {
-        map.set(key, { label, totalPence: p.amount || 0, gifts: 1 });
+        map.set(key, { label, totalPence: giftPence, gifts: 1 });
       }
     }
 
@@ -399,7 +410,6 @@ export default function CreatorClient({ username: propUsername }: { username?: s
         <section className={`w-full ${panelClass} px-5 sm:px-8 py-4 sm:py-6 overflow-x-hidden`}>
           <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 sm:gap-6">
             <div className="flex items-center gap-4 sm:gap-6 min-w-0 flex-1">
-              {/* Bigger + clearly clickable profile picture */}
               <button
                 type="button"
                 onClick={() => profile.avatar_url && setShowAvatar(true)}
@@ -414,7 +424,6 @@ export default function CreatorClient({ username: propUsername }: { username?: s
               </button>
 
               <div className="flex flex-col min-w-0 flex-1">
-                {/* Full name on mobile (no cut off) + badge stays within the panel */}
                 <div className="flex flex-wrap items-start gap-2 min-w-0">
                   <h1 className="text-2xl sm:text-3xl font-bold tracking-tight leading-tight whitespace-normal break-words sm:truncate">
                     {profile.profile_name || username}
@@ -424,10 +433,8 @@ export default function CreatorClient({ username: propUsername }: { username?: s
                   </div>
                 </div>
 
-                {/* Socials */}
                 {Array.isArray(profile.social_links) && profile.social_links.length > 0 && (
                   <>
-                    {/* Mobile: scroll pills INSIDE container (no negative margins to avoid page scroll) */}
                     <div className="sm:hidden mt-2 w-full overflow-x-auto whitespace-nowrap">
                       <div className="inline-flex gap-2 pr-1">
                         {profile.social_links.map((url) => {
@@ -468,21 +475,18 @@ export default function CreatorClient({ username: propUsername }: { username?: s
                   </>
                 )}
 
-                {/* Mobile brand (CENTERED within top panel) */}
                 <div className="sm:hidden mt-3 w-full flex justify-center">
                   <span className="text-[11px] text-white/55 tracking-wide text-center">Powered by EverPay</span>
                 </div>
               </div>
             </div>
 
-            {/* Desktop brand (top-right) */}
             <div className="hidden sm:flex items-start justify-end pt-1">
               <span className="text-[12px] text-white/70 font-medium tracking-wide">Powered by EverPay</span>
             </div>
           </div>
         </section>
 
-        {/* Milestone bar */}
         {milestoneEnabled && (
           <section className={`${panelClass} px-5 py-4 overflow-x-hidden`}>
             <p className="text-[11px] uppercase tracking-[0.18em] text-white/70 mb-1">Goal</p>
@@ -507,13 +511,10 @@ export default function CreatorClient({ username: propUsername }: { username?: s
           </section>
         )}
 
-        {/* Two-column layout */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 sm:gap-6 items-start lg:items-stretch overflow-x-hidden">
-          {/* LEFT — Send Gift */}
           <section className={`${panelClass} p-4 sm:p-8 flex flex-col min-h-0 overflow-hidden lg:h-[720px]`}>
             <h2 className="text-lg sm:text-xl font-semibold mb-3">Send a Gift</h2>
 
-            {/* Presets first */}
             <div className="flex flex-wrap gap-2 mb-3">
               {presetAmounts.map((v) => {
                 const selected = Number(amount) === v;
@@ -532,7 +533,6 @@ export default function CreatorClient({ username: propUsername }: { username?: s
               })}
             </div>
 
-            {/* Amount under presets — FIXED (stays inside panel, no sideways overflow) */}
             <div className="flex items-center gap-3 mb-3 w-full min-w-0">
               <span className="text-xl font-bold shrink-0">£</span>
               <input
@@ -558,7 +558,6 @@ export default function CreatorClient({ username: propUsername }: { username?: s
               className="w-full rounded-xl bg-white/10 border border-white/20 px-3 py-2 text-sm text-white placeholder-white/60 outline-none mb-3 focus:border-white/35"
             />
 
-            {/* Mobile shorter message box */}
             <textarea
               value={message}
               onChange={(e) => setMessage(e.target.value.slice(0, 120))}
@@ -571,7 +570,6 @@ export default function CreatorClient({ username: propUsername }: { username?: s
               <span>Gift anonymously</span>
             </label>
 
-            {/* CTA stays directly under checkbox (desktop + mobile) */}
             <button
               className="w-full py-3 rounded-xl text-white font-semibold active:scale-[0.98] transition mb-2 shadow-xl border border-white/15 hover:opacity-[0.96]"
               style={ctaStyle}
@@ -584,7 +582,6 @@ export default function CreatorClient({ username: propUsername }: { username?: s
             <p className="text-center text-[11px] text-white/80">Pay by bank • No card details needed</p>
             <p className="text-center text-[11px] text-white/60 mt-1 tracking-wide">Secure checkout powered by Stripe</p>
 
-            {/* Desktop QR (unchanged) */}
             <div className="mt-auto pt-4 pb-2 hidden lg:flex flex-col items-center gap-2">
               <div className="bg-white rounded-2xl p-3 border border-black/20 shadow-xl flex items-center justify-center">
                 {pageUrl ? (
@@ -599,7 +596,6 @@ export default function CreatorClient({ username: propUsername }: { username?: s
             </div>
           </section>
 
-          {/* RIGHT — Recent Gifts + Top Supporters */}
           <section className={`${panelClass} p-4 sm:p-8 flex flex-col min-h-0 overflow-hidden lg:h-[720px]`}>
             <div className="mb-4 flex items-center justify-start lg:justify-between">
               <h2 className="text-lg sm:text-xl font-semibold">Recent Gifts 🎁</h2>
@@ -610,10 +606,10 @@ export default function CreatorClient({ username: propUsername }: { username?: s
             ) : payments.length === 0 ? (
               <p className="text-center text-white/70 text-sm">No gifts yet — be the first! 🎁</p>
             ) : (
-              // Mobile shows ~5/6 then scroll; desktop uses full height
               <div className="w-full overflow-y-auto pr-1 everpay-scroll mb-4 space-y-2 max-h-[260px] sm:max-h-[360px] lg:max-h-none lg:flex-1 lg:min-h-0">
                 {payments.map((p) => {
                   const displayName = p.anonymous ? "Anonymous" : p.gift_name?.trim() ? p.gift_name : "Someone";
+                  const giftPence = getGiftPence(p);
 
                   return (
                     <div
@@ -622,7 +618,7 @@ export default function CreatorClient({ username: propUsername }: { username?: s
                     >
                       <div className="flex-1 min-w-0">
                         <p className="font-semibold text-[13px] sm:text-sm truncate">
-                          {displayName} gifted {formatGBP(p.amount)}
+                          {displayName} gifted {formatGBP(giftPence)}
                         </p>
                         {p.gift_message && (
                           <p className="text-[11px] sm:text-xs opacity-80 mt-1 italic line-clamp-2">“{p.gift_message}”</p>
@@ -638,7 +634,6 @@ export default function CreatorClient({ username: propUsername }: { username?: s
 
             {!loadingPayments && topSupporters.length > 0 && (
               <>
-                {/* Mobile: toggle so it doesn't crush Recent Gifts */}
                 <div className="lg:hidden">
                   <button
                     type="button"
@@ -682,7 +677,6 @@ export default function CreatorClient({ username: propUsername }: { username?: s
                   )}
                 </div>
 
-                {/* Desktop: always visible */}
                 <div className="hidden lg:block rounded-2xl bg-white/6 border border-white/15 p-4">
                   <div className="flex items-center justify-between mb-3">
                     <p className="text-[11px] uppercase tracking-[0.18em] text-white/70">Top Supporters</p>
@@ -718,7 +712,6 @@ export default function CreatorClient({ username: propUsername }: { username?: s
           </section>
         </div>
 
-        {/* MOBILE QR — collapsible */}
         <section className={`lg:hidden ${panelClass} px-5 py-4 overflow-hidden`}>
           <button
             type="button"
@@ -750,7 +743,6 @@ export default function CreatorClient({ username: propUsername }: { username?: s
           )}
         </section>
 
-        {/* Avatar modal */}
         {showAvatar && profile.avatar_url && (
           <div
             className="fixed inset-0 z-[100] bg-black/75 backdrop-blur-sm flex items-center justify-center p-6"
@@ -781,10 +773,9 @@ export default function CreatorClient({ username: propUsername }: { username?: s
           </div>
         )}
 
-        {/* Local thin scrollbar styling + hard kill horizontal scroll */}
         <style jsx global>{`
           .everpay-scroll {
-            scrollbar-width: thin; /* Firefox */
+            scrollbar-width: thin;
             scrollbar-color: rgba(255, 255, 255, 0.22) rgba(255, 255, 255, 0.05);
           }
           .everpay-scroll::-webkit-scrollbar {
@@ -807,7 +798,6 @@ export default function CreatorClient({ username: propUsername }: { username?: s
             overflow-x: hidden;
           }
 
-          /* prevent accidental sideways scroll from any child */
           #__next {
             overflow-x: hidden;
           }
