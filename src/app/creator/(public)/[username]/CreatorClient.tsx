@@ -1,7 +1,7 @@
 // ~/everpay-frontend/src/app/creator/(public)/[username]/CreatorClient.tsx
 "use client";
 
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import { useParams } from "next/navigation";
 import QRCode from "react-qr-code";
 
@@ -110,7 +110,6 @@ export default function CreatorClient({ username: propUsername }: { username?: s
   const apiUrl = process.env.NEXT_PUBLIC_API_URL;
   const baseUrl = process.env.NEXT_PUBLIC_PUBLIC_BASE_URL;
 
-  // fallback to route params on client
   const params = useParams<{ username?: string | string[] }>();
   const routeUsernameRaw = params?.username;
   const routeUsername =
@@ -118,7 +117,6 @@ export default function CreatorClient({ username: propUsername }: { username?: s
 
   const username = String(propUsername || routeUsername || "").trim();
 
-  // Always resolve a valid public URL (works on Vercel + locally)
   const origin = typeof window !== "undefined" ? window.location.origin : baseUrl || "";
   const pageUrl = origin && username ? `${origin}/creator/${encodeURIComponent(username)}` : "";
 
@@ -134,22 +132,20 @@ export default function CreatorClient({ username: propUsername }: { username?: s
   const [profile, setProfile] = useState<CreatorProfile | null>(null);
   const [profileLoaded, setProfileLoaded] = useState(false);
 
-  // Profile picture modal
   const [showAvatar, setShowAvatar] = useState(false);
-
-  // Animated milestone percent (smooth climb)
   const [displayMilestonePercent, setDisplayMilestonePercent] = useState(0);
-
-  // Mobile QR collapsible (default collapsed)
   const [showMobileQR, setShowMobileQR] = useState(false);
-
-  // Mobile Top Supporters toggle
   const [showTopSupportersMobile, setShowTopSupportersMobile] = useState(false);
 
-  // Preset amounts (GBP)
+  const [toastPayment, setToastPayment] = useState<Payment | null>(null);
+  const latestSeenPaymentIdRef = useRef<string | null>(null);
+  const toastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   const presetAmounts = [2, 5, 10, 20, 50];
 
-  // Load creator profile (+ milestone)
+  const creatorDisplayName = (profile?.profile_name || username || "").trim();
+  const creatorFirstName = creatorDisplayName.split(" ")[0] || creatorDisplayName || "Creator";
+
   useEffect(() => {
     async function load() {
       try {
@@ -189,7 +185,6 @@ export default function CreatorClient({ username: propUsername }: { username?: s
     load();
   }, [apiUrl, username]);
 
-  // Refresh colours & milestone every 3 seconds (but never overwrite with undefined)
   useEffect(() => {
     if (!apiUrl) return;
     if (!username) return;
@@ -238,7 +233,6 @@ export default function CreatorClient({ username: propUsername }: { username?: s
     return () => clearInterval(interval);
   }, [apiUrl, username]);
 
-  // Load payments (and keep refreshing)
   useEffect(() => {
     if (!apiUrl) return;
     if (!username) return;
@@ -247,7 +241,25 @@ export default function CreatorClient({ username: propUsername }: { username?: s
       try {
         const res = await fetch(`${apiUrl}/api/payments/creator/${encodeURIComponent(username)}`);
         const data = await res.json().catch(() => []);
-        setPayments(Array.isArray(data) ? data : []);
+        const nextPayments = Array.isArray(data) ? data : [];
+
+        setPayments(nextPayments);
+
+        if (nextPayments.length > 0) {
+          const newest = nextPayments[0];
+
+          if (!latestSeenPaymentIdRef.current) {
+            latestSeenPaymentIdRef.current = newest.id;
+          } else if (newest.id !== latestSeenPaymentIdRef.current) {
+            latestSeenPaymentIdRef.current = newest.id;
+            setToastPayment(newest);
+
+            if (toastTimeoutRef.current) clearTimeout(toastTimeoutRef.current);
+            toastTimeoutRef.current = setTimeout(() => {
+              setToastPayment(null);
+            }, 3500);
+          }
+        }
       } catch {
         setPayments([]);
       } finally {
@@ -257,10 +269,13 @@ export default function CreatorClient({ username: propUsername }: { username?: s
 
     loadPayments();
     const interval = setInterval(loadPayments, 5000);
-    return () => clearInterval(interval);
+
+    return () => {
+      clearInterval(interval);
+      if (toastTimeoutRef.current) clearTimeout(toastTimeoutRef.current);
+    };
   }, [apiUrl, username]);
 
-  // Handle send gift
   async function handlePay() {
     if (!apiUrl) {
       alert("Missing API URL");
@@ -322,7 +337,6 @@ export default function CreatorClient({ username: propUsername }: { username?: s
 
   const totalEarned = payments.reduce((sum, p) => sum + getGiftPence(p), 0) / 100;
 
-  // Top Supporters — top 4
   const topSupporters = useMemo(() => {
     if (!Array.isArray(payments) || payments.length === 0) return [];
 
@@ -362,7 +376,6 @@ export default function CreatorClient({ username: propUsername }: { username?: s
   const milestoneProgress = milestoneTarget > 0 ? Math.min(1, totalEarned / milestoneTarget) : 0;
   const milestonePercent = Math.round(milestoneProgress * 100);
 
-  // Animate milestone percent smoothly
   useEffect(() => {
     if (!milestoneEnabled) {
       setDisplayMilestonePercent(0);
@@ -397,8 +410,15 @@ export default function CreatorClient({ username: propUsername }: { username?: s
     background: `linear-gradient(90deg, ${bgStart}, ${bgMid}, ${bgEnd})`,
   };
 
-  // Premium panel styles
   const panelClass = "bg-black/45 backdrop-blur-md rounded-3xl border border-white/18 shadow-2xl";
+
+  const toastName = toastPayment
+    ? toastPayment.anonymous
+      ? "Someone"
+      : toastPayment.gift_name?.trim() || "Someone"
+    : "";
+
+  const toastAmount = toastPayment ? formatGBP(getGiftPence(toastPayment)) : "";
 
   return (
     <div
@@ -406,6 +426,17 @@ export default function CreatorClient({ username: propUsername }: { username?: s
       style={{ background: `linear-gradient(to bottom right, ${bgStart}, ${bgMid}, ${bgEnd})` }}
     >
       <div className="w-full max-w-6xl space-y-4 sm:space-y-6 px-1 sm:px-0 overflow-x-hidden">
+        {toastPayment && (
+          <div className="fixed left-1/2 -translate-x-1/2 bottom-5 sm:left-auto sm:right-6 sm:translate-x-0 sm:bottom-6 z-[120] pointer-events-none">
+            <div className="px-4 py-3 rounded-2xl border border-white/30 bg-black/75 backdrop-blur-xl shadow-2xl text-white min-w-[220px] max-w-[88vw] animate-[fadeInUp_.25s_ease]">
+              <p className="text-sm sm:text-[15px] font-semibold truncate">
+                🔥 {toastName} just gifted {toastAmount}
+              </p>
+              <p className="text-[11px] sm:text-xs text-white/65 mt-1">Added to Recent Gifts</p>
+            </div>
+          </div>
+        )}
+
         {/* Header */}
         <section className={`w-full ${panelClass} px-5 sm:px-8 py-4 sm:py-6 overflow-x-hidden`}>
           <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 sm:gap-6">
@@ -545,7 +576,7 @@ export default function CreatorClient({ username: propUsername }: { username?: s
                   setAmount(raw);
                 }}
                 placeholder="0.00"
-                className="min-w-0 flex-1 rounded-xl bg-white/10 border border-white/20 px-3 py-2 text-base text-white placeholder-white/60 outline-none focus:border-white/35"
+                className="min-w-0 flex-1 rounded-xl bg-white/10 border border-white/20 px-3 py-2 sm:py-2.5 text-base text-white placeholder-white/60 outline-none focus:border-white/35"
               />
             </div>
 
@@ -571,12 +602,12 @@ export default function CreatorClient({ username: propUsername }: { username?: s
             </label>
 
             <button
-              className="w-full py-3 rounded-xl text-white font-semibold active:scale-[0.98] transition mb-2 shadow-xl border border-white/15 hover:opacity-[0.96]"
+              className="w-full py-3 rounded-xl text-white font-semibold active:scale-[0.98] transition mb-2 shadow-xl border-2 border-white/70 hover:border-white hover:opacity-[0.97]"
               style={ctaStyle}
               onClick={handlePay}
               disabled={loading}
             >
-              {loading ? "Redirecting..." : "Send Gift 🎁"}
+              {loading ? "Redirecting..." : `Send ${creatorFirstName} a Gift 🎁`}
             </button>
 
             <p className="text-center text-[11px] text-white/80">Pay by bank • No card details needed</p>
@@ -791,6 +822,17 @@ export default function CreatorClient({ username: propUsername }: { username?: s
           }
           .everpay-scroll::-webkit-scrollbar-thumb:hover {
             background: rgba(255, 255, 255, 0.32);
+          }
+
+          @keyframes fadeInUp {
+            from {
+              opacity: 0;
+              transform: translateY(10px);
+            }
+            to {
+              opacity: 1;
+              transform: translateY(0);
+            }
           }
 
           html,
