@@ -2,7 +2,7 @@
 "use client";
 
 import React, { useEffect, useMemo, useRef, useState } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useSearchParams } from "next/navigation";
 import QRCode from "react-qr-code";
 
 type Payment = {
@@ -92,7 +92,6 @@ function getGiftPence(payment: Payment) {
   return Number(payment.amount || 0);
 }
 
-// TikTok-ish verified badge (subtle)
 function VerifiedBadge() {
   return (
     <span className="inline-flex items-center gap-1.5 text-[12px] text-white/80 shrink-0">
@@ -111,6 +110,8 @@ export default function CreatorClient({ username: propUsername }: { username?: s
   const baseUrl = process.env.NEXT_PUBLIC_PUBLIC_BASE_URL;
 
   const params = useParams<{ username?: string | string[] }>();
+  const searchParams = useSearchParams();
+
   const routeUsernameRaw = params?.username;
   const routeUsername =
     typeof routeUsernameRaw === "string" ? routeUsernameRaw : Array.isArray(routeUsernameRaw) ? routeUsernameRaw[0] : "";
@@ -138,8 +139,12 @@ export default function CreatorClient({ username: propUsername }: { username?: s
   const [showTopSupportersMobile, setShowTopSupportersMobile] = useState(false);
 
   const [toastPayment, setToastPayment] = useState<Payment | null>(null);
+  const [successToast, setSuccessToast] = useState(false);
+  const [successToastName, setSuccessToastName] = useState("");
+
   const latestSeenPaymentIdRef = useRef<string | null>(null);
   const toastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const successToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const presetAmounts = [2, 5, 10, 20, 50];
 
@@ -276,6 +281,35 @@ export default function CreatorClient({ username: propUsername }: { username?: s
     };
   }, [apiUrl, username]);
 
+  useEffect(() => {
+    const success = searchParams.get("success");
+    if (success !== "true") return;
+    if (typeof window === "undefined") return;
+
+    const pendingKey = `everpay_pending_gift_${username}`;
+    const pendingNameKey = `everpay_pending_gift_name_${username}`;
+
+    const hadPendingGift = window.localStorage.getItem(pendingKey) === "1";
+    if (!hadPendingGift) return;
+
+    const storedName = (window.localStorage.getItem(pendingNameKey) || "").trim();
+
+    setSuccessToastName(storedName);
+    setSuccessToast(true);
+
+    window.localStorage.removeItem(pendingKey);
+    window.localStorage.removeItem(pendingNameKey);
+
+    if (successToastTimeoutRef.current) clearTimeout(successToastTimeoutRef.current);
+    successToastTimeoutRef.current = setTimeout(() => {
+      setSuccessToast(false);
+    }, 4000);
+
+    return () => {
+      if (successToastTimeoutRef.current) clearTimeout(successToastTimeoutRef.current);
+    };
+  }, [searchParams, username]);
+
   async function handlePay() {
     if (!apiUrl) {
       alert("Missing API URL");
@@ -301,6 +335,9 @@ export default function CreatorClient({ username: propUsername }: { username?: s
     try {
       if (typeof window !== "undefined") {
         window.localStorage.setItem(`everpay_pending_gift_${username}`, "1");
+
+        const safeSupporterName = anonymous ? "" : supporterName.trim();
+        window.localStorage.setItem(`everpay_pending_gift_name_${username}`, safeSupporterName);
       }
 
       const res = await fetch(`${apiUrl}/creator/pay/${encodeURIComponent(username)}`, {
@@ -420,12 +457,25 @@ export default function CreatorClient({ username: propUsername }: { username?: s
 
   const toastAmount = toastPayment ? formatGBP(getGiftPence(toastPayment)) : "";
 
+  const successNameLabel = successToastName || "there";
+
   return (
     <div
       className="min-h-screen text-white flex justify-center px-4 py-6 sm:py-8 transition-[background] duration-[600ms] overflow-x-hidden"
       style={{ background: `linear-gradient(to bottom right, ${bgStart}, ${bgMid}, ${bgEnd})` }}
     >
       <div className="w-full max-w-6xl space-y-4 sm:space-y-6 px-1 sm:px-0 overflow-x-hidden">
+        {successToast && (
+          <div className="fixed left-1/2 -translate-x-1/2 bottom-5 sm:left-auto sm:right-6 sm:translate-x-0 sm:bottom-6 z-[121] pointer-events-none">
+            <div className="px-4 py-3 rounded-2xl border border-white/30 bg-black/78 backdrop-blur-xl shadow-2xl text-white min-w-[240px] max-w-[90vw] animate-[fadeInUp_.25s_ease]">
+              <p className="text-sm sm:text-[15px] font-semibold">
+                🎁 Thank you {successNameLabel} — your gift to {creatorFirstName} was sent
+              </p>
+              <p className="text-[11px] sm:text-xs text-white/65 mt-1">Added to Recent Gifts</p>
+            </div>
+          </div>
+        )}
+
         {toastPayment && (
           <div className="fixed left-1/2 -translate-x-1/2 bottom-5 sm:left-auto sm:right-6 sm:translate-x-0 sm:bottom-6 z-[120] pointer-events-none">
             <div className="px-4 py-3 rounded-2xl border border-white/30 bg-black/75 backdrop-blur-xl shadow-2xl text-white min-w-[220px] max-w-[88vw] animate-[fadeInUp_.25s_ease]">
@@ -437,7 +487,6 @@ export default function CreatorClient({ username: propUsername }: { username?: s
           </div>
         )}
 
-        {/* Header */}
         <section className={`w-full ${panelClass} px-5 sm:px-8 py-4 sm:py-6 overflow-x-hidden`}>
           <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 sm:gap-6">
             <div className="flex items-center gap-4 sm:gap-6 min-w-0 flex-1">
