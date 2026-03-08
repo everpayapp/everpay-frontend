@@ -138,11 +138,12 @@ export default function CreatorClient({ username: propUsername }: { username?: s
   const [showMobileQR, setShowMobileQR] = useState(false);
   const [showTopSupportersMobile, setShowTopSupportersMobile] = useState(false);
 
-  const [toastPayment, setToastPayment] = useState<Payment | null>(null);
+  const [activeToastPayment, setActiveToastPayment] = useState<Payment | null>(null);
   const [successToast, setSuccessToast] = useState(false);
   const [successToastName, setSuccessToastName] = useState("");
 
   const latestSeenPaymentIdRef = useRef<string | null>(null);
+  const toastQueueRef = useRef<Payment[]>([]);
   const toastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const successToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -151,11 +152,42 @@ export default function CreatorClient({ username: propUsername }: { username?: s
   const creatorDisplayName = (profile?.profile_name || username || "").trim();
   const creatorFirstName = creatorDisplayName.split(" ")[0] || creatorDisplayName || "Creator";
 
+  function enqueueToast(payment: Payment) {
+    const alreadyQueued = toastQueueRef.current.some((p) => p.id === payment.id);
+    const isActive = activeToastPayment?.id === payment.id;
+    if (alreadyQueued || isActive) return;
+
+    toastQueueRef.current.push(payment);
+
+    if (!activeToastPayment) {
+      showNextToast();
+    }
+  }
+
+  function showNextToast() {
+    if (toastTimeoutRef.current) clearTimeout(toastTimeoutRef.current);
+
+    const next = toastQueueRef.current.shift() || null;
+    setActiveToastPayment(next);
+
+    if (next) {
+      toastTimeoutRef.current = setTimeout(() => {
+        setActiveToastPayment(null);
+      }, 3200);
+    }
+  }
+
+  useEffect(() => {
+    if (!activeToastPayment && toastQueueRef.current.length > 0) {
+      showNextToast();
+    }
+    return undefined;
+  }, [activeToastPayment]);
+
   useEffect(() => {
     async function load() {
       try {
-        if (!apiUrl) return;
-        if (!username) return;
+        if (!apiUrl || !username) return;
 
         const res = await fetch(`${apiUrl}/api/creator/profile?username=${encodeURIComponent(username)}`);
         const data = await res.json().catch(() => ({} as any));
@@ -191,8 +223,7 @@ export default function CreatorClient({ username: propUsername }: { username?: s
   }, [apiUrl, username]);
 
   useEffect(() => {
-    if (!apiUrl) return;
-    if (!username) return;
+    if (!apiUrl || !username) return;
 
     const interval = setInterval(async () => {
       try {
@@ -239,8 +270,7 @@ export default function CreatorClient({ username: propUsername }: { username?: s
   }, [apiUrl, username]);
 
   useEffect(() => {
-    if (!apiUrl) return;
-    if (!username) return;
+    if (!apiUrl || !username) return;
 
     async function loadPayments() {
       try {
@@ -256,13 +286,18 @@ export default function CreatorClient({ username: propUsername }: { username?: s
           if (!latestSeenPaymentIdRef.current) {
             latestSeenPaymentIdRef.current = newest.id;
           } else if (newest.id !== latestSeenPaymentIdRef.current) {
-            latestSeenPaymentIdRef.current = newest.id;
-            setToastPayment(newest);
+            const previousTopId = latestSeenPaymentIdRef.current;
+            const previousTopIndex = nextPayments.findIndex((p) => p.id === previousTopId);
 
-            if (toastTimeoutRef.current) clearTimeout(toastTimeoutRef.current);
-            toastTimeoutRef.current = setTimeout(() => {
-              setToastPayment(null);
-            }, 3500);
+            const unseenPayments =
+              previousTopIndex > 0 ? nextPayments.slice(0, previousTopIndex) : [newest];
+
+            unseenPayments
+              .slice()
+              .reverse()
+              .forEach((payment) => enqueueToast(payment));
+
+            latestSeenPaymentIdRef.current = newest.id;
           }
         }
       } catch {
@@ -278,8 +313,9 @@ export default function CreatorClient({ username: propUsername }: { username?: s
     return () => {
       clearInterval(interval);
       if (toastTimeoutRef.current) clearTimeout(toastTimeoutRef.current);
+      if (successToastTimeoutRef.current) clearTimeout(successToastTimeoutRef.current);
     };
-  }, [apiUrl, username]);
+  }, [apiUrl, username, activeToastPayment]);
 
   useEffect(() => {
     const success = searchParams.get("success");
@@ -319,7 +355,6 @@ export default function CreatorClient({ username: propUsername }: { username?: s
       alert("Missing creator username in URL");
       return;
     }
-
     if (!amount || Number(amount) <= 0) {
       alert("Enter an amount");
       return;
@@ -335,7 +370,6 @@ export default function CreatorClient({ username: propUsername }: { username?: s
     try {
       if (typeof window !== "undefined") {
         window.localStorage.setItem(`everpay_pending_gift_${username}`, "1");
-
         const safeSupporterName = anonymous ? "" : supporterName.trim();
         window.localStorage.setItem(`everpay_pending_gift_name_${username}`, safeSupporterName);
       }
@@ -449,14 +483,13 @@ export default function CreatorClient({ username: propUsername }: { username?: s
 
   const panelClass = "bg-black/45 backdrop-blur-md rounded-3xl border border-white/18 shadow-2xl";
 
-  const toastName = toastPayment
-    ? toastPayment.anonymous
+  const toastName = activeToastPayment
+    ? activeToastPayment.anonymous
       ? "Someone"
-      : toastPayment.gift_name?.trim() || "Someone"
+      : activeToastPayment.gift_name?.trim() || "Someone"
     : "";
 
-  const toastAmount = toastPayment ? formatGBP(getGiftPence(toastPayment)) : "";
-
+  const toastAmount = activeToastPayment ? formatGBP(getGiftPence(activeToastPayment)) : "";
   const successNameLabel = successToastName || "there";
 
   return (
@@ -476,7 +509,7 @@ export default function CreatorClient({ username: propUsername }: { username?: s
           </div>
         )}
 
-        {toastPayment && (
+        {activeToastPayment && (
           <div className="fixed left-1/2 -translate-x-1/2 bottom-5 sm:left-auto sm:right-6 sm:translate-x-0 sm:bottom-6 z-[120] pointer-events-none">
             <div className="px-4 py-3 rounded-2xl border border-white/30 bg-black/75 backdrop-blur-xl shadow-2xl text-white min-w-[220px] max-w-[88vw] animate-[fadeInUp_.25s_ease]">
               <p className="text-sm sm:text-[15px] font-semibold truncate">
