@@ -1,46 +1,23 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
 
 export default function HomePage() {
-  const apiUrl = process.env.NEXT_PUBLIC_API_URL;
-
-  const [prizePoolGbp, setPrizePoolGbp] = useState<number | null>(null);
-  const [loadingPrizePool, setLoadingPrizePool] = useState(true);
-
-  useEffect(() => {
-    if (!apiUrl) return;
-
-    async function loadPrizePool() {
-      try {
-        const res = await fetch(`${apiUrl}/api/prize-pool`);
-        const data = await res.json().catch(() => ({} as any));
-        const gbp = Number(data?.prize_pool_gbp);
-        setPrizePoolGbp(Number.isFinite(gbp) ? gbp : null);
-      } catch {
-        setPrizePoolGbp(null);
-      } finally {
-        setLoadingPrizePool(false);
-      }
-    }
-
-    loadPrizePool();
-    const interval = setInterval(loadPrizePool, 15000);
-    return () => clearInterval(interval);
-  }, [apiUrl]);
-
   return (
-    <main className="min-h-screen text-white">
+    <main
+      className="min-h-screen text-white"
+      style={{
+        background:
+          "radial-gradient(circle at top, rgba(0,61,245,0.18), transparent 32%), linear-gradient(to bottom right, #050816, #071227 45%, #0a1630 100%)",
+      }}
+    >
       {/* Top bar (homepage only) */}
       <header className="w-full px-6 pt-6">
         <div className="mx-auto max-w-6xl flex items-center justify-between">
-          {/* Brand */}
           <Link href="/" className="text-white font-extrabold tracking-tight text-3xl md:text-4xl">
             EverPay
           </Link>
 
-          {/* Actions */}
           <div className="flex items-center gap-3">
             <Link
               href="/login"
@@ -62,38 +39,33 @@ export default function HomePage() {
       <section className="px-6 pt-10 pb-12">
         <div className="mx-auto max-w-6xl">
           <div className="rounded-3xl border border-white/10 bg-white/5 backdrop-blur-xl p-10 md:p-12 shadow-2xl">
-            <div className="text-xs tracking-widest text-white/60 font-semibold">CREATOR FIRST GIFTING</div>
+            <div className="text-xs tracking-widest text-white/60 font-semibold">CREATOR GIFT PAGES</div>
 
             <h1 className="mt-4 text-4xl md:text-6xl font-extrabold leading-tight">
-              Get paid fast.
+              Get gifted online.
               <br />
               <span className="text-white/70">No wallets. No balances. No delays.</span>
             </h1>
 
-            <p className="mt-4 max-w-2xl text-white/70 leading-relaxed">
-              EverPay lets supporters send you a gift that routes directly to your bank. We do not store balances and we
-              never hold your funds.
+            <p className="mt-4 text-white/90 font-semibold">
+            Creators keep 100% of gifts. Only Stripe processing applies.
+            </p>
+
+            <p className="mt-3 max-w-2xl text-white/70 leading-relaxed">
+             EverPay gives creators a clean page to receive gifts online. People can choose an amount, leave a message, and pay securely with no card details needed.
             </p>
 
             <div className="mt-6 flex flex-wrap gap-2 text-xs">
-              <span className="px-3 py-1 rounded-full bg-black/30 border border-white/10 text-white/70">UK based</span>
+              <span className="px-3 py-1 rounded-full bg-black/30 border border-white/10 text-white/70">Pay by bank</span>
               <span className="px-3 py-1 rounded-full bg-black/30 border border-white/10 text-white/70">
-                Payments protected by Stripe
+                No card details needed
               </span>
               <span className="px-3 py-1 rounded-full bg-black/30 border border-white/10 text-white/70">
-                Funds go directly to you
+                Secure checkout by Stripe
               </span>
-            </div>
-
-            {/* ✅ Live prize pool pill */}
-            <div className="mt-4">
-              <div className="inline-flex items-center gap-2 rounded-full bg-white/10 border border-white/10 px-3 py-1 text-xs text-white/80">
-                <span>🏆 Monthly Prize Pool (live) grows with every gift </span>
-                <span className="opacity-60">•</span>
-                <span className="font-semibold text-white">
-                  {loadingPrizePool ? "£…" : prizePoolGbp !== null ? `£${prizePoolGbp.toFixed(2)}` : "£0.00"}
-                </span>
-              </div>
+              <span className="px-3 py-1 rounded-full bg-black/30 border border-white/10 text-white/70">
+                Built for creators
+              </span>
             </div>
 
             <div className="mt-7 flex flex-wrap gap-3">
@@ -112,7 +84,9 @@ export default function HomePage() {
               </Link>
             </div>
 
-            <p className="mt-5 text-xs text-white/50">Payments are processed by Stripe and routed directly to creators.</p>
+            <p className="mt-5 text-xs text-white/50">
+              Share one clean link across your social platforms and give people a faster, safer way to send you a gift.
+            </p>
           </div>
         </div>
       </section>
@@ -122,7 +96,7 @@ export default function HomePage() {
         <div className="mx-auto max-w-6xl">
           <h2 className="text-2xl md:text-3xl font-bold">How EverPay works</h2>
           <p className="mt-2 text-white/60 max-w-2xl">
-            A simple flow supporters understand instantly. Built to feel safe and familiar.
+            A simple gifting flow designed to feel clear, safe, and easy to use.
           </p>
 
           <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -130,7 +104,7 @@ export default function HomePage() {
               <div className="text-xs text-white/50 font-semibold">STEP 1</div>
               <div className="mt-2 font-semibold text-lg">Create your page</div>
               <p className="mt-2 text-white/60 text-sm">
-                Add your name, profile picture, and links. Your EverPay page becomes your single shareable link.
+                Add your name, profile picture, and links. Your EverPay page becomes your single shareable gift link.
               </p>
             </div>
 
@@ -138,15 +112,15 @@ export default function HomePage() {
               <div className="text-xs text-white/50 font-semibold">STEP 2</div>
               <div className="mt-2 font-semibold text-lg">Share it anywhere</div>
               <p className="mt-2 text-white/60 text-sm">
-                Put it in TikTok, Instagram, YouTube, Twitch, or anywhere your supporters already are.
+                Put it across your social platforms, livestreams, bio links, or anywhere your audience already follows you.
               </p>
             </div>
 
             <div className="rounded-2xl border border-white/10 bg-white/5 p-6">
               <div className="text-xs text-white/50 font-semibold">STEP 3</div>
-              <div className="mt-2 font-semibold text-lg">Supporters send a gift</div>
+              <div className="mt-2 font-semibold text-lg">Receive gifts</div>
               <p className="mt-2 text-white/60 text-sm">
-                They choose an amount, add a message, and checkout securely. Funds route straight to your bank.
+                People choose an amount, add a message, and check out securely through a clean pay-by-bank flow.
               </p>
             </div>
           </div>
@@ -158,34 +132,36 @@ export default function HomePage() {
         <div className="mx-auto max-w-6xl">
           <h2 className="text-2xl md:text-3xl font-bold">Built on trust</h2>
           <p className="mt-2 text-white/60 max-w-2xl">
-            Clear, simple, and designed to make supporters feel safe.
+            Clear, simple, and designed to make gifting feel safer and more premium.
           </p>
 
           <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="rounded-2xl border border-white/10 bg-white/5 p-6">
-              <div className="font-semibold">Payments protected by Stripe</div>
+              <div className="font-semibold">Secure checkout by Stripe</div>
               <p className="mt-2 text-white/60 text-sm">
-                Checkout is handled by Stripe, a globally trusted payments provider.
+                Checkout is powered by Stripe, helping EverPay feel familiar and secure from the moment someone pays.
               </p>
             </div>
 
             <div className="rounded-2xl border border-white/10 bg-white/5 p-6">
-              <div className="font-semibold">No funds held by EverPay</div>
+              <div className="font-semibold">No card details needed</div>
               <p className="mt-2 text-white/60 text-sm">
-                EverPay never holds balances. Payments route directly to creators.
+                Pay by bank keeps the gifting flow simple and can feel safer for people sending money online.
               </p>
             </div>
 
             <div className="rounded-2xl border border-white/10 bg-white/5 p-6">
-              <div className="font-semibold">Simple for supporters</div>
+              <div className="font-semibold">Cleaner than a payment link</div>
               <p className="mt-2 text-white/60 text-sm">
-                A clear page, a clear amount, and a familiar checkout.
+                EverPay is built to give creators a cleaner, more premium gift page instead of a basic payment link alone.
               </p>
             </div>
 
             <div className="rounded-2xl border border-white/10 bg-white/5 p-6">
-              <div className="font-semibold">UK first, global next</div>
-              <p className="mt-2 text-white/60 text-sm">Launching UK first with Stripe as the secure base.</p>
+              <div className="font-semibold">Simple fee structure</div>
+              <p className="mt-2 text-white/60 text-sm">
+                No confusing wallets, stored balances, or cluttered checkout journey just a simple gift experience.
+              </p>
             </div>
           </div>
         </div>
@@ -196,7 +172,7 @@ export default function HomePage() {
         <div className="mx-auto max-w-6xl">
           <div className="rounded-3xl border border-white/10 bg-white/5 backdrop-blur-xl p-10 text-center">
             <h3 className="text-2xl md:text-3xl font-bold">Start with EverPay today</h3>
-            <p className="mt-2 text-white/60">Set up your page in minutes, then share your link everywhere.</p>
+            <p className="mt-2 text-white/60">Set up your page in minutes, then share your link anywhere.</p>
 
             <div className="mt-6 flex flex-wrap justify-center gap-3">
               <Link
@@ -216,19 +192,19 @@ export default function HomePage() {
             <p className="mt-4 text-xs text-white/50">No monthly fees. No setup costs.</p>
           </div>
 
-         <footer className="mt-10 text-center text-xs text-white/40">
-  <div className="flex flex-wrap items-center justify-center gap-3">
-    <span>© {new Date().getFullYear()} EverPay. Powered by Stripe.</span>
-    <span className="opacity-40">•</span>
-    <Link href="/terms" className="hover:text-white transition">
-      Terms
-    </Link>
-    <span className="opacity-40">•</span>
-    <Link href="/privacy" className="hover:text-white transition">
-      Privacy
-    </Link>
-  </div>
-</footer>
+          <footer className="mt-10 text-center text-xs text-white/40">
+            <div className="flex flex-wrap items-center justify-center gap-3">
+              <span>© {new Date().getFullYear()} EverPay. Powered by Stripe.</span>
+              <span className="opacity-40">•</span>
+              <Link href="/terms" className="hover:text-white transition">
+                Terms
+              </Link>
+              <span className="opacity-40">•</span>
+              <Link href="/privacy" className="hover:text-white transition">
+                Privacy
+              </Link>
+            </div>
+          </footer>
         </div>
       </section>
     </main>
