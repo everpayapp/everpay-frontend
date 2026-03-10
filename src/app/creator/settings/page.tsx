@@ -1,3 +1,5 @@
+
+
 // ~/everpay-frontend/src/app/creator/settings/page.tsx
 "use client";
 
@@ -20,7 +22,6 @@ type CreatorProfile = {
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL!;
 
-// ✅ Locked EverPay identity (Premium Graphite) — matches your desired look
 const LOCKED_THEME = {
   start: "#0B0D12",
   mid: "#121826",
@@ -31,7 +32,6 @@ export default function CreatorSettingsPage() {
   const { status, data: session } = useSession();
   const router = useRouter();
 
-  // ✅ ONLY use the session username (no fallback!)
   const username = (session?.user as any)?.username as string | undefined;
 
   const [profile, setProfile] = useState<CreatorProfile | null>(null);
@@ -46,13 +46,11 @@ export default function CreatorSettingsPage() {
   const [milestoneAmount, setMilestoneAmount] = useState("");
   const [milestoneText, setMilestoneText] = useState("");
 
-  // Profile picture upload state
   const fileRef = useRef<HTMLInputElement | null>(null);
   const [avatarFile, setAvatarFile] = useState<File | null>(null);
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
 
-  // Stripe Connect (payouts)
   const [connectLoading, setConnectLoading] = useState(false);
   const [connectError, setConnectError] = useState<string | null>(null);
   const [connectStatus, setConnectStatus] = useState<{
@@ -63,7 +61,6 @@ export default function CreatorSettingsPage() {
     requirementsDue?: string[];
   } | null>(null);
 
-  // Shared “EverPay glass panel” styles (match Gift page feel)
   const PANEL =
     "rounded-3xl border border-white/18 bg-black/25 backdrop-blur-xl shadow-[0_18px_60px_rgba(0,0,0,0.55)] ring-1 ring-white/10";
   const SUBPANEL = "rounded-2xl border border-white/12 bg-black/20";
@@ -72,14 +69,12 @@ export default function CreatorSettingsPage() {
   const TEXTAREA =
     "w-full mt-1 rounded-xl bg-white/10 border border-white/20 px-3 py-2 text-sm text-white placeholder-white/50 outline-none resize-none";
 
-  // Redirect if logged out
   useEffect(() => {
     if (status === "unauthenticated") {
       router.replace("/login");
     }
   }, [status, router]);
 
-  // Load profile (only when authenticated + username exists)
   useEffect(() => {
     if (status !== "authenticated") return;
 
@@ -149,12 +144,9 @@ export default function CreatorSettingsPage() {
         profile_name: profile?.profile_name ?? "",
         avatar_url: newUrl,
         social_links: socialLinksArray,
-
-        // ✅ LOCKED THEME
         theme_start: LOCKED_THEME.start,
         theme_mid: LOCKED_THEME.mid,
         theme_end: LOCKED_THEME.end,
-
         milestone_enabled: milestoneEnabled ? 1 : 0,
         milestone_amount: Number(milestoneAmount) || 0,
         milestone_text: milestoneText,
@@ -240,12 +232,9 @@ export default function CreatorSettingsPage() {
           profile_name: profile.profile_name,
           avatar_url: profile.avatar_url,
           social_links: socialLinksArray,
-
-          // ✅ LOCKED THEME
           theme_start: LOCKED_THEME.start,
           theme_mid: LOCKED_THEME.mid,
           theme_end: LOCKED_THEME.end,
-
           milestone_enabled: milestoneEnabled ? 1 : 0,
           milestone_amount: Number(milestoneAmount) || 0,
           milestone_text: milestoneText,
@@ -287,6 +276,25 @@ export default function CreatorSettingsPage() {
     loadConnectStatus();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [status, username]);
+
+  useEffect(() => {
+    if (typeof window === "undefined" || !username) return;
+
+    const params = new URLSearchParams(window.location.search);
+    const connectState = params.get("connect");
+    if (!connectState) return;
+
+    loadConnectStatus();
+
+    if (connectState === "refresh") {
+      setConnectError("Stripe onboarding was not completed. Click below to continue setup.");
+    }
+
+    if (connectState === "return") {
+      setSuccess("Returned from Stripe. Refreshing payout status…");
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [username]);
 
   const startConnectOnboarding = async () => {
     if (!username) return;
@@ -361,7 +369,6 @@ export default function CreatorSettingsPage() {
   return (
     <main
       className="min-h-screen text-slate-50 px-6 py-12 flex justify-center"
-      // ✅ Solid graphite — no blue wash
       style={{ backgroundColor: LOCKED_THEME.start }}
     >
       <div className="w-full max-w-3xl space-y-6">
@@ -382,7 +389,6 @@ export default function CreatorSettingsPage() {
             />
           </div>
 
-          {/* Profile Picture Upload (Cloudinary) */}
           <section className={`${SUBPANEL} p-4`}>
             <div className="flex items-start justify-between gap-4 flex-col sm:flex-row">
               <div className="space-y-1">
@@ -463,7 +469,6 @@ export default function CreatorSettingsPage() {
             )}
           </div>
 
-          {/* ✅ Locked theme notice (no selector) */}
           <section className="border-t border-white/10 pt-6">
             <h2 className="text-lg font-semibold mb-1">Theme</h2>
             <p className="text-xs text-white/60">EverPay uses a single premium identity to keep trust high.</p>
@@ -513,7 +518,6 @@ export default function CreatorSettingsPage() {
             )}
           </section>
 
-          {/* Payouts (Stripe Connect) */}
           <section className="mt-8 border-t border-white/10 pt-6">
             <h3 className="text-sm font-semibold text-white mb-2">Payouts</h3>
             <p className="text-[11px] text-white/60 mb-4">
@@ -524,21 +528,29 @@ export default function CreatorSettingsPage() {
               <div className="flex items-start justify-between gap-3 flex-col sm:flex-row">
                 <div>
                   <div className="text-sm font-medium">
-                    {connectStatus?.connected ? "Stripe account connected ✅" : "Stripe account not connected"}
+                    {!connectStatus?.connected
+                      ? "Stripe account not connected"
+                      : connectStatus?.payoutsEnabled
+                      ? "Stripe account connected ✅"
+                      : "Stripe setup incomplete"}
                   </div>
 
                   <div className="text-xs text-white/60 mt-1">
-                    {connectStatus?.connected ? (
+                    {!connectStatus?.connected ? (
+                      "Set up payouts to receive money."
+                    ) : connectStatus?.payoutsEnabled ? (
                       <>
-                        Payouts: <span className="text-white/80">{connectStatus?.payoutsEnabled ? "Enabled" : "Not enabled yet"}</span>
+                        Payouts: <span className="text-white/80">Enabled</span>
                       </>
                     ) : (
-                      "Set up payouts to receive money."
+                      "Finish Stripe onboarding to enable payouts."
                     )}
                   </div>
 
-                  {Array.isArray(connectStatus?.requirementsDue) && connectStatus!.requirementsDue!.length > 0 && (
-                    <div className="mt-2 text-xs text-amber-200/90">Required: {connectStatus!.requirementsDue!.join(", ")}</div>
+                  {Array.isArray(connectStatus?.requirementsDue) && connectStatus.requirementsDue.length > 0 && (
+                    <div className="mt-2 text-xs text-amber-200/90">
+                      Required: {connectStatus.requirementsDue.join(", ")}
+                    </div>
                   )}
                 </div>
 
@@ -552,14 +564,18 @@ export default function CreatorSettingsPage() {
                     Refresh
                   </button>
 
-                  {!connectStatus?.connected ? (
+                  {!connectStatus?.connected || !connectStatus?.payoutsEnabled ? (
                     <button
                       type="button"
                       onClick={startConnectOnboarding}
                       className="flex-1 sm:flex-none px-4 py-2 rounded-xl bg-white text-black text-sm font-semibold disabled:opacity-60"
                       disabled={connectLoading}
                     >
-                      {connectLoading ? "Opening…" : "Set up payouts"}
+                      {connectLoading
+                        ? "Opening…"
+                        : connectStatus?.connected
+                        ? "Continue Stripe setup"
+                        : "Set up payouts"}
                     </button>
                   ) : (
                     <button
@@ -595,7 +611,6 @@ export default function CreatorSettingsPage() {
             <p className="mt-2 text-[11px] text-white/50">We’ll email you a secure link to reset your password.</p>
           </section>
 
-          {/* DANGER ZONE */}
           <div className="mt-10 bg-red-500/10 border border-red-500/25 rounded-2xl p-5">
             <h3 className="text-lg font-semibold text-red-200">Danger zone</h3>
             <p className="text-sm text-white/70 mt-1">
