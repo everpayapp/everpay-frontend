@@ -28,17 +28,15 @@ export default function CreatorPaymentsPage() {
   const { status, data: session } = useSession();
   const router = useRouter();
 
-  // ✅ Force a real string (prevents encodeURIComponent string|undefined build error)
   const username: string = String(
     (session?.user as any)?.username ||
       session?.user?.email?.split("@")?.[0] ||
       "lee"
   );
 
-  // ✅ STYLE (Premium Graphite + stronger white border)
   const PAGE_BG = "#0B0D12";
   const PANEL =
-    "bg-[#151923] rounded-3xl border border-white/20 shadow-[0_18px_60px_rgba(0,0,0,0.55)] ring-1 ring-white/10";
+    "bg-black/25 rounded-3xl border border-white/18 shadow-[0_18px_60px_rgba(0,0,0,0.55)] ring-1 ring-white/10";
 
   const [payments, setPayments] = useState<Payment[]>([]);
   const [loading, setLoading] = useState(true);
@@ -177,7 +175,6 @@ export default function CreatorPaymentsPage() {
       <main className="max-w-4xl mx-auto pt-6 sm:pt-10 px-3 sm:px-0 text-white pb-24">
         <h1 className="text-2xl font-semibold mb-6">Creator Payments</h1>
 
-        {/* SUMMARY / CONTROLS */}
         <div className={`mb-8 ${PANEL} p-6`}>
           <div className="flex flex-col gap-4">
             <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
@@ -215,21 +212,21 @@ export default function CreatorPaymentsPage() {
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-              <div className="bg-black/35 border border-white/15 rounded-xl p-4">
+              <div className="bg-black/20 border border-white/12 rounded-xl p-4">
                 <p className="text-[11px] uppercase text-white/60 mb-1">
                   Total (range)
                 </p>
                 <p className="text-lg font-semibold">{formatGBP(totalRange)}</p>
               </div>
 
-              <div className="bg-black/35 border border-white/15 rounded-xl p-4">
+              <div className="bg-black/20 border border-white/12 rounded-xl p-4">
                 <p className="text-[11px] uppercase text-white/60 mb-1">
                   Payments
                 </p>
                 <p className="text-lg font-semibold">{filtered.length}</p>
               </div>
 
-              <div className="bg-black/35 border border-white/15 rounded-xl p-4">
+              <div className="bg-black/20 border border-white/12 rounded-xl p-4">
                 <p className="text-[11px] uppercase text-white/60 mb-1">
                   Average
                 </p>
@@ -242,7 +239,7 @@ export default function CreatorPaymentsPage() {
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="Search supporter, message, amount…"
-                className="w-full sm:flex-1 bg-black/35 border border-white/15 rounded-xl px-4 py-2 text-sm text-white placeholder:text-white/40 outline-none"
+                className="w-full sm:flex-1 bg-white/10 border border-white/20 rounded-xl px-4 py-2 text-sm text-white placeholder:text-white/40 outline-none"
               />
 
               <div className="flex items-center gap-2 overflow-x-auto whitespace-nowrap -mx-2 px-2 pb-1 sm:overflow-visible sm:whitespace-normal sm:mx-0 sm:px-0 sm:pb-0">
@@ -251,7 +248,7 @@ export default function CreatorPaymentsPage() {
                   className={`shrink-0 px-3 py-2 rounded-xl text-xs border ${
                     anonymousOnly
                       ? "bg-white/10 border-white/20"
-                      : "bg-black/35 border-white/15 text-white/70 hover:text-white"
+                      : "bg-white/10 border-white/20 text-white/70 hover:text-white"
                   }`}
                 >
                   Anonymous: {anonymousOnly ? "ON" : "OFF"}
@@ -272,7 +269,6 @@ export default function CreatorPaymentsPage() {
           </div>
         </div>
 
-        {/* LIST */}
         {loading ? (
           <p className="text-white/70">Loading payments…</p>
         ) : filtered.length === 0 ? (
@@ -282,7 +278,7 @@ export default function CreatorPaymentsPage() {
             {filtered.map((p) => (
               <div
                 key={p.id}
-                className="bg-[#151923] border border-white/20 rounded-xl p-4 flex justify-between gap-4 shadow-[0_12px_40px_rgba(0,0,0,0.45)] ring-1 ring-white/10"
+                className="bg-black/20 border border-white/12 rounded-xl p-4 flex justify-between gap-4 shadow-[0_12px_40px_rgba(0,0,0,0.45)] ring-1 ring-white/10"
               >
                 <div className="min-w-0">
                   <div className="flex items-center justify-between gap-2">

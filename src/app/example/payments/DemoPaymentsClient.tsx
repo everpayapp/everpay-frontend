@@ -18,7 +18,7 @@ const formatGBP = (value: number) =>
 type RangeKey = "today" | "7d" | "30d" | "all";
 
 export default function DemoPaymentsClient({ username }: { username: string }) {
-  // Demo payments (fixed timestamps to avoid hydration mismatch)
+
   const payments: Payment[] = [
     {
       id: "ep_demo_pay_001",
@@ -59,10 +59,8 @@ export default function DemoPaymentsClient({ username }: { username: string }) {
   const [anonymousOnly, setAnonymousOnly] = useState(false);
   const [mounted, setMounted] = useState(false);
 
-  // Avoid any SSR/client mismatch around dates/locales
   useEffect(() => setMounted(true), []);
 
-  // Avoid setting state after unmount (pattern consistent with your real page)
   const mountedRef = useRef(true);
   useEffect(() => {
     mountedRef.current = true;
@@ -71,7 +69,7 @@ export default function DemoPaymentsClient({ username }: { username: string }) {
     };
   }, []);
 
-  const now = new Date("2026-01-30T09:00:00.000Z"); // fixed "now" for demo realism + stability
+  const now = new Date("2026-01-30T09:00:00.000Z");
 
   const startOfToday = new Date(now);
   startOfToday.setHours(0, 0, 0, 0);
@@ -83,7 +81,13 @@ export default function DemoPaymentsClient({ username }: { username: string }) {
   startOf30d.setDate(startOf30d.getDate() - 30);
 
   const rangeStart =
-    range === "today" ? startOfToday : range === "7d" ? startOf7d : range === "30d" ? startOf30d : null;
+    range === "today"
+      ? startOfToday
+      : range === "7d"
+      ? startOf7d
+      : range === "30d"
+      ? startOf30d
+      : null;
 
   const withinRange = (p: Payment) => {
     if (!rangeStart) return true;
@@ -132,9 +136,7 @@ export default function DemoPaymentsClient({ username }: { username: string }) {
       ]),
     ];
 
-    const csv = rows
-      .map((r) => r.map((cell) => `"${String(cell)}"`).join(","))
-      .join("\n");
+    const csv = rows.map((r) => r.map((cell) => `"${String(cell)}"`).join(",")).join("\n");
 
     const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
     const url = window.URL.createObjectURL(blob);
@@ -146,12 +148,16 @@ export default function DemoPaymentsClient({ username }: { username: string }) {
   };
 
   return (
-    <main className="max-w-6xl mx-auto px-4 text-white mt-10 pb-32 bg-gradient-to-b from-slate-800/40 via-slate-900/25 to-transparent rounded-3xl">
+    <main className="max-w-6xl mx-auto px-4 text-white mt-10 pb-32">
+
       <h1 className="text-2xl font-semibold mb-6">Creator Payments</h1>
 
-      <div className="mb-8 bg-black/40 border border-white/10 rounded-2xl p-6">
+      <div className="mb-8 bg-[#151923] border border-white/10 rounded-2xl p-6">
+
         <div className="flex flex-col gap-4">
+
           <div className="flex items-start justify-between gap-4">
+
             <div>
               <p className="text-sm uppercase text-white/60 mb-1">Today</p>
               <p className="text-4xl font-bold">{formatGBP(todaysTotal)}</p>
@@ -159,71 +165,91 @@ export default function DemoPaymentsClient({ username }: { username: string }) {
             </div>
 
             <div className="flex gap-2">
+
               <button
                 onClick={() => setRange("today")}
                 className={`px-3 py-1.5 rounded-lg text-xs border ${
-                  range === "today" ? "bg-white/10 border-white/20" : "bg-transparent border-white/10 text-white/70 hover:text-white"
+                  range === "today"
+                    ? "bg-white/10 border-white/20"
+                    : "bg-transparent border-white/10 text-white/70 hover:text-white"
                 }`}
               >
                 Today
               </button>
+
               <button
                 onClick={() => setRange("7d")}
                 className={`px-3 py-1.5 rounded-lg text-xs border ${
-                  range === "7d" ? "bg-white/10 border-white/20" : "bg-transparent border-white/10 text-white/70 hover:text-white"
+                  range === "7d"
+                    ? "bg-white/10 border-white/20"
+                    : "bg-transparent border-white/10 text-white/70 hover:text-white"
                 }`}
               >
                 7 Days
               </button>
+
               <button
                 onClick={() => setRange("30d")}
                 className={`px-3 py-1.5 rounded-lg text-xs border ${
-                  range === "30d" ? "bg-white/10 border-white/20" : "bg-transparent border-white/10 text-white/70 hover:text-white"
+                  range === "30d"
+                    ? "bg-white/10 border-white/20"
+                    : "bg-transparent border-white/10 text-white/70 hover:text-white"
                 }`}
               >
                 30 Days
               </button>
+
               <button
                 onClick={() => setRange("all")}
                 className={`px-3 py-1.5 rounded-lg text-xs border ${
-                  range === "all" ? "bg-white/10 border-white/20" : "bg-transparent border-white/10 text-white/70 hover:text-white"
+                  range === "all"
+                    ? "bg-white/10 border-white/20"
+                    : "bg-transparent border-white/10 text-white/70 hover:text-white"
                 }`}
               >
                 All
               </button>
+
             </div>
+
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            <div className="bg-black/30 border border-white/10 rounded-xl p-4">
+
+            <div className="bg-[#151923] border border-white/10 rounded-xl p-4">
               <p className="text-[11px] uppercase text-white/60 mb-1">Total (range)</p>
               <p className="text-lg font-semibold">{formatGBP(totalRange)}</p>
             </div>
 
-            <div className="bg-black/30 border border-white/10 rounded-xl p-4">
+            <div className="bg-[#151923] border border-white/10 rounded-xl p-4">
               <p className="text-[11px] uppercase text-white/60 mb-1">Payments</p>
               <p className="text-lg font-semibold">{filtered.length}</p>
             </div>
 
-            <div className="bg-black/30 border border-white/10 rounded-xl p-4">
+            <div className="bg-[#151923] border border-white/10 rounded-xl p-4">
               <p className="text-[11px] uppercase text-white/60 mb-1">Average</p>
               <p className="text-lg font-semibold">{formatGBP(avg)}</p>
             </div>
+
           </div>
 
           <div className="flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between">
+
             <input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search supporter, message, amount…"
-              className="w-full sm:flex-1 bg-black/30 border border-white/10 rounded-xl px-4 py-2 text-sm text-white placeholder:text-white/40 outline-none"
+              className="w-full sm:flex-1 bg-[#151923] border border-white/10 rounded-xl px-4 py-2 text-sm text-white placeholder:text-white/40 outline-none"
             />
 
             <div className="flex gap-2">
+
               <button
                 onClick={() => setAnonymousOnly((v) => !v)}
                 className={`px-3 py-2 rounded-xl text-xs border ${
-                  anonymousOnly ? "bg-white/10 border-white/20" : "bg-black/30 border-white/10 text-white/70 hover:text-white"
+                  anonymousOnly
+                    ? "bg-white/10 border-white/20"
+                    : "bg-[#151923] border-white/10 text-white/70 hover:text-white"
                 }`}
               >
                 Anonymous: {anonymousOnly ? "ON" : "OFF"}
@@ -235,16 +261,19 @@ export default function DemoPaymentsClient({ username }: { username: string }) {
               >
                 Export CSV
               </button>
+
             </div>
+
           </div>
 
           <p className="text-[11px] text-white/40">
             Demo preview — export works, but data is sample-only. Status is shown as Completed.
           </p>
+
         </div>
+
       </div>
 
-      {/* LIST */}
       {filtered.length === 0 ? (
         <p className="text-white/70">No payments found for this filter.</p>
       ) : (
@@ -252,11 +281,12 @@ export default function DemoPaymentsClient({ username }: { username: string }) {
           {filtered.map((p) => (
             <div
               key={p.id}
-              className="bg-black/40 border border-white/10 rounded-xl p-4 flex justify-between gap-4"
+              className="bg-[#151923] border border-white/10 rounded-xl p-4 flex justify-between gap-4"
             >
               <div className="min-w-0">
                 <div className="flex items-center gap-2">
                   <p className="font-semibold">{formatGBP(p.amount / 100)}</p>
+
                   <span className="text-[11px] px-2 py-0.5 rounded-full bg-white/10 border border-white/10 text-white/70">
                     Completed
                   </span>
