@@ -242,7 +242,7 @@ export default function CreatorDashboard() {
             <div className={`${PANEL} p-6 space-y-4`}>
               <p className="text-sm text-center">Share your gift page 🌍</p>
 
-              <div className={`${SUBPANEL} rounded-xl px-4 py-2 text-sm text-white/70`}>
+              <div className={`${SUBPANEL} rounded-xl px-4 py-2 text-xs sm:text-sm text-white/70 break-all whitespace-normal overflow-hidden`}>
                 {pageUrl}
               </div>
 
