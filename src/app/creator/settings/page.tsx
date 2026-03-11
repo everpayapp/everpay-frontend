@@ -1,5 +1,3 @@
-
-
 // ~/everpay-frontend/src/app/creator/settings/page.tsx
 "use client";
 
@@ -368,10 +366,10 @@ export default function CreatorSettingsPage() {
 
   return (
     <main
-      className="min-h-screen text-slate-50 px-6 py-12 flex justify-center"
+      className="min-h-screen text-slate-50 px-4 sm:px-6 py-12 flex justify-center"
       style={{ backgroundColor: LOCKED_THEME.start }}
     >
-      <div className="w-full max-w-3xl space-y-6">
+      <div className="w-full max-w-5xl space-y-6">
         <div className="space-y-1">
           <h1 className="text-2xl font-semibold">Creator Settings</h1>
           <p className="text-xs text-white/60">
