@@ -26,30 +26,24 @@ type CreatorProfile = {
 };
 
 export default function CreatorDashboard() {
-  // 🔒 ENV
   const apiUrl = process.env.NEXT_PUBLIC_API_URL!;
   const baseUrl = process.env.NEXT_PUBLIC_PUBLIC_BASE_URL!;
 
-  // 🔐 AUTH
   const { status, data: session } = useSession();
   const router = useRouter();
 
-  // ✅ STRICT: only use real username from session
   const username = (session?.user as any)?.username as string | undefined;
 
-  // ✅ STYLE (Premium Graphite + stronger white border)
   const PAGE_BG = "#0B0D12";
   const PANEL =
-    "bg-[#151923] rounded-3xl border border-white/20 shadow-[0_18px_60px_rgba(0,0,0,0.55)] ring-1 ring-white/10";
-  const SUBPANEL = "bg-black/40 rounded-2xl border border-white/15";
+    "bg-black/25 rounded-3xl border border-white/18 shadow-[0_18px_60px_rgba(0,0,0,0.55)] ring-1 ring-white/10";
+  const SUBPANEL = "bg-black/20 rounded-2xl border border-white/12";
 
-  // ✅ STATE
   const [payments, setPayments] = useState<Payment[]>([]);
   const [profile, setProfile] = useState<CreatorProfile | null>(null);
   const [loadingProfile, setLoadingProfile] = useState(true);
   const [showQRModal, setShowQRModal] = useState(false);
 
-  // ✅ Copy feedback
   const [copied, setCopied] = useState(false);
   const copiedTimer = useRef<number | null>(null);
 
@@ -59,14 +53,12 @@ export default function CreatorDashboard() {
     };
   }, []);
 
-  // 🔐 Redirect if logged out
   useEffect(() => {
     if (status === "unauthenticated") {
       router.replace("/login");
     }
   }, [status, router]);
 
-  // 🛑 If authenticated but missing username, don’t load the wrong person
   useEffect(() => {
     if (status !== "authenticated") return;
     if (!username) {
@@ -74,13 +66,12 @@ export default function CreatorDashboard() {
     }
   }, [status, username]);
 
-  // 🔁 Load payments
   useEffect(() => {
     if (status !== "authenticated") return;
     if (!username) return;
 
     let isMounted = true;
-    const safeUsername = username; // TS-safe capture
+    const safeUsername = username;
 
     const loadPayments = async () => {
       try {
@@ -104,12 +95,11 @@ export default function CreatorDashboard() {
     };
   }, [apiUrl, username, status]);
 
-  // 🔁 Load profile
   useEffect(() => {
     if (status !== "authenticated") return;
     if (!username) return;
 
-    const safeUsername = username; // TS-safe capture
+    const safeUsername = username;
 
     async function loadProfile() {
       try {
@@ -138,7 +128,6 @@ export default function CreatorDashboard() {
     loadProfile();
   }, [apiUrl, username, status]);
 
-  // 🧠 Derived values
   const totalEarned = payments.reduce((sum, p) => sum + p.amount, 0) / 100;
 
   const formattedTotal = totalEarned.toLocaleString("en-GB", {
@@ -171,7 +160,6 @@ export default function CreatorDashboard() {
 
   if (status === "loading") return null;
 
-  // Authenticated but missing username → show a clear message instead of loading Lee
   if (status === "authenticated" && !username) {
     return (
       <div className="min-h-screen" style={{ backgroundColor: PAGE_BG }}>
@@ -214,7 +202,6 @@ export default function CreatorDashboard() {
         )}
 
         <div className="grid grid-cols-1 lg:grid-cols-[55%_45%] gap-8">
-          {/* LEFT */}
           <div className="space-y-8">
             {milestoneEnabled && (
               <div className={`${PANEL} px-6 py-5`}>
@@ -252,7 +239,6 @@ export default function CreatorDashboard() {
               )}
             </div>
 
-            {/* SHARE */}
             <div className={`${PANEL} p-6 space-y-4`}>
               <p className="text-sm text-center">Share your gift page 🌍</p>
 
@@ -276,7 +262,6 @@ export default function CreatorDashboard() {
             </div>
           </div>
 
-          {/* RIGHT */}
           <div className={`${PANEL} p-6`}>
             <h2 className="text-2xl font-semibold mb-5 text-center">
               Recent Supporters
@@ -285,7 +270,7 @@ export default function CreatorDashboard() {
             {payments.slice(0, 5).map((p) => (
               <div
                 key={p.id}
-                className="bg-white/5 border border-white/10 rounded-xl p-4 mb-2 flex justify-between"
+                className="bg-black/20 border border-white/12 rounded-xl p-4 mb-2 flex justify-between"
               >
                 <div>
                   <p className="text-sm">
@@ -306,7 +291,6 @@ export default function CreatorDashboard() {
           </div>
         </div>
 
-        {/* QR MODAL */}
         {showQRModal && (
           <div className="fixed inset-0 bg-black flex items-center justify-center z-50">
             <div className="bg-white rounded-3xl p-6 shadow-2xl text-center">
