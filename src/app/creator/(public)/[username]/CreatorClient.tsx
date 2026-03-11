@@ -200,18 +200,20 @@ export default function CreatorClient({ username: propUsername }: { username?: s
         const socialLinks = normalizeSocialLinks(data.social_links);
 
         setProfile({
-          username: data.username || username,
-          profile_name: data.profile_name || username,
-          avatar_url: data.avatar_url || "",
-          bio: data.bio || "",
-          social_links: socialLinks,
-          theme_start: data.theme_start || "#ff0080",
-          theme_mid: data.theme_mid || "#7c3aed",
-          theme_end: data.theme_end || "#2563eb",
-          milestone_enabled: data.milestone_enabled,
-          milestone_amount: Number(data.milestone_amount) || 0,
-          milestone_text: data.milestone_text || "",
-        });
+        username: data.username || username,
+        profile_name: data.profile_name || username,
+        avatar_url: data.avatar_url || "",
+        bio: data.bio || "",
+        social_links: socialLinks,
+
+        theme_start: data.theme_start || "#0B0D12",
+        theme_mid: data.theme_mid || "#121826",
+        theme_end: data.theme_end || "#0B0D12",
+
+        milestone_enabled: data.milestone_enabled,
+        milestone_amount: Number(data.milestone_amount) || 0,
+        milestone_text: data.milestone_text || "",
+       });
       } catch {
         setProfile(null);
       } finally {
