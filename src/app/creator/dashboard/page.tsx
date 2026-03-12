@@ -35,9 +35,12 @@ export default function CreatorDashboard() {
   const username = (session?.user as any)?.username as string | undefined;
 
   const PAGE_BG = "#0B0D12";
+
   const PANEL =
     "bg-black/25 rounded-3xl border border-white/18 shadow-[0_18px_60px_rgba(0,0,0,0.55)] ring-1 ring-white/10";
-  const SUBPANEL = "bg-black/20 rounded-2xl border border-white/12";
+
+  const SUBPANEL =
+    "bg-black/20 rounded-2xl border border-white/12";
 
   const [payments, setPayments] = useState<Payment[]>([]);
   const [profile, setProfile] = useState<CreatorProfile | null>(null);
@@ -62,7 +65,7 @@ export default function CreatorDashboard() {
   useEffect(() => {
     if (status !== "authenticated") return;
     if (!username) {
-      console.error("❌ Session missing user.username — dashboard cannot load safely.");
+      console.error("❌ Session missing username");
     }
   }, [status, username]);
 
@@ -71,22 +74,25 @@ export default function CreatorDashboard() {
     if (!username) return;
 
     let isMounted = true;
-    const safeUsername = username;
 
     const loadPayments = async () => {
       try {
         const res = await fetch(
-          `${apiUrl}/api/payments/creator/${encodeURIComponent(safeUsername)}`
+          `${apiUrl}/api/payments/creator/${encodeURIComponent(username)}`
         );
+
         const data = await res.json();
-        if (isMounted) setPayments(Array.isArray(data) ? data : []);
+
+        if (isMounted) {
+          setPayments(Array.isArray(data) ? data : []);
+        }
       } catch (err) {
         console.error("Failed to load payments", err);
-        if (isMounted) setPayments([]);
       }
     };
 
     loadPayments();
+
     const interval = setInterval(loadPayments, 15000);
 
     return () => {
@@ -99,18 +105,17 @@ export default function CreatorDashboard() {
     if (status !== "authenticated") return;
     if (!username) return;
 
-    const safeUsername = username;
-
     async function loadProfile() {
       try {
         const res = await fetch(
-          `${apiUrl}/api/creator/profile?username=${encodeURIComponent(safeUsername)}`
+          `${apiUrl}/api/creator/profile?username=${encodeURIComponent(username)}`
         );
+
         const data = await res.json();
 
         setProfile({
-          username: data.username || safeUsername,
-          profile_name: data.profile_name || safeUsername,
+          username: data.username || username,
+          profile_name: data.profile_name || username,
           avatar_url: data.avatar_url || "",
           bio: data.bio || "",
           milestone_enabled: data.milestone_enabled,
@@ -128,60 +133,85 @@ export default function CreatorDashboard() {
     loadProfile();
   }, [apiUrl, username, status]);
 
-  const totalEarned = payments.reduce((sum, p) => sum + p.amount, 0) / 100;
+  const totalEarned =
+    payments.reduce((sum, p) => sum + p.amount, 0) / 100;
 
-  const formattedTotal = totalEarned.toLocaleString("en-GB", {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  });
+  const formattedTotal =
+    totalEarned.toLocaleString("en-GB", {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    });
 
-  const pageUrl = username
-    ? `${baseUrl}/creator/${encodeURIComponent(username)}`
-    : `${baseUrl}/creator/`;
+  const pageUrl =
+    username
+      ? `${baseUrl}/creator/${encodeURIComponent(username)}`
+      : `${baseUrl}/creator/`;
 
   const milestoneEnabled =
     profile &&
-    (profile.milestone_enabled === 1 || profile.milestone_enabled === true) &&
+    (profile.milestone_enabled === 1 ||
+      profile.milestone_enabled === true) &&
     (profile.milestone_amount || 0) > 0;
 
   const milestoneTarget = profile?.milestone_amount || 0;
+
   const progress =
-    milestoneTarget > 0 ? Math.min(1, totalEarned / milestoneTarget) : 0;
-  const progressPercent = Math.round(progress * 100);
+    milestoneTarget > 0
+      ? Math.min(1, totalEarned / milestoneTarget)
+      : 0;
+
+  const progressPercent =
+    Math.round(progress * 100);
 
   const handleCopy = async () => {
     if (!username) return;
+
     await navigator.clipboard.writeText(pageUrl);
+
     setCopied(true);
 
-    if (copiedTimer.current) window.clearTimeout(copiedTimer.current);
-    copiedTimer.current = window.setTimeout(() => setCopied(false), 1600);
+    if (copiedTimer.current) {
+      window.clearTimeout(copiedTimer.current);
+    }
+
+    copiedTimer.current =
+      window.setTimeout(() => setCopied(false), 1600);
+  };
+
+  const handleOpenMyPage = () => {
+    if (!username) return;
+
+    window.open(pageUrl, "_blank", "noopener,noreferrer");
+  };
+
+  const handleShare = async () => {
+    if (!username) return;
+
+    try {
+      if (navigator.share) {
+        await navigator.share({
+          title: `${profile?.profile_name || username} on EverPay`,
+          text: `Support ${profile?.profile_name || username} on EverPay`,
+          url: pageUrl,
+        });
+      } else {
+        await navigator.clipboard.writeText(pageUrl);
+        setCopied(true);
+      }
+    } catch {
+      console.log("Share cancelled");
+    }
   };
 
   if (status === "loading") return null;
 
-  if (status === "authenticated" && !username) {
-    return (
-      <div className="min-h-screen" style={{ backgroundColor: PAGE_BG }}>
-        <div className="max-w-3xl mx-auto px-4 text-white pt-10">
-          <div className={`${PANEL} p-6`}>
-            <p className="text-lg font-semibold mb-2">Session missing username</p>
-            <p className="text-white/70 text-sm">
-              Your login session doesn’t include <code>user.username</code>, so the dashboard
-              can’t load safely.
-            </p>
-            <p className="text-white/60 text-sm mt-2">
-              Fix: update NextAuth to include <code>username</code> in JWT/session.
-            </p>
-          </div>
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <div className="min-h-screen" style={{ backgroundColor: PAGE_BG }}>
+    <div
+      className="min-h-screen"
+      style={{ backgroundColor: PAGE_BG }}
+    >
       <div className="max-w-6xl mx-auto px-4 text-white pt-10 pb-32">
+
         {profile && (
           <div className={`w-full ${PANEL} p-8 flex items-center gap-6 mb-10`}>
             <div className="w-24 h-24 rounded-full border-[5px] border-white/30 overflow-hidden shadow-xl">
@@ -195,33 +225,40 @@ export default function CreatorDashboard() {
             </div>
 
             <div>
-              <h1 className="text-3xl font-bold uppercase">{profile.profile_name}</h1>
+              <h1 className="text-3xl font-bold uppercase">
+                {profile.profile_name}
+              </h1>
               <p className="text-sm text-white/60">@{username}</p>
             </div>
           </div>
         )}
 
         <div className="grid grid-cols-1 lg:grid-cols-[55%_45%] gap-8">
+
           <div className="space-y-8">
+
             {milestoneEnabled && (
               <div className={`${PANEL} px-6 py-5`}>
-                <p className="text-xs uppercase text-white/70 mb-1">Current goal</p>
+                <p className="text-xs uppercase text-white/70 mb-1">
+                  Current goal
+                </p>
 
                 {profile?.milestone_text && (
-                  <p className="text-sm font-medium mb-2">{profile.milestone_text}</p>
+                  <p className="text-sm font-medium mb-2">
+                    {profile.milestone_text}
+                  </p>
                 )}
 
                 <p className="text-[13px] text-white/80 mb-3">
                   £{formattedTotal} of £
                   {milestoneTarget.toLocaleString("en-GB", {
                     minimumFractionDigits: 2,
-                  })}{" "}
-                  raised
+                  })} raised
                 </p>
 
                 <div className="w-full h-2.5 rounded-full bg-white/10 overflow-hidden">
                   <div
-                    className="h-full bg-gradient-to-r from-cyan-400 to-emerald-400"
+                    className="h-full bg-gradient-to-r from-teal-400 to-emerald-500"
                     style={{ width: `${progressPercent}%` }}
                   />
                 </div>
@@ -229,37 +266,61 @@ export default function CreatorDashboard() {
             )}
 
             <div className={`${PANEL} p-6`}>
-              {loadingProfile ? (
-                <p className="text-white/60">Loading…</p>
-              ) : (
-                <>
-                  <p className="text-sm uppercase text-white/60">Total Earnings</p>
-                  <p className="text-5xl font-bold">£{formattedTotal}</p>
-                </>
-              )}
+              <p className="text-sm uppercase text-white/60">
+                Total Earnings
+              </p>
+
+              <p className="text-5xl font-bold">
+                £{formattedTotal}
+              </p>
             </div>
 
             <div className={`${PANEL} p-6 space-y-4`}>
-              <p className="text-sm text-center">Share your gift page 🌍</p>
 
-              <div className={`${SUBPANEL} rounded-xl px-4 py-2 text-xs sm:text-sm text-white/70 break-all whitespace-normal overflow-hidden`}>
+              <p className="text-sm text-center">
+                Share your gift page 🌍
+              </p>
+
+              <div
+                className={`${SUBPANEL} rounded-xl px-4 py-2 text-xs sm:text-sm text-white/70 break-all`}
+              >
                 {pageUrl}
               </div>
 
-              <button
-                onClick={handleCopy}
-                className="w-full py-3 rounded-xl bg-gradient-to-r from-cyan-400 to-emerald-400 text-black font-semibold"
-              >
-                {copied ? "Copied ✓" : "Copy Link"}
-              </button>
+              <div className="grid grid-cols-2 gap-4">
 
-              <button
-                onClick={() => setShowQRModal(true)}
-                className="w-full py-3 rounded-xl bg-gradient-to-r from-cyan-400 to-emerald-400 text-black font-semibold"
-              >
-                📷 Show Live Stream QR
-              </button>
+                <button
+                  onClick={handleCopy}
+                  className="py-3 rounded-xl bg-gradient-to-r from-teal-400 to-emerald-500 text-black font-semibold"
+                >
+                  {copied ? "Copied ✓" : "Copy Link"}
+                </button>
+
+                <button
+                  onClick={handleOpenMyPage}
+                  className="py-3 rounded-xl bg-gradient-to-r from-teal-400 to-emerald-500 text-black font-semibold"
+                >
+                  View My Gift Page
+                </button>
+
+                <button
+                  onClick={() => setShowQRModal(true)}
+                  className="py-3 rounded-xl bg-gradient-to-r from-teal-400 to-emerald-500 text-black font-semibold"
+                >
+                  📷 Show Live Stream QR
+                </button>
+
+                <button
+                  onClick={handleShare}
+                  className="py-3 rounded-xl bg-gradient-to-r from-teal-400 to-emerald-500 text-black font-semibold"
+                >
+                  Share Page
+                </button>
+
+              </div>
+
             </div>
+
           </div>
 
           <div className={`${PANEL} p-6`}>
@@ -274,8 +335,11 @@ export default function CreatorDashboard() {
               >
                 <div>
                   <p className="text-sm">
-                    {p.anonymous ? "Anonymous" : p.gift_name || "Someone"}
+                    {p.anonymous
+                      ? "Anonymous"
+                      : p.gift_name || "Someone"}
                   </p>
+
                   <p className="font-semibold">
                     £
                     {(p.amount / 100).toLocaleString("en-GB", {
@@ -283,30 +347,37 @@ export default function CreatorDashboard() {
                     })}
                   </p>
                 </div>
+
                 <div className="text-xs opacity-60">
                   {new Date(p.created_at).toLocaleDateString()}
                 </div>
               </div>
             ))}
           </div>
+
         </div>
 
         {showQRModal && (
           <div className="fixed inset-0 bg-black flex items-center justify-center z-50">
             <div className="bg-white rounded-3xl p-6 shadow-2xl text-center">
+
               <QRCode value={pageUrl} size={220} />
+
               <p className="mt-3 text-xs text-slate-500">
-                Powered by <strong>EverPay</strong> · Scan to support live
+                Powered by <strong>EverPay</strong>
               </p>
+
               <button
                 onClick={() => setShowQRModal(false)}
                 className="mt-4 text-sm text-slate-400 hover:text-slate-600"
               >
                 Close
               </button>
+
             </div>
           </div>
         )}
+
       </div>
     </div>
   );
