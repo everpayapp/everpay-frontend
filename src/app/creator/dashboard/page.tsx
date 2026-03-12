@@ -214,7 +214,7 @@ export default function CreatorDashboard() {
       <div className="max-w-7xl mx-auto px-6 text-white pt-10 pb-32">
 
         {profile && (
-          <div className={`w-full ${PANEL} p-8 flex items-center gap-6 mb-10`}>
+          <div className={`w-full ${PANEL} p-9 flex items-center gap-7 mb-10`}>
             <div className="w-28 h-28 rounded-full border-[5px] border-white/30 overflow-hidden shadow-xl">
               {profile.avatar_url && (
                 <img
@@ -234,11 +234,11 @@ export default function CreatorDashboard() {
           </div>
         )}
 
-        <div className="grid grid-cols-1 lg:grid-cols-[55%_45%] gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-[58%_42%] gap-8">
 
           <div className="space-y-8">
             {milestoneEnabled && (
-              <div className={`${PANEL} px-6 py-5`}>
+              <div className={`${PANEL} px-7 py-6`}>
                 <p className="text-xs uppercase text-white/70 mb-1">
                   Current goal
                 </p>
@@ -265,7 +265,7 @@ export default function CreatorDashboard() {
               </div>
             )}
 
-            <div className={`${PANEL} p-6`}>
+            <div className={`${PANEL} p-7`}>
               <p className="text-sm uppercase text-white/60">
                 Total Earnings
               </p>
@@ -275,7 +275,7 @@ export default function CreatorDashboard() {
               </p>
             </div>
 
-            <div className={`${PANEL} p-6 space-y-4`}>
+            <div className={`${PANEL} p-7 space-y-5`}>
               <p className="text-sm text-center">
                 Share your gift page 🌍
               </p>
@@ -318,7 +318,7 @@ export default function CreatorDashboard() {
             </div>
           </div>
 
-          <div className={`${PANEL} p-6`}>
+          <div className={`${PANEL} p-7`}>
             <h2 className="text-2xl font-semibold mb-5 text-center">
               Recent Gifts
             </h2>
@@ -326,7 +326,7 @@ export default function CreatorDashboard() {
             {payments.slice(0, 5).map((p) => (
               <div
                 key={p.id}
-                className="bg-black/20 border border-white/12 rounded-xl p-4 mb-2 flex justify-between"
+                className="bg-black/20 border border-white/12 rounded-xl p-4 mb-3 flex justify-between"
               >
                 <div>
                   <p className="text-sm">
