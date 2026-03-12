@@ -65,7 +65,7 @@ export default function CreatorDashboard() {
   useEffect(() => {
     if (status !== "authenticated") return;
     if (!username) {
-      console.error("❌ Session missing username");
+      console.error("Session missing username");
     }
   }, [status, username]);
 
@@ -73,12 +73,14 @@ export default function CreatorDashboard() {
     if (status !== "authenticated") return;
     if (!username) return;
 
+    const safeUsername: string = username;
+
     let isMounted = true;
 
     const loadPayments = async () => {
       try {
         const res = await fetch(
-          `${apiUrl}/api/payments/creator/${encodeURIComponent(username)}`
+          `${apiUrl}/api/payments/creator/${encodeURIComponent(safeUsername)}`
         );
 
         const data = await res.json();
@@ -105,17 +107,21 @@ export default function CreatorDashboard() {
     if (status !== "authenticated") return;
     if (!username) return;
 
+    const safeUsername: string = username;
+
     async function loadProfile() {
       try {
         const res = await fetch(
-          `${apiUrl}/api/creator/profile?username=${encodeURIComponent(username)}`
+          `${apiUrl}/api/creator/profile?username=${encodeURIComponent(
+            safeUsername
+          )}`
         );
 
         const data = await res.json();
 
         setProfile({
-          username: data.username || username,
-          profile_name: data.profile_name || username,
+          username: data.username || safeUsername,
+          profile_name: data.profile_name || safeUsername,
           avatar_url: data.avatar_url || "",
           bio: data.bio || "",
           milestone_enabled: data.milestone_enabled,
