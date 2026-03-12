@@ -64,17 +64,9 @@ export default function CreatorDashboard() {
 
   useEffect(() => {
     if (status !== "authenticated") return;
-    if (!username) {
-      console.error("Session missing username");
-    }
-  }, [status, username]);
-
-  useEffect(() => {
-    if (status !== "authenticated") return;
     if (!username) return;
 
     const safeUsername: string = username;
-    let isMounted = true;
 
     const loadPayments = async () => {
       try {
@@ -82,10 +74,7 @@ export default function CreatorDashboard() {
           `${apiUrl}/api/payments/creator/${encodeURIComponent(safeUsername)}`
         );
         const data = await res.json();
-
-        if (isMounted) {
-          setPayments(Array.isArray(data) ? data : []);
-        }
+        setPayments(Array.isArray(data) ? data : []);
       } catch (err) {
         console.error("Failed to load payments", err);
       }
@@ -94,10 +83,7 @@ export default function CreatorDashboard() {
     loadPayments();
     const interval = setInterval(loadPayments, 15000);
 
-    return () => {
-      isMounted = false;
-      clearInterval(interval);
-    };
+    return () => clearInterval(interval);
   }, [apiUrl, username, status]);
 
   useEffect(() => {
@@ -199,55 +185,45 @@ export default function CreatorDashboard() {
         await navigator.clipboard.writeText(pageUrl);
         setCopied(true);
       }
-    } catch {
-      console.log("Share cancelled");
-    }
+    } catch {}
   };
 
   if (status === "loading") return null;
 
   return (
-    <div
-      className="min-h-screen"
-      style={{ backgroundColor: PAGE_BG }}
-    >
+    <div className="min-h-screen" style={{ backgroundColor: PAGE_BG }}>
       <div className="max-w-7xl mx-auto px-6 text-white pt-10 pb-32">
-
-        {profile && (
-          <div className={`w-full ${PANEL} p-9 flex items-center gap-7 mb-10`}>
-            <div className="w-28 h-28 rounded-full border-[5px] border-white/30 overflow-hidden shadow-xl">
-              {profile.avatar_url && (
-                <img
-                  src={profile.avatar_url}
-                  alt="Creator avatar"
-                  className="w-full h-full object-cover"
-                />
-              )}
-            </div>
-
-            <div>
-              <h1 className="text-4xl font-bold uppercase">
-                {profile.profile_name}
-              </h1>
-              <p className="text-sm text-white/60">@{username}</p>
-            </div>
-          </div>
-        )}
 
         <div className="grid grid-cols-1 lg:grid-cols-[58%_42%] gap-8">
 
+          {profile && (
+            <div className={`lg:col-span-2 ${PANEL} p-9 flex items-center gap-7`}>
+              <div className="w-28 h-28 rounded-full border-[5px] border-white/30 overflow-hidden shadow-xl">
+                {profile.avatar_url && (
+                  <img
+                    src={profile.avatar_url}
+                    alt="Creator avatar"
+                    className="w-full h-full object-cover"
+                  />
+                )}
+              </div>
+
+              <div>
+                <h1 className="text-4xl font-bold uppercase">
+                  {profile.profile_name}
+                </h1>
+                <p className="text-sm text-white/60">@{username}</p>
+              </div>
+            </div>
+          )}
+
           <div className="space-y-8">
+
             {milestoneEnabled && (
               <div className={`${PANEL} px-7 py-6`}>
                 <p className="text-xs uppercase text-white/70 mb-1">
                   Current goal
                 </p>
-
-                {profile?.milestone_text && (
-                  <p className="text-sm font-medium mb-2">
-                    {profile.milestone_text}
-                  </p>
-                )}
 
                 <p className="text-[13px] text-white/80 mb-3">
                   £{formattedTotal} of £
