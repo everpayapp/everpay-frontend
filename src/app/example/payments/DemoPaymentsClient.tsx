@@ -18,6 +18,9 @@ const formatGBP = (value: number) =>
 type RangeKey = "today" | "7d" | "30d" | "all";
 
 export default function DemoPaymentsClient({ username }: { username: string }) {
+  const PAGE_BG = "#0B0D12";
+  const PANEL =
+    "bg-black/25 rounded-3xl border border-white/18 shadow-[0_18px_60px_rgba(0,0,0,0.55)] ring-1 ring-white/10";
 
   const payments: Payment[] = [
     {
@@ -148,163 +151,150 @@ export default function DemoPaymentsClient({ username }: { username: string }) {
   };
 
   return (
-    <main className="max-w-6xl mx-auto px-4 text-white mt-10 pb-32">
+    <div className="min-h-screen" style={{ backgroundColor: PAGE_BG }}>
+      <main className="max-w-6xl mx-auto px-4 text-white mt-10 pb-32">
+        <h1 className="text-2xl font-semibold mb-6">Creator Payments</h1>
 
-      <h1 className="text-2xl font-semibold mb-6">Creator Payments</h1>
+        <div className={`mb-8 ${PANEL} p-6`}>
+          <div className="flex flex-col gap-4">
+            <div className="flex items-start justify-between gap-4">
+              <div>
+                <p className="text-sm uppercase text-white/60 mb-1">Today</p>
+                <p className="text-4xl font-bold">{formatGBP(todaysTotal)}</p>
+                <p className="text-[11px] text-white/40 mt-1">Demo preview • fake data</p>
+              </div>
 
-      <div className="mb-8 bg-[#151923] border border-white/10 rounded-2xl p-6">
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setRange("today")}
+                  className={`px-3 py-1.5 rounded-lg text-xs border ${
+                    range === "today"
+                      ? "bg-white/10 border-white/20"
+                      : "bg-transparent border-white/10 text-white/70 hover:text-white"
+                  }`}
+                >
+                  Today
+                </button>
 
-        <div className="flex flex-col gap-4">
+                <button
+                  onClick={() => setRange("7d")}
+                  className={`px-3 py-1.5 rounded-lg text-xs border ${
+                    range === "7d"
+                      ? "bg-white/10 border-white/20"
+                      : "bg-transparent border-white/10 text-white/70 hover:text-white"
+                  }`}
+                >
+                  7 Days
+                </button>
 
-          <div className="flex items-start justify-between gap-4">
+                <button
+                  onClick={() => setRange("30d")}
+                  className={`px-3 py-1.5 rounded-lg text-xs border ${
+                    range === "30d"
+                      ? "bg-white/10 border-white/20"
+                      : "bg-transparent border-white/10 text-white/70 hover:text-white"
+                  }`}
+                >
+                  30 Days
+                </button>
 
-            <div>
-              <p className="text-sm uppercase text-white/60 mb-1">Today</p>
-              <p className="text-4xl font-bold">{formatGBP(todaysTotal)}</p>
-              <p className="text-[11px] text-white/40 mt-1">Demo preview • fake data</p>
+                <button
+                  onClick={() => setRange("all")}
+                  className={`px-3 py-1.5 rounded-lg text-xs border ${
+                    range === "all"
+                      ? "bg-white/10 border-white/20"
+                      : "bg-transparent border-white/10 text-white/70 hover:text-white"
+                  }`}
+                >
+                  All
+                </button>
+              </div>
             </div>
 
-            <div className="flex gap-2">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <div className="bg-black/20 border border-white/12 rounded-xl p-4">
+                <p className="text-[11px] uppercase text-white/60 mb-1">Total (range)</p>
+                <p className="text-lg font-semibold">{formatGBP(totalRange)}</p>
+              </div>
 
-              <button
-                onClick={() => setRange("today")}
-                className={`px-3 py-1.5 rounded-lg text-xs border ${
-                  range === "today"
-                    ? "bg-white/10 border-white/20"
-                    : "bg-transparent border-white/10 text-white/70 hover:text-white"
-                }`}
-              >
-                Today
-              </button>
+              <div className="bg-black/20 border border-white/12 rounded-xl p-4">
+                <p className="text-[11px] uppercase text-white/60 mb-1">Payments</p>
+                <p className="text-lg font-semibold">{filtered.length}</p>
+              </div>
 
-              <button
-                onClick={() => setRange("7d")}
-                className={`px-3 py-1.5 rounded-lg text-xs border ${
-                  range === "7d"
-                    ? "bg-white/10 border-white/20"
-                    : "bg-transparent border-white/10 text-white/70 hover:text-white"
-                }`}
-              >
-                7 Days
-              </button>
-
-              <button
-                onClick={() => setRange("30d")}
-                className={`px-3 py-1.5 rounded-lg text-xs border ${
-                  range === "30d"
-                    ? "bg-white/10 border-white/20"
-                    : "bg-transparent border-white/10 text-white/70 hover:text-white"
-                }`}
-              >
-                30 Days
-              </button>
-
-              <button
-                onClick={() => setRange("all")}
-                className={`px-3 py-1.5 rounded-lg text-xs border ${
-                  range === "all"
-                    ? "bg-white/10 border-white/20"
-                    : "bg-transparent border-white/10 text-white/70 hover:text-white"
-                }`}
-              >
-                All
-              </button>
-
+              <div className="bg-black/20 border border-white/12 rounded-xl p-4">
+                <p className="text-[11px] uppercase text-white/60 mb-1">Average</p>
+                <p className="text-lg font-semibold">{formatGBP(avg)}</p>
+              </div>
             </div>
 
+            <div className="flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between">
+              <input
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Search supporter, message, amount…"
+                className="w-full sm:flex-1 bg-white/10 border border-white/20 rounded-xl px-4 py-2 text-sm text-white placeholder:text-white/40 outline-none"
+              />
+
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setAnonymousOnly((v) => !v)}
+                  className={`px-3 py-2 rounded-xl text-xs border ${
+                    anonymousOnly
+                      ? "bg-white/10 border-white/20"
+                      : "bg-white/10 border-white/20 text-white/70 hover:text-white"
+                  }`}
+                >
+                  Anonymous: {anonymousOnly ? "ON" : "OFF"}
+                </button>
+
+                <button
+                  onClick={exportCSV}
+                  className="px-3 py-2 rounded-xl text-xs bg-gradient-to-r from-cyan-400 to-emerald-400 text-black font-semibold"
+                >
+                  Export CSV
+                </button>
+              </div>
+            </div>
+
+            <p className="text-[11px] text-white/40">
+              Demo preview — export works, but data is sample-only. Status is shown as Completed.
+            </p>
           </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-
-            <div className="bg-[#151923] border border-white/10 rounded-xl p-4">
-              <p className="text-[11px] uppercase text-white/60 mb-1">Total (range)</p>
-              <p className="text-lg font-semibold">{formatGBP(totalRange)}</p>
-            </div>
-
-            <div className="bg-[#151923] border border-white/10 rounded-xl p-4">
-              <p className="text-[11px] uppercase text-white/60 mb-1">Payments</p>
-              <p className="text-lg font-semibold">{filtered.length}</p>
-            </div>
-
-            <div className="bg-[#151923] border border-white/10 rounded-xl p-4">
-              <p className="text-[11px] uppercase text-white/60 mb-1">Average</p>
-              <p className="text-lg font-semibold">{formatGBP(avg)}</p>
-            </div>
-
-          </div>
-
-          <div className="flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between">
-
-            <input
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search supporter, message, amount…"
-              className="w-full sm:flex-1 bg-[#151923] border border-white/10 rounded-xl px-4 py-2 text-sm text-white placeholder:text-white/40 outline-none"
-            />
-
-            <div className="flex gap-2">
-
-              <button
-                onClick={() => setAnonymousOnly((v) => !v)}
-                className={`px-3 py-2 rounded-xl text-xs border ${
-                  anonymousOnly
-                    ? "bg-white/10 border-white/20"
-                    : "bg-[#151923] border-white/10 text-white/70 hover:text-white"
-                }`}
-              >
-                Anonymous: {anonymousOnly ? "ON" : "OFF"}
-              </button>
-
-              <button
-                onClick={exportCSV}
-                className="px-3 py-2 rounded-xl text-xs bg-gradient-to-r from-cyan-400 to-emerald-400 text-black font-semibold"
-              >
-                Export CSV
-              </button>
-
-            </div>
-
-          </div>
-
-          <p className="text-[11px] text-white/40">
-            Demo preview — export works, but data is sample-only. Status is shown as Completed.
-          </p>
-
         </div>
 
-      </div>
+        {filtered.length === 0 ? (
+          <p className="text-white/70">No payments found for this filter.</p>
+        ) : (
+          <div className="space-y-3">
+            {filtered.map((p) => (
+              <div
+                key={p.id}
+                className="bg-black/20 border border-white/12 rounded-xl p-4 flex justify-between gap-4 shadow-[0_12px_40px_rgba(0,0,0,0.45)] ring-1 ring-white/10"
+              >
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2">
+                    <p className="font-semibold">{formatGBP(p.amount / 100)}</p>
 
-      {filtered.length === 0 ? (
-        <p className="text-white/70">No payments found for this filter.</p>
-      ) : (
-        <div className="space-y-3">
-          {filtered.map((p) => (
-            <div
-              key={p.id}
-              className="bg-[#151923] border border-white/10 rounded-xl p-4 flex justify-between gap-4"
-            >
-              <div className="min-w-0">
-                <div className="flex items-center gap-2">
-                  <p className="font-semibold">{formatGBP(p.amount / 100)}</p>
+                    <span className="text-[11px] px-2 py-0.5 rounded-full bg-white/10 border border-white/10 text-white/70">
+                      Completed
+                    </span>
+                  </div>
 
-                  <span className="text-[11px] px-2 py-0.5 rounded-full bg-white/10 border border-white/10 text-white/70">
-                    Completed
-                  </span>
+                  <p className="text-xs text-white/70 truncate">
+                    {p.anonymous ? "Anonymous" : p.gift_name || "Someone"}
+                    {p.gift_message ? ` — “${p.gift_message}”` : ""}
+                  </p>
                 </div>
 
-                <p className="text-xs text-white/70 truncate">
-                  {p.anonymous ? "Anonymous" : p.gift_name || "Someone"}
-                  {p.gift_message ? ` — “${p.gift_message}”` : ""}
-                </p>
+                <div className="text-xs text-white/60 whitespace-nowrap">
+                  {mounted ? new Date(p.created_at).toLocaleDateString("en-GB") : ""}
+                </div>
               </div>
-
-              <div className="text-xs text-white/60 whitespace-nowrap">
-                {mounted ? new Date(p.created_at).toLocaleDateString("en-GB") : ""}
-              </div>
-            </div>
-          ))}
-        </div>
-      )}
-    </main>
+            ))}
+          </div>
+        )}
+      </main>
+    </div>
   );
 }
