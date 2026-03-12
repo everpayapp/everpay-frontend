@@ -499,7 +499,7 @@ export default function CreatorClient({ username: propUsername }: { username?: s
       className="min-h-screen text-white flex justify-center px-4 py-6 sm:py-8 transition-[background] duration-[600ms] overflow-x-hidden"
       style={{ background: `linear-gradient(to bottom right, ${bgStart}, ${bgMid}, ${bgEnd})` }}
     >
-      <div className="w-full max-w-6xl space-y-4 sm:space-y-6 px-1 sm:px-0 overflow-x-hidden">
+      <div className="w-full max-w-7xl space-y-4 sm:space-y-6 px-1 sm:px-0 overflow-x-hidden">
         {successToast && (
           <div className="fixed left-1/2 -translate-x-1/2 bottom-5 sm:left-auto sm:right-6 sm:translate-x-0 sm:bottom-6 z-[121] pointer-events-none">
             <div className="px-4 py-3 rounded-2xl border border-white/30 bg-black/78 backdrop-blur-xl shadow-2xl text-white min-w-[240px] max-w-[90vw] animate-[fadeInUp_.25s_ease]">
@@ -626,7 +626,7 @@ export default function CreatorClient({ username: propUsername }: { username?: s
           </section>
         )}
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 sm:gap-6 items-start lg:items-stretch overflow-x-hidden">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8 items-start lg:items-stretch overflow-x-hidden">
           <section className={`${panelClass} p-4 sm:p-8 flex flex-col min-h-0 overflow-hidden lg:h-[720px]`}>
             <h2 className="text-lg sm:text-xl font-semibold mb-3">Send a Gift</h2>
 
