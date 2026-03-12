@@ -165,25 +165,27 @@ export default function CreatorPaymentsPage() {
     window.URL.revokeObjectURL(url);
   };
 
-  const chipBase = "shrink-0 px-3 py-1.5 rounded-lg text-xs border transition";
+  const chipBase =
+    "px-3 py-2 rounded-xl text-xs border transition min-w-[78px] text-center";
   const chipOn = "bg-white/10 border-white/20";
-  const chipOff =
-    "bg-transparent border-white/10 text-white/70 hover:text-white";
+  const chipOff = "bg-transparent border-white/10 text-white/70 hover:text-white";
 
   return (
     <div className="min-h-screen" style={{ backgroundColor: PAGE_BG }}>
-    <main className="max-w-7xl mx-auto pt-6 sm:pt-10 px-6 text-white pb-24">
-        <h1 className="text-2xl font-semibold mb-6">Creator Payments</h1>
+      <main className="max-w-7xl mx-auto pt-4 sm:pt-10 px-3 sm:px-6 text-white pb-16 sm:pb-24">
+        <h1 className="text-[20px] sm:text-2xl font-semibold mb-5 sm:mb-6">
+          Creator Payments
+        </h1>
 
-        <div className={`mb-8 ${PANEL} p-6`}>
+        <div className={`mb-8 ${PANEL} p-4 sm:p-6`}>
           <div className="flex flex-col gap-4">
-            <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
               <div>
                 <p className="text-sm uppercase text-white/60 mb-1">Today</p>
                 <p className="text-4xl font-bold">{formatGBP(todaysTotal)}</p>
               </div>
 
-              <div className="flex items-center gap-2 overflow-x-auto whitespace-nowrap -mx-2 px-2 pb-1">
+              <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:items-center sm:justify-end sm:gap-2">
                 <button
                   onClick={() => setRange("today")}
                   className={`${chipBase} ${range === "today" ? chipOn : chipOff}`}
@@ -234,18 +236,18 @@ export default function CreatorPaymentsPage() {
               </div>
             </div>
 
-            <div className="flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between">
+            <div className="flex flex-col gap-3">
               <input
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="Search supporter, message, amount…"
-                className="w-full sm:flex-1 bg-white/10 border border-white/20 rounded-xl px-4 py-2 text-sm text-white placeholder:text-white/40 outline-none"
+                className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-sm text-white placeholder:text-white/40 outline-none"
               />
 
-              <div className="flex items-center gap-2 overflow-x-auto whitespace-nowrap -mx-2 px-2 pb-1 sm:overflow-visible sm:whitespace-normal sm:mx-0 sm:px-0 sm:pb-0">
+              <div className="grid grid-cols-1 sm:grid-cols-[auto_auto] gap-3 sm:justify-end">
                 <button
                   onClick={() => setAnonymousOnly((v) => !v)}
-                  className={`shrink-0 px-3 py-2 rounded-xl text-xs border ${
+                  className={`w-full sm:w-auto px-4 py-3 rounded-xl text-sm border ${
                     anonymousOnly
                       ? "bg-white/10 border-white/20"
                       : "bg-white/10 border-white/20 text-white/70 hover:text-white"
@@ -256,14 +258,12 @@ export default function CreatorPaymentsPage() {
 
                 <button
                   onClick={exportCSV}
-                  className="shrink-0 px-3 py-2 rounded-xl text-xs bg-gradient-to-r from-teal-400 to-emerald-500 text-black font-semibold"
-                  >
-                  
+                  className="w-full sm:w-auto px-4 py-3 rounded-xl text-sm bg-gradient-to-r from-teal-400 to-emerald-500 text-black font-semibold"
+                >
                   Export CSV
                 </button>
               </div>
             </div>
-
           </div>
         </div>
 
