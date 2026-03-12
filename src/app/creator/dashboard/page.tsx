@@ -74,7 +74,6 @@ export default function CreatorDashboard() {
     if (!username) return;
 
     const safeUsername: string = username;
-
     let isMounted = true;
 
     const loadPayments = async () => {
@@ -82,7 +81,6 @@ export default function CreatorDashboard() {
         const res = await fetch(
           `${apiUrl}/api/payments/creator/${encodeURIComponent(safeUsername)}`
         );
-
         const data = await res.json();
 
         if (isMounted) {
@@ -94,7 +92,6 @@ export default function CreatorDashboard() {
     };
 
     loadPayments();
-
     const interval = setInterval(loadPayments, 15000);
 
     return () => {
@@ -173,7 +170,6 @@ export default function CreatorDashboard() {
     if (!username) return;
 
     await navigator.clipboard.writeText(pageUrl);
-
     setCopied(true);
 
     if (copiedTimer.current) {
@@ -186,7 +182,6 @@ export default function CreatorDashboard() {
 
   const handleOpenMyPage = () => {
     if (!username) return;
-
     window.open(pageUrl, "_blank", "noopener,noreferrer");
   };
 
@@ -216,11 +211,11 @@ export default function CreatorDashboard() {
       className="min-h-screen"
       style={{ backgroundColor: PAGE_BG }}
     >
-      <div className="max-w-6xl mx-auto px-4 text-white pt-10 pb-32">
+      <div className="max-w-7xl mx-auto px-6 text-white pt-10 pb-32">
 
         {profile && (
           <div className={`w-full ${PANEL} p-8 flex items-center gap-6 mb-10`}>
-            <div className="w-24 h-24 rounded-full border-[5px] border-white/30 overflow-hidden shadow-xl">
+            <div className="w-28 h-28 rounded-full border-[5px] border-white/30 overflow-hidden shadow-xl">
               {profile.avatar_url && (
                 <img
                   src={profile.avatar_url}
@@ -231,7 +226,7 @@ export default function CreatorDashboard() {
             </div>
 
             <div>
-              <h1 className="text-3xl font-bold uppercase">
+              <h1 className="text-4xl font-bold uppercase">
                 {profile.profile_name}
               </h1>
               <p className="text-sm text-white/60">@{username}</p>
@@ -242,7 +237,6 @@ export default function CreatorDashboard() {
         <div className="grid grid-cols-1 lg:grid-cols-[55%_45%] gap-8">
 
           <div className="space-y-8">
-
             {milestoneEnabled && (
               <div className={`${PANEL} px-6 py-5`}>
                 <p className="text-xs uppercase text-white/70 mb-1">
@@ -282,7 +276,6 @@ export default function CreatorDashboard() {
             </div>
 
             <div className={`${PANEL} p-6 space-y-4`}>
-
               <p className="text-sm text-center">
                 Share your gift page 🌍
               </p>
@@ -294,7 +287,6 @@ export default function CreatorDashboard() {
               </div>
 
               <div className="grid grid-cols-2 gap-4">
-
                 <button
                   onClick={handleCopy}
                   className="py-3 rounded-xl bg-gradient-to-r from-teal-400 to-emerald-500 text-black font-semibold"
@@ -322,16 +314,13 @@ export default function CreatorDashboard() {
                 >
                   Share Page
                 </button>
-
               </div>
-
             </div>
-
           </div>
 
           <div className={`${PANEL} p-6`}>
             <h2 className="text-2xl font-semibold mb-5 text-center">
-              Recent Supporters
+              Recent Gifts
             </h2>
 
             {payments.slice(0, 5).map((p) => (
@@ -366,7 +355,6 @@ export default function CreatorDashboard() {
         {showQRModal && (
           <div className="fixed inset-0 bg-black flex items-center justify-center z-50">
             <div className="bg-white rounded-3xl p-6 shadow-2xl text-center">
-
               <QRCode value={pageUrl} size={220} />
 
               <p className="mt-3 text-xs text-slate-500">
@@ -379,7 +367,6 @@ export default function CreatorDashboard() {
               >
                 Close
               </button>
-
             </div>
           </div>
         )}
