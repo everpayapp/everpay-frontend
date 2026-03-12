@@ -1,4 +1,3 @@
-
 // ~/everpay-frontend/src/app/creator/dashboard/page.tsx
 "use client";
 
@@ -270,28 +269,28 @@ export default function CreatorDashboard() {
               <div className="grid grid-cols-2 gap-3 sm:gap-4">
                 <button
                   onClick={handleCopy}
-                  className="min-h-[56px] sm:min-h-0 py-2.5 sm:py-3 px-3 rounded-xl bg-gradient-to-r from-teal-400 to-emerald-500 text-black font-semibold text-sm sm:text-base leading-snug"
+                  className="min-h-[50px] sm:min-h-0 py-2 sm:py-3 px-3 rounded-xl bg-gradient-to-r from-teal-400 to-emerald-500 text-black font-semibold text-[13px] sm:text-base leading-snug"
                 >
                   {copied ? "Copied ✓" : "Copy Link"}
                 </button>
 
                 <button
                   onClick={handleOpenMyPage}
-                  className="min-h-[56px] sm:min-h-0 py-2.5 sm:py-3 px-3 rounded-xl bg-gradient-to-r from-teal-400 to-emerald-500 text-black font-semibold text-sm sm:text-base leading-snug"
+                  className="min-h-[50px] sm:min-h-0 py-2 sm:py-3 px-3 rounded-xl bg-gradient-to-r from-teal-400 to-emerald-500 text-black font-semibold text-[13px] sm:text-base leading-snug"
                 >
-                  View My Gift Page
+                  View Page
                 </button>
 
                 <button
                   onClick={() => setShowQRModal(true)}
-                  className="min-h-[72px] sm:min-h-0 py-2.5 sm:py-3 px-3 rounded-xl bg-gradient-to-r from-teal-400 to-emerald-500 text-black font-semibold text-sm sm:text-base leading-snug"
+                  className="min-h-[50px] sm:min-h-0 py-2 sm:py-3 px-3 rounded-xl bg-gradient-to-r from-teal-400 to-emerald-500 text-black font-semibold text-[13px] sm:text-base leading-snug"
                 >
-                  📷 Show Live Stream QR
+                  Show QR
                 </button>
 
                 <button
                   onClick={handleShare}
-                  className="min-h-[72px] sm:min-h-0 py-2.5 sm:py-3 px-3 rounded-xl bg-gradient-to-r from-teal-400 to-emerald-500 text-black font-semibold text-sm sm:text-base leading-snug"
+                  className="min-h-[50px] sm:min-h-0 py-2 sm:py-3 px-3 rounded-xl bg-gradient-to-r from-teal-400 to-emerald-500 text-black font-semibold text-[13px] sm:text-base leading-snug"
                 >
                   Share Page
                 </button>
