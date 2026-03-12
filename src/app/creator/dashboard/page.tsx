@@ -1,3 +1,4 @@
+
 // ~/everpay-frontend/src/app/creator/dashboard/page.tsx
 "use client";
 
@@ -192,36 +193,40 @@ export default function CreatorDashboard() {
 
   return (
     <div className="min-h-screen" style={{ backgroundColor: PAGE_BG }}>
-      <div className="max-w-7xl mx-auto px-6 text-white pt-10 pb-32">
+      <div className="max-w-7xl mx-auto px-3 sm:px-6 text-white pt-4 sm:pt-10 pb-16 sm:pb-32">
 
-        <div className="grid grid-cols-1 lg:grid-cols-[58%_42%] gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-[58%_42%] gap-5 sm:gap-8">
 
           {profile && (
-            <div className={`lg:col-span-2 ${PANEL} p-9 flex items-center gap-7`}>
-              <div className="w-28 h-28 rounded-full border-[5px] border-white/30 overflow-hidden shadow-xl">
-                {profile.avatar_url && (
+            <div
+              className={`lg:col-span-2 ${PANEL} px-4 py-4 sm:p-9 flex items-center gap-4 sm:gap-7`}
+            >
+              <div className="w-20 h-20 sm:w-28 sm:h-28 rounded-full border-[4px] sm:border-[5px] border-white/30 overflow-hidden shadow-xl shrink-0 bg-white/5">
+                {profile.avatar_url ? (
                   <img
                     src={profile.avatar_url}
                     alt="Creator avatar"
                     className="w-full h-full object-cover"
                   />
-                )}
+                ) : null}
               </div>
 
-              <div>
-                <h1 className="text-4xl font-bold uppercase">
+              <div className="min-w-0">
+                <h1 className="text-[18px] leading-[1.05] sm:text-4xl font-bold uppercase break-words">
                   {profile.profile_name}
                 </h1>
-                <p className="text-sm text-white/60">@{username}</p>
+                <p className="text-xs sm:text-sm text-white/60 mt-1 break-all">
+                  @{username}
+                </p>
               </div>
             </div>
           )}
 
-          <div className="space-y-8">
+          <div className="space-y-5 sm:space-y-8">
 
             {milestoneEnabled && (
-              <div className={`${PANEL} px-7 py-6`}>
-                <p className="text-xs uppercase text-white/70 mb-1">
+              <div className={`${PANEL} px-5 py-5 sm:px-7 sm:py-6`}>
+                <p className="text-[11px] sm:text-xs uppercase text-white/70 mb-1">
                   Current goal
                 </p>
 
@@ -241,52 +246,52 @@ export default function CreatorDashboard() {
               </div>
             )}
 
-            <div className={`${PANEL} p-7`}>
+            <div className={`${PANEL} px-5 py-5 sm:p-7`}>
               <p className="text-sm uppercase text-white/60">
                 Total Earnings
               </p>
 
-              <p className="text-5xl font-bold">
+              <p className="text-[44px] leading-none sm:text-5xl font-bold mt-2 sm:mt-0">
                 £{formattedTotal}
               </p>
             </div>
 
-            <div className={`${PANEL} p-7 space-y-5`}>
+            <div className={`${PANEL} px-5 py-5 sm:p-7 space-y-4 sm:space-y-5`}>
               <p className="text-sm text-center">
                 Share your gift page 🌍
               </p>
 
               <div
-                className={`${SUBPANEL} rounded-xl px-4 py-2 text-xs sm:text-sm text-white/70 break-all`}
+                className={`${SUBPANEL} rounded-xl px-4 py-2.5 text-[13px] sm:text-sm text-white/70 break-all leading-snug`}
               >
                 {pageUrl}
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
+              <div className="grid grid-cols-2 gap-3 sm:gap-4">
                 <button
                   onClick={handleCopy}
-                  className="py-3 rounded-xl bg-gradient-to-r from-teal-400 to-emerald-500 text-black font-semibold"
+                  className="min-h-[56px] sm:min-h-0 py-2.5 sm:py-3 px-3 rounded-xl bg-gradient-to-r from-teal-400 to-emerald-500 text-black font-semibold text-sm sm:text-base leading-snug"
                 >
                   {copied ? "Copied ✓" : "Copy Link"}
                 </button>
 
                 <button
                   onClick={handleOpenMyPage}
-                  className="py-3 rounded-xl bg-gradient-to-r from-teal-400 to-emerald-500 text-black font-semibold"
+                  className="min-h-[56px] sm:min-h-0 py-2.5 sm:py-3 px-3 rounded-xl bg-gradient-to-r from-teal-400 to-emerald-500 text-black font-semibold text-sm sm:text-base leading-snug"
                 >
                   View My Gift Page
                 </button>
 
                 <button
                   onClick={() => setShowQRModal(true)}
-                  className="py-3 rounded-xl bg-gradient-to-r from-teal-400 to-emerald-500 text-black font-semibold"
+                  className="min-h-[72px] sm:min-h-0 py-2.5 sm:py-3 px-3 rounded-xl bg-gradient-to-r from-teal-400 to-emerald-500 text-black font-semibold text-sm sm:text-base leading-snug"
                 >
                   📷 Show Live Stream QR
                 </button>
 
                 <button
                   onClick={handleShare}
-                  className="py-3 rounded-xl bg-gradient-to-r from-teal-400 to-emerald-500 text-black font-semibold"
+                  className="min-h-[72px] sm:min-h-0 py-2.5 sm:py-3 px-3 rounded-xl bg-gradient-to-r from-teal-400 to-emerald-500 text-black font-semibold text-sm sm:text-base leading-snug"
                 >
                   Share Page
                 </button>
@@ -294,24 +299,24 @@ export default function CreatorDashboard() {
             </div>
           </div>
 
-          <div className={`${PANEL} p-7`}>
-            <h2 className="text-2xl font-semibold mb-5 text-center">
+          <div className={`${PANEL} px-5 py-5 sm:p-7`}>
+            <h2 className="text-[20px] sm:text-2xl font-semibold mb-4 sm:mb-5 text-center">
               Recent Gifts
             </h2>
 
             {payments.slice(0, 5).map((p) => (
               <div
                 key={p.id}
-                className="bg-black/20 border border-white/12 rounded-xl p-4 mb-3 flex justify-between"
+                className="bg-black/20 border border-white/12 rounded-xl px-4 py-3 sm:p-4 mb-3 flex justify-between gap-3"
               >
-                <div>
-                  <p className="text-sm">
+                <div className="min-w-0">
+                  <p className="text-sm truncate">
                     {p.anonymous
                       ? "Anonymous"
                       : p.gift_name || "Someone"}
                   </p>
 
-                  <p className="font-semibold">
+                  <p className="font-semibold text-[15px] sm:text-base mt-1">
                     £
                     {(p.amount / 100).toLocaleString("en-GB", {
                       minimumFractionDigits: 2,
@@ -319,7 +324,7 @@ export default function CreatorDashboard() {
                   </p>
                 </div>
 
-                <div className="text-xs opacity-60">
+                <div className="text-[11px] sm:text-xs opacity-60 whitespace-nowrap pt-0.5">
                   {new Date(p.created_at).toLocaleDateString()}
                 </div>
               </div>
@@ -329,8 +334,8 @@ export default function CreatorDashboard() {
         </div>
 
         {showQRModal && (
-          <div className="fixed inset-0 bg-black flex items-center justify-center z-50">
-            <div className="bg-white rounded-3xl p-6 shadow-2xl text-center">
+          <div className="fixed inset-0 bg-black/90 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-3xl p-5 sm:p-6 shadow-2xl text-center max-w-[92vw]">
               <QRCode value={pageUrl} size={220} />
 
               <p className="mt-3 text-xs text-slate-500">
