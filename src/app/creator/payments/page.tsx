@@ -172,7 +172,7 @@ export default function CreatorPaymentsPage() {
 
   return (
     <div className="min-h-screen" style={{ backgroundColor: PAGE_BG }}>
-    <main className="max-w-6xl mx-auto pt-6 sm:pt-10 px-4 sm:px-6 text-white pb-24">
+    <main className="max-w-7xl mx-auto pt-6 sm:pt-10 px-6 text-white pb-24">
         <h1 className="text-2xl font-semibold mb-6">Creator Payments</h1>
 
         <div className={`mb-8 ${PANEL} p-6`}>
@@ -256,16 +256,14 @@ export default function CreatorPaymentsPage() {
 
                 <button
                   onClick={exportCSV}
-                  className="shrink-0 px-3 py-2 rounded-xl text-xs bg-gradient-to-r from-cyan-400 to-emerald-400 text-black font-semibold"
-                >
+                  className="shrink-0 px-3 py-2 rounded-xl text-xs bg-gradient-to-r from-teal-400 to-emerald-500 text-black font-semibold"
+                  >
+                  
                   Export CSV
                 </button>
               </div>
             </div>
 
-            <p className="text-[11px] text-white/40">
-              Status is shown as Completed (Stripe-confirmed). Payout status can be added later.
-            </p>
           </div>
         </div>
 
