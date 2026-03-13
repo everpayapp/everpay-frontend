@@ -43,6 +43,8 @@ export default function PrivacyPage() {
               <p className="mt-2">
                 Payments are processed by Stripe. EverPay does not store full card details. We may store limited
                 payment-related metadata (e.g., amount, time, creator, status) to show receipts and recent gifts.
+                Stripe may collect and process personal data in accordance with its own privacy policy when handling
+                payments or payouts.
               </p>
             </section>
 
@@ -81,8 +83,9 @@ export default function PrivacyPage() {
             <section>
               <h2 className="text-lg font-bold text-white">7. Cookies &amp; analytics</h2>
               <p className="mt-2">
-                We may use privacy-friendly analytics to understand usage and improve EverPay. We do not sell your
-                personal data.
+                We may use basic analytics tools to understand how the platform is used, improve reliability,
+                and maintain the security of EverPay. These tools do not sell or share personal data with third
+                parties for advertising.
               </p>
             </section>
 

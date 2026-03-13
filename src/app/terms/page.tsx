@@ -51,12 +51,22 @@ export default function TermsPage() {
               <h2 className="text-lg font-bold text-white">3. Payments &amp; Payouts</h2>
               <p className="mt-2">
                 Supporter payments are handled by Stripe. Payout speed depends on bank and Stripe settings.
-                EverPay does not guarantee payout timing.
+                EverPay does not guarantee payout timing. Creators are responsible for any taxes, reporting obligations,
+                or other legal responsibilities related to gifts they receive through EverPay.
               </p>
             </section>
 
             <section>
-              <h2 className="text-lg font-bold text-white">4. Fees</h2>
+              <h2 className="text-lg font-bold text-white">4. Refunds</h2>
+              <p className="mt-2">
+                Gifts sent through EverPay are voluntary. EverPay does not issue or manage refunds. If a supporter
+                believes a payment was made in error, they should contact their payment provider (such as Stripe
+                or their bank) directly to request a refund or dispute.
+              </p>
+            </section>
+
+            <section>
+              <h2 className="text-lg font-bold text-white">5. Fees</h2>
               <p className="mt-2">
                 Any applicable fees are shown clearly in the experience. EverPay may use a portion of fees to fund
                 features like monthly prize pools (where offered). Prize pool totals can change as gifts are made.
@@ -64,7 +74,7 @@ export default function TermsPage() {
             </section>
 
             <section>
-              <h2 className="text-lg font-bold text-white">5. Prohibited Use</h2>
+              <h2 className="text-lg font-bold text-white">6. Prohibited Use</h2>
               <p className="mt-2">
                 You may not use EverPay for illegal activity, fraud, scams, harassment, or to sell restricted goods/services.
                 We may suspend accounts that violate these terms.
@@ -72,7 +82,16 @@ export default function TermsPage() {
             </section>
 
             <section>
-              <h2 className="text-lg font-bold text-white">6. Content &amp; Creator Pages</h2>
+              <h2 className="text-lg font-bold text-white">7. Account Suspension or Termination</h2>
+              <p className="mt-2">
+                EverPay may suspend or terminate accounts that violate these terms, engage in fraudulent activity,
+                or create risk for the platform or other users. Users may delete their account at any time from
+                their dashboard where available.
+              </p>
+            </section>
+
+            <section>
+              <h2 className="text-lg font-bold text-white">8. Content &amp; Creator Pages</h2>
               <p className="mt-2">
                 You are responsible for the content and links you publish on your creator page. Do not post content that
                 infringes rights or violates applicable laws.
@@ -80,7 +99,7 @@ export default function TermsPage() {
             </section>
 
             <section>
-              <h2 className="text-lg font-bold text-white">7. Limitation of Liability</h2>
+              <h2 className="text-lg font-bold text-white">9. Limitation of Liability</h2>
               <p className="mt-2">
                 EverPay is provided “as is”. To the maximum extent permitted by law, EverPay is not liable for indirect or
                 consequential losses. Stripe’s terms also apply to payment processing.
@@ -88,7 +107,7 @@ export default function TermsPage() {
             </section>
 
             <section>
-              <h2 className="text-lg font-bold text-white">8. Contact</h2>
+              <h2 className="text-lg font-bold text-white">10. Contact</h2>
               <p className="mt-2">
                 Questions? Email us at{" "}
                 <a className="underline hover:text-white" href="mailto:support@everpayapp.co.uk">
@@ -109,4 +128,3 @@ export default function TermsPage() {
     </main>
   );
 }
-
