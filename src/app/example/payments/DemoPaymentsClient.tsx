@@ -204,6 +204,23 @@ export default function DemoPaymentsClient({ username }: { username: string }) {
     );
   }, [filtered]);
 
+  useEffect(() => {
+    if (groupedPayments.length === 0) return;
+
+    const firstMonthKey = groupedPayments[0].key;
+
+    setOpenMonths((prev) => {
+      if (typeof prev[firstMonthKey] !== "undefined") {
+        return prev;
+      }
+
+      return {
+        ...prev,
+        [firstMonthKey]: true,
+      };
+    });
+  }, [groupedPayments]);
+
   const toggleMonth = (monthKey: string) => {
     setOpenMonths((prev) => ({
       ...prev,
@@ -211,13 +228,140 @@ export default function DemoPaymentsClient({ username }: { username: string }) {
     }));
   };
 
+  const exportCSV = () => {
+    const rows = [
+      ["date", "supporter", "amount_gbp", "message", "status"],
+      ...filtered.map((p) => [
+        new Date(p.created_at).toISOString(),
+        p.anonymous ? "Anonymous" : p.gift_name || "Someone",
+        (p.amount / 100).toFixed(2),
+        (p.gift_message || "").replaceAll('"', '""'),
+        "Completed",
+      ]),
+    ];
+
+    const csv = rows
+      .map((r) => r.map((cell) => `"${String(cell)}"`).join(","))
+      .join("\n");
+
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `everpay-demo-gifts-${username}.csv`;
+    a.click();
+    window.URL.revokeObjectURL(url);
+  };
+
+  const chipBase =
+    "px-3 py-2 rounded-xl text-xs border transition min-w-[78px] text-center";
+  const chipOn = "bg-white/10 border-white/20";
+  const chipOff =
+    "bg-transparent border-white/10 text-white/70 hover:text-white";
+
   return (
     <div className="min-h-screen" style={{ backgroundColor: PAGE_BG }}>
       <main className="max-w-7xl mx-auto pt-4 sm:pt-10 px-3 sm:px-6 text-white pb-16 sm:pb-24">
-
         <h1 className="text-[20px] sm:text-2xl font-semibold mb-5 sm:mb-6">
           Creator Gifts
         </h1>
+
+        <div className={`mb-6 sm:mb-8 ${PANEL} p-4 sm:p-6`}>
+          <div className="flex flex-col gap-4">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+              <div>
+                <p className="text-sm uppercase text-white/60 mb-1">Today</p>
+                <p className="text-4xl font-bold">{formatGBP(todaysTotal)}</p>
+                <p className="text-[11px] text-white/40 mt-1">
+                  Demo preview • fake data
+                </p>
+              </div>
+
+              <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:items-center sm:justify-end sm:gap-2">
+                <button
+                  onClick={() => setRange("today")}
+                  className={`${chipBase} ${
+                    range === "today" ? chipOn : chipOff
+                  }`}
+                >
+                  Today
+                </button>
+                <button
+                  onClick={() => setRange("7d")}
+                  className={`${chipBase} ${range === "7d" ? chipOn : chipOff}`}
+                >
+                  7 Days
+                </button>
+                <button
+                  onClick={() => setRange("30d")}
+                  className={`${chipBase} ${
+                    range === "30d" ? chipOn : chipOff
+                  }`}
+                >
+                  30 Days
+                </button>
+                <button
+                  onClick={() => setRange("all")}
+                  className={`${chipBase} ${range === "all" ? chipOn : chipOff}`}
+                >
+                  All
+                </button>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <div className="bg-black/20 border border-white/12 rounded-xl p-4">
+                <p className="text-[11px] uppercase text-white/60 mb-1">
+                  Total (range)
+                </p>
+                <p className="text-lg font-semibold">{formatGBP(totalRange)}</p>
+              </div>
+
+              <div className="bg-black/20 border border-white/12 rounded-xl p-4">
+                <p className="text-[11px] uppercase text-white/60 mb-1">
+                  Gifts
+                </p>
+                <p className="text-lg font-semibold">{filtered.length}</p>
+              </div>
+
+              <div className="bg-black/20 border border-white/12 rounded-xl p-4">
+                <p className="text-[11px] uppercase text-white/60 mb-1">
+                  Average
+                </p>
+                <p className="text-lg font-semibold">{formatGBP(avg)}</p>
+              </div>
+            </div>
+
+            <div className="flex flex-col gap-3">
+              <input
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="Search supporter, message, amount…"
+                className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-sm text-white placeholder:text-white/40 outline-none"
+              />
+
+              <div className="grid grid-cols-1 sm:grid-cols-[auto_auto] gap-3 sm:justify-end">
+                <button
+                  onClick={() => setAnonymousOnly((v) => !v)}
+                  className={`w-full sm:w-auto px-4 py-3 rounded-xl text-sm border ${
+                    anonymousOnly
+                      ? "bg-white/10 border-white/20"
+                      : "bg-white/10 border-white/20 text-white/70 hover:text-white"
+                  }`}
+                >
+                  Anonymous: {anonymousOnly ? "ON" : "OFF"}
+                </button>
+
+                <button
+                  onClick={exportCSV}
+                  className="w-full sm:w-auto px-4 py-3 rounded-xl text-sm bg-gradient-to-r from-teal-400 to-emerald-500 text-black font-semibold"
+                >
+                  Export CSV
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
 
         {filtered.length > 0 && (
           <div className="mb-4 px-1">
