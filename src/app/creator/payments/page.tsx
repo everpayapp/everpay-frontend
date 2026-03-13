@@ -177,7 +177,7 @@ export default function CreatorPaymentsPage() {
           Creator Payments
         </h1>
 
-        <div className={`mb-8 ${PANEL} p-4 sm:p-6`}>
+        <div className={`mb-6 sm:mb-8 ${PANEL} p-4 sm:p-6`}>
           <div className="flex flex-col gap-4">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
               <div>
@@ -267,6 +267,17 @@ export default function CreatorPaymentsPage() {
           </div>
         </div>
 
+        {!loading && filtered.length > 0 && (
+          <div className="mb-4 px-1">
+            <p className="text-sm text-white/60">
+              Showing <span className="text-white font-medium">{filtered.length}</span>{" "}
+              payment{filtered.length === 1 ? "" : "s"} •{" "}
+              <span className="text-white font-medium">{formatGBP(totalRange)}</span>{" "}
+              in this range
+            </p>
+          </div>
+        )}
+
         {loading ? (
           <p className="text-white/70">Loading payments…</p>
         ) : filtered.length === 0 ? (
@@ -276,26 +287,26 @@ export default function CreatorPaymentsPage() {
             {filtered.map((p) => (
               <div
                 key={p.id}
-                className="bg-black/20 border border-white/12 rounded-xl p-4 flex justify-between gap-4 shadow-[0_12px_40px_rgba(0,0,0,0.45)] ring-1 ring-white/10"
+                className="bg-black/20 border border-white/12 rounded-xl p-4 shadow-[0_12px_40px_rgba(0,0,0,0.45)] ring-1 ring-white/10"
               >
-                <div className="min-w-0">
-                  <div className="flex items-center justify-between gap-2">
-                    <p className="font-semibold">{formatGBP(p.amount / 100)}</p>
-
-                    <span className="shrink-0 text-[11px] px-2 py-0.5 rounded-full bg-white/10 border border-white/10 text-white/70">
-                      Completed
-                    </span>
-                  </div>
-
-                  <p className="text-xs text-white/70 truncate">
-                    {p.anonymous ? "Anonymous" : p.gift_name || "Someone"}
-                    {p.gift_message ? ` — “${p.gift_message}”` : ""}
+                <div className="flex items-start justify-between gap-3 mb-2">
+                  <p className="text-lg font-semibold">
+                    {formatGBP(p.amount / 100)}
                   </p>
+
+                  <span className="shrink-0 text-[11px] px-2 py-0.5 rounded-full bg-white/10 border border-white/10 text-white/70">
+                    Completed
+                  </span>
                 </div>
 
-                <div className="text-xs text-white/60 whitespace-nowrap">
+                <p className="text-sm text-white/80 break-words">
+                  {p.anonymous ? "Anonymous" : p.gift_name || "Someone"}
+                  {p.gift_message ? ` — “${p.gift_message}”` : ""}
+                </p>
+
+                <p className="mt-2 text-[11px] text-white/50">
                   {new Date(p.created_at).toLocaleDateString()}
-                </div>
+                </p>
               </div>
             ))}
           </div>
