@@ -1,7 +1,7 @@
 // ~/everpay-frontend/src/app/example/DemoDashboardClient.tsx
 "use client";
 
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import QRCode from "react-qr-code";
 
 type Payment = {
@@ -28,31 +28,20 @@ function firstChar(s: string) {
   return t.length ? t[0] : "?";
 }
 
-function formatGBP(pence: number) {
-  return `£${(Number(pence || 0) / 100).toFixed(2)}`;
-}
-
-function VerifiedBadge() {
-  return (
-    <span className="inline-flex items-center gap-1.5 text-[12px] text-white/80 shrink-0">
-      <span className="inline-flex items-center justify-center w-[18px] h-[18px] rounded-full bg-[#1d9bf0] shadow-sm">
-        <svg viewBox="0 0 24 24" width="12" height="12" aria-hidden="true" className="fill-white">
-          <path d="M9.0 16.2 4.8 12l1.4-1.4L9 13.4l8.8-8.8L19.2 6z" />
-        </svg>
-      </span>
-      <span className="font-medium">Verified</span>
-    </span>
-  );
-}
-
 export default function DemoDashboardClient({ username }: { username: string }) {
-  const [mounted, setMounted] = useState(false);
+  const PAGE_BG = "#0B0D12";
+
+  const PANEL =
+    "bg-black/25 rounded-3xl border border-white/18 shadow-[0_18px_60px_rgba(0,0,0,0.55)] ring-1 ring-white/10";
+
+  const SUBPANEL =
+    "bg-black/20 rounded-2xl border border-white/12";
+
   const [showQRModal, setShowQRModal] = useState(false);
   const [copied, setCopied] = useState(false);
   const copiedTimer = useRef<number | null>(null);
 
   useEffect(() => {
-    setMounted(true);
     return () => {
       if (copiedTimer.current) window.clearTimeout(copiedTimer.current);
     };
@@ -105,8 +94,12 @@ export default function DemoDashboardClient({ username }: { username: string }) 
     },
   ];
 
-  const totalPence = payments.reduce((sum, p) => sum + Number(p.amount || 0), 0);
-  const totalEarned = totalPence / 100;
+  const totalEarned = payments.reduce((sum, p) => sum + p.amount, 0) / 100;
+
+  const formattedTotal = totalEarned.toLocaleString("en-GB", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
 
   const milestoneEnabled =
     profile &&
@@ -114,161 +107,218 @@ export default function DemoDashboardClient({ username }: { username: string }) 
     (profile.milestone_amount || 0) > 0;
 
   const milestoneTarget = profile.milestone_amount || 0;
-  const progress = milestoneTarget > 0 ? Math.min(1, totalEarned / milestoneTarget) : 0;
+  const progress =
+    milestoneTarget > 0 ? Math.min(1, totalEarned / milestoneTarget) : 0;
   const progressPercent = Math.round(progress * 100);
-
-  const panelClass = "bg-black/45 backdrop-blur-md rounded-3xl border border-white/18 shadow-2xl";
-
-  const recentGifts = useMemo(() => payments.slice(0, 5), [payments]);
 
   const handleCopy = async () => {
     try {
       await navigator.clipboard.writeText(pageUrl);
       setCopied(true);
-      if (copiedTimer.current) window.clearTimeout(copiedTimer.current);
+
+      if (copiedTimer.current) {
+        window.clearTimeout(copiedTimer.current);
+      }
+
       copiedTimer.current = window.setTimeout(() => setCopied(false), 1600);
     } catch {
       alert("Copy failed (demo).");
     }
   };
 
+  const handleOpenMyPage = () => {
+    window.open(pageUrl, "_blank", "noopener,noreferrer");
+  };
+
+  const handleShare = async () => {
+    try {
+      if (navigator.share) {
+        await navigator.share({
+          title: `${profile.profile_name} on EverPay`,
+          text: `Support ${profile.profile_name} on EverPay`,
+          url: pageUrl,
+        });
+      } else {
+        await navigator.clipboard.writeText(pageUrl);
+        setCopied(true);
+      }
+    } catch {
+      // cancelled
+    }
+  };
+
   return (
     <>
-      <div
-        className="max-w-6xl mx-auto px-4 text-white mt-10 pb-24"
-        style={{ background: "linear-gradient(to bottom right, #0B0D12, #121826, #0B0D12)" }}
-      >
-        <div className="space-y-6">
-          <div className="rounded-2xl border border-emerald-400/25 bg-emerald-400/10 px-4 py-3 text-sm text-emerald-100">
-            Demo preview — actions are disabled on this page.
+      <div className="min-h-screen" style={{ backgroundColor: PAGE_BG }}>
+        <div className="max-w-7xl mx-auto px-3 sm:px-6 text-white pt-4 sm:pt-10 pb-16 sm:pb-32">
+
+          <div className="rounded-2xl border border-emerald-400/25 bg-emerald-400/10 px-4 py-3 text-sm text-emerald-100 mb-5 sm:mb-6">
+            Demo preview — actions are safe and do not affect a real account.
           </div>
 
-          <section className={`w-full ${panelClass} px-5 sm:px-8 py-5 sm:py-6 overflow-x-hidden`}>
-            <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 sm:gap-6">
-              <div className="flex items-center gap-4 sm:gap-6 min-w-0 flex-1">
-                <div className="w-16 h-16 sm:w-20 sm:h-20 rounded-full border-[4px] border-white/35 bg-white/10 flex items-center justify-center overflow-hidden shadow-xl shrink-0">
-                  {profile.avatar_url ? (
-                    <img src={profile.avatar_url} alt="Profile picture" className="w-full h-full object-contain" />
-                  ) : (
-                    <span className="text-2xl font-bold">{firstChar(profile.profile_name)}</span>
-                  )}
-                </div>
+          <div className="grid grid-cols-1 lg:grid-cols-[58%_42%] gap-5 sm:gap-8">
 
-                <div className="min-w-0 flex-1">
-                  <div className="flex flex-wrap items-start gap-2 min-w-0">
-                    <h1 className="text-2xl sm:text-3xl font-bold tracking-tight leading-tight">{profile.profile_name}</h1>
-                    <div className="pt-1">
-                      <VerifiedBadge />
-                    </div>
-                  </div>
-
-                  <p className="text-sm text-white/60">@everpay</p>
-                  <p className="text-[11px] text-white/45 mt-1">Demo preview • fake data</p>
-                </div>
+            <div
+              className={`lg:col-span-2 ${PANEL} px-4 py-4 sm:p-9 flex items-center gap-4 sm:gap-7`}
+            >
+              <div className="w-20 h-20 sm:w-28 sm:h-28 rounded-full border-[4px] sm:border-[5px] border-white/30 overflow-hidden shadow-xl shrink-0 bg-white/5 flex items-center justify-center">
+                {profile.avatar_url ? (
+                  <img
+                    src={profile.avatar_url}
+                    alt="Creator avatar"
+                    className="w-full h-full object-cover"
+                  />
+                ) : (
+                  <span className="text-2xl sm:text-4xl font-bold">
+                    {firstChar(profile.profile_name)}
+                  </span>
+                )}
               </div>
 
-              <div className="hidden sm:flex items-start justify-end pt-1">
-                <span className="text-[12px] text-white/70 font-medium tracking-wide">Powered by EverPay</span>
+              <div className="min-w-0">
+                <h1 className="text-[18px] leading-[1.05] sm:text-4xl font-bold uppercase break-words">
+                  {profile.profile_name}
+                </h1>
+                <p className="text-xs sm:text-sm text-white/60 mt-1 break-all">
+                  @{profile.username}
+                </p>
+                <p className="text-[11px] sm:text-xs text-white/45 mt-1">
+                  Demo preview • fake data
+                </p>
               </div>
             </div>
-          </section>
 
-          <div className="grid grid-cols-1 lg:grid-cols-[55%_45%] gap-6">
-            <div className="space-y-6">
+            <div className="space-y-5 sm:space-y-8">
+
               {milestoneEnabled && (
-                <section className={`${panelClass} px-5 py-4 overflow-x-hidden`}>
-                  <p className="text-[11px] uppercase tracking-[0.18em] text-white/70 mb-1">Current goal</p>
-
-                  {profile.milestone_text && <p className="text-sm font-semibold mb-1">{profile.milestone_text}</p>}
+                <div className={`${PANEL} px-5 py-5 sm:px-7 sm:py-6`}>
+                  <p className="text-[11px] sm:text-xs uppercase text-white/70 mb-1">
+                    Current goal
+                  </p>
 
                   <p className="text-[13px] text-white/80 mb-3">
-                    £{totalEarned.toLocaleString("en-GB", { minimumFractionDigits: 2 })} of £
-                    {milestoneTarget.toLocaleString("en-GB", { minimumFractionDigits: 2 })} raised
+                    £{formattedTotal} of £
+                    {milestoneTarget.toLocaleString("en-GB", {
+                      minimumFractionDigits: 2,
+                    })} raised
                   </p>
 
                   <div className="w-full h-2.5 rounded-full bg-white/10 overflow-hidden">
                     <div
-                      className="h-full rounded-full bg-gradient-to-r from-cyan-400 via-emerald-400 to-lime-300"
+                      className="h-full bg-gradient-to-r from-teal-400 to-emerald-500"
                       style={{ width: `${progressPercent}%` }}
                     />
                   </div>
-
-                  <p className="mt-1 text-[11px] text-white/65">{progressPercent}% complete</p>
-                </section>
+                </div>
               )}
 
-              <section className={`${panelClass} p-6`}>
-                <p className="text-sm uppercase text-white/60 mb-2">Total earnings</p>
-                <p className="text-5xl font-bold">£{totalEarned.toFixed(2)}</p>
-              </section>
+              <div className={`${PANEL} px-5 py-5 sm:p-7`}>
+                <p className="text-sm uppercase text-white/60">
+                  Total Earnings
+                </p>
 
-              <section className={`${panelClass} p-6 space-y-4`}>
-                <p className="text-sm text-center">Share your gift page 🌍</p>
+                <p className="text-[44px] leading-none sm:text-5xl font-bold mt-2 sm:mt-0">
+                  £{formattedTotal}
+                </p>
+              </div>
 
-                <div className="bg-black/60 rounded-xl px-4 py-2 text-sm text-white/70 break-all border border-white/10">
+              <div className={`${PANEL} px-5 py-5 sm:p-7 space-y-4 sm:space-y-5`}>
+                <p className="text-sm text-center">
+                  Share your gift page 🌍
+                </p>
+
+                <div
+                  className={`${SUBPANEL} rounded-xl px-4 py-2.5 text-[13px] sm:text-sm text-white/70 break-all leading-snug`}
+                >
                   {pageUrl}
                 </div>
 
-                <button
-                  onClick={handleCopy}
-                  className="w-full py-3 rounded-xl bg-gradient-to-r from-[#2EE4A5] to-[#41E8A5] text-black font-semibold hover:opacity-95 transition"
-                >
-                  {copied ? "Copied ✓" : "Copy Link"}
-                </button>
+                <div className="grid grid-cols-2 gap-3 sm:gap-4">
+                  <button
+                    onClick={handleCopy}
+                    className="min-h-[50px] sm:min-h-0 py-2 sm:py-3 px-3 rounded-xl bg-gradient-to-r from-teal-400 to-emerald-500 text-black font-semibold text-[13px] sm:text-base leading-snug"
+                  >
+                    {copied ? "Copied ✓" : "Copy Link"}
+                  </button>
 
-                <button
-                  onClick={() => setShowQRModal(true)}
-                  className="w-full py-3 rounded-xl bg-gradient-to-r from-[#2EE4A5] to-[#41E8A5] text-black font-semibold hover:opacity-95 transition"
-                >
-                  📷 Show Live Stream QR
-                </button>
+                  <button
+                    onClick={handleOpenMyPage}
+                    className="min-h-[50px] sm:min-h-0 py-2 sm:py-3 px-3 rounded-xl bg-gradient-to-r from-teal-400 to-emerald-500 text-black font-semibold text-[13px] sm:text-base leading-snug"
+                  >
+                    View Page
+                  </button>
 
-                <p className="text-center text-[11px] text-white/40">
-                  Demo preview — buttons are safe and do not affect a real account.
-                </p>
-              </section>
+                  <button
+                    onClick={() => setShowQRModal(true)}
+                    className="min-h-[50px] sm:min-h-0 py-2 sm:py-3 px-3 rounded-xl bg-gradient-to-r from-teal-400 to-emerald-500 text-black font-semibold text-[13px] sm:text-base leading-snug"
+                  >
+                    Show QR
+                  </button>
+
+                  <button
+                    onClick={handleShare}
+                    className="min-h-[50px] sm:min-h-0 py-2 sm:py-3 px-3 rounded-xl bg-gradient-to-r from-teal-400 to-emerald-500 text-black font-semibold text-[13px] sm:text-base leading-snug"
+                  >
+                    Share Page
+                  </button>
+                </div>
+              </div>
             </div>
 
-            <section className={`${panelClass} p-6`}>
-              <h2 className="text-2xl font-semibold mb-5 text-center">Recent Gifts 🎁</h2>
+            <div className={`${PANEL} px-5 py-5 sm:p-7`}>
+              <h2 className="text-[20px] sm:text-2xl font-semibold mb-4 sm:mb-5 text-center">
+                Recent Gifts
+              </h2>
 
               <div className="space-y-3">
-                {recentGifts.map((p) => (
+                {payments.slice(0, 5).map((p) => (
                   <div
                     key={p.id}
-                    className="bg-white/6 border border-white/10 rounded-xl px-4 py-3 text-sm flex justify-between gap-3 shadow-sm overflow-hidden"
+                    className="bg-black/20 border border-white/12 rounded-xl px-4 py-3 sm:p-4 mb-3 flex justify-between gap-3"
                   >
-                    <div className="flex-1 min-w-0">
-                      <p className="text-sm font-semibold">
-                        {p.anonymous ? "Anonymous" : p.gift_name?.trim() ? p.gift_name : "Someone"}
+                    <div className="min-w-0">
+                      <p className="text-sm truncate">
+                        {p.anonymous ? "Anonymous" : p.gift_name || "Someone"}
                       </p>
-                      <p className="font-bold text-white">{formatGBP(p.amount)}</p>
+
+                      <p className="font-semibold text-[15px] sm:text-base mt-1">
+                        £
+                        {(p.amount / 100).toLocaleString("en-GB", {
+                          minimumFractionDigits: 2,
+                        })}
+                      </p>
+
                       {p.gift_message ? (
-                        <p className="text-xs text-white/60 truncate max-w-[240px]">“{p.gift_message}”</p>
+                        <p className="text-xs text-white/60 mt-1 truncate">
+                          “{p.gift_message}”
+                        </p>
                       ) : null}
                     </div>
 
-                    <div className="text-xs opacity-60 whitespace-nowrap mt-1">
+                    <div className="text-[11px] sm:text-xs opacity-60 whitespace-nowrap pt-0.5">
                       {new Date(p.created_at).toLocaleDateString("en-GB")}
                     </div>
                   </div>
                 ))}
               </div>
-            </section>
+            </div>
+
           </div>
         </div>
       </div>
 
       {showQRModal && (
-        <div className="fixed inset-0 bg-black/80 backdrop-blur-sm flex items-center justify-center z-50 p-6">
-          <div className="bg-white rounded-3xl p-6 shadow-2xl text-center max-w-sm w-full">
-            {mounted ? <QRCode value={pageUrl} size={220} /> : <div className="w-[220px] h-[220px] mx-auto" />}
+        <div className="fixed inset-0 bg-black/90 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-3xl p-5 sm:p-6 shadow-2xl text-center max-w-[92vw]">
+            <QRCode value={pageUrl} size={220} />
+
             <p className="mt-3 text-xs text-slate-500">
               Powered by <strong>EverPay</strong> · Demo preview
             </p>
+
             <button
               onClick={() => setShowQRModal(false)}
-              className="mt-4 text-sm text-slate-500 hover:text-slate-700 transition"
+              className="mt-4 text-sm text-slate-400 hover:text-slate-600"
             >
               Close
             </button>
