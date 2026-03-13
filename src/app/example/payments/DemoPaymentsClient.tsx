@@ -1,7 +1,7 @@
 // ~/everpay-frontend/src/app/example/payments/DemoPaymentsClient.tsx
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 
 type Payment = {
   id: string;
@@ -13,9 +13,25 @@ type Payment = {
 };
 
 const formatGBP = (value: number) =>
-  new Intl.NumberFormat("en-GB", { style: "currency", currency: "GBP" }).format(value);
+  new Intl.NumberFormat("en-GB", {
+    style: "currency",
+    currency: "GBP",
+  }).format(value);
+
+const formatMonthLabel = (date: Date) =>
+  new Intl.DateTimeFormat("en-GB", {
+    month: "long",
+    year: "numeric",
+  }).format(date);
 
 type RangeKey = "today" | "7d" | "30d" | "all";
+
+type MonthGroup = {
+  key: string;
+  label: string;
+  payments: Payment[];
+  total: number;
+};
 
 export default function DemoPaymentsClient({ username }: { username: string }) {
   const PAGE_BG = "#0B0D12";
@@ -29,7 +45,7 @@ export default function DemoPaymentsClient({ username }: { username: string }) {
       gift_name: "Sarah",
       gift_message: "Love your content 🎁",
       anonymous: 0,
-      created_at: "2026-01-30T08:10:00.000Z",
+      created_at: "2026-03-14T08:10:00.000Z",
     },
     {
       id: "ep_demo_pay_002",
@@ -37,7 +53,7 @@ export default function DemoPaymentsClient({ username }: { username: string }) {
       gift_name: "",
       gift_message: "Keep going 👏",
       anonymous: 1,
-      created_at: "2026-01-29T19:30:00.000Z",
+      created_at: "2026-03-13T19:30:00.000Z",
     },
     {
       id: "ep_demo_pay_003",
@@ -45,7 +61,7 @@ export default function DemoPaymentsClient({ username }: { username: string }) {
       gift_name: "Tom",
       gift_message: "Legend 🙌",
       anonymous: 0,
-      created_at: "2026-01-29T12:05:00.000Z",
+      created_at: "2026-03-12T12:05:00.000Z",
     },
     {
       id: "ep_demo_pay_004",
@@ -53,16 +69,46 @@ export default function DemoPaymentsClient({ username }: { username: string }) {
       gift_name: "Mia",
       gift_message: "",
       anonymous: 0,
-      created_at: "2026-01-28T21:40:00.000Z",
+      created_at: "2026-03-11T21:40:00.000Z",
+    },
+    {
+      id: "ep_demo_pay_005",
+      amount: 1200,
+      gift_name: "Ariana",
+      gift_message: "You got this",
+      anonymous: 0,
+      created_at: "2026-02-26T10:15:00.000Z",
+    },
+    {
+      id: "ep_demo_pay_006",
+      amount: 700,
+      gift_name: "Leo",
+      gift_message: "",
+      anonymous: 0,
+      created_at: "2026-02-21T14:20:00.000Z",
+    },
+    {
+      id: "ep_demo_pay_007",
+      amount: 1800,
+      gift_name: "",
+      gift_message: "Proud of you",
+      anonymous: 1,
+      created_at: "2026-02-16T18:45:00.000Z",
+    },
+    {
+      id: "ep_demo_pay_008",
+      amount: 950,
+      gift_name: "Chris",
+      gift_message: "Amazing work",
+      anonymous: 0,
+      created_at: "2026-01-30T09:00:00.000Z",
     },
   ];
 
   const [range, setRange] = useState<RangeKey>("today");
   const [search, setSearch] = useState("");
   const [anonymousOnly, setAnonymousOnly] = useState(false);
-  const [mounted, setMounted] = useState(false);
-
-  useEffect(() => setMounted(true), []);
+  const [openMonths, setOpenMonths] = useState<Record<string, boolean>>({});
 
   const mountedRef = useRef(true);
   useEffect(() => {
@@ -72,7 +118,7 @@ export default function DemoPaymentsClient({ username }: { username: string }) {
     };
   }, []);
 
-  const now = new Date("2026-01-30T09:00:00.000Z");
+  const now = new Date("2026-03-14T09:00:00.000Z");
 
   const startOfToday = new Date(now);
   startOfToday.setHours(0, 0, 0, 0);
@@ -102,7 +148,9 @@ export default function DemoPaymentsClient({ username }: { username: string }) {
     const q = search.trim().toLowerCase();
     if (!q) return true;
 
-    const supporter = (p.anonymous ? "anonymous" : p.gift_name || "someone").toLowerCase();
+    const supporter = (
+      p.anonymous ? "anonymous" : p.gift_name || "someone"
+    ).toLowerCase();
     const message = (p.gift_message || "").toLowerCase();
     const amount = (p.amount / 100).toFixed(2);
 
@@ -127,6 +175,59 @@ export default function DemoPaymentsClient({ username }: { username: string }) {
       .filter((p) => new Date(p.created_at) >= startOfToday)
       .reduce((sum, p) => sum + p.amount, 0) / 100;
 
+  const groupedPayments = useMemo<MonthGroup[]>(() => {
+    const groups = new Map<string, MonthGroup>();
+
+    for (const payment of filtered) {
+      const d = new Date(payment.created_at);
+      const year = d.getFullYear();
+      const month = d.getMonth();
+      const key = `${year}-${String(month + 1).padStart(2, "0")}`;
+      const label = formatMonthLabel(new Date(year, month, 1));
+
+      if (!groups.has(key)) {
+        groups.set(key, {
+          key,
+          label,
+          payments: [],
+          total: 0,
+        });
+      }
+
+      const group = groups.get(key)!;
+      group.payments.push(payment);
+      group.total += payment.amount;
+    }
+
+    return Array.from(groups.values()).sort((a, b) =>
+      b.key.localeCompare(a.key)
+    );
+  }, [filtered]);
+
+  useEffect(() => {
+    if (groupedPayments.length === 0) return;
+
+    const firstMonthKey = groupedPayments[0].key;
+
+    setOpenMonths((prev) => {
+      if (typeof prev[firstMonthKey] !== "undefined") {
+        return prev;
+      }
+
+      return {
+        ...prev,
+        [firstMonthKey]: true,
+      };
+    });
+  }, [groupedPayments]);
+
+  const toggleMonth = (monthKey: string) => {
+    setOpenMonths((prev) => ({
+      ...prev,
+      [monthKey]: !prev[monthKey],
+    }));
+  };
+
   const exportCSV = () => {
     const rows = [
       ["date", "supporter", "amount_gbp", "message", "status"],
@@ -139,7 +240,9 @@ export default function DemoPaymentsClient({ username }: { username: string }) {
       ]),
     ];
 
-    const csv = rows.map((r) => r.map((cell) => `"${String(cell)}"`).join(",")).join("\n");
+    const csv = rows
+      .map((r) => r.map((cell) => `"${String(cell)}"`).join(","))
+      .join("\n");
 
     const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
     const url = window.URL.createObjectURL(blob);
@@ -150,61 +253,56 @@ export default function DemoPaymentsClient({ username }: { username: string }) {
     window.URL.revokeObjectURL(url);
   };
 
+  const chipBase =
+    "px-3 py-2 rounded-xl text-xs border transition min-w-[78px] text-center";
+  const chipOn = "bg-white/10 border-white/20";
+  const chipOff =
+    "bg-transparent border-white/10 text-white/70 hover:text-white";
+
   return (
     <div className="min-h-screen" style={{ backgroundColor: PAGE_BG }}>
-      <main className="max-w-6xl mx-auto px-4 text-white mt-10 pb-32">
-        <h1 className="text-2xl font-semibold mb-6">Creator Payments</h1>
+      <main className="max-w-7xl mx-auto pt-4 sm:pt-10 px-3 sm:px-6 text-white pb-16 sm:pb-24">
+        <h1 className="text-[20px] sm:text-2xl font-semibold mb-5 sm:mb-6">
+          Creator Payments
+        </h1>
 
-        <div className={`mb-8 ${PANEL} p-6`}>
+        <div className={`mb-6 sm:mb-8 ${PANEL} p-4 sm:p-6`}>
           <div className="flex flex-col gap-4">
-            <div className="flex items-start justify-between gap-4">
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
               <div>
                 <p className="text-sm uppercase text-white/60 mb-1">Today</p>
                 <p className="text-4xl font-bold">{formatGBP(todaysTotal)}</p>
-                <p className="text-[11px] text-white/40 mt-1">Demo preview • fake data</p>
+                <p className="text-[11px] text-white/40 mt-1">
+                  Demo preview • fake data
+                </p>
               </div>
 
-              <div className="flex gap-2">
+              <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:items-center sm:justify-end sm:gap-2">
                 <button
                   onClick={() => setRange("today")}
-                  className={`px-3 py-1.5 rounded-lg text-xs border ${
-                    range === "today"
-                      ? "bg-white/10 border-white/20"
-                      : "bg-transparent border-white/10 text-white/70 hover:text-white"
+                  className={`${chipBase} ${
+                    range === "today" ? chipOn : chipOff
                   }`}
                 >
                   Today
                 </button>
-
                 <button
                   onClick={() => setRange("7d")}
-                  className={`px-3 py-1.5 rounded-lg text-xs border ${
-                    range === "7d"
-                      ? "bg-white/10 border-white/20"
-                      : "bg-transparent border-white/10 text-white/70 hover:text-white"
-                  }`}
+                  className={`${chipBase} ${range === "7d" ? chipOn : chipOff}`}
                 >
                   7 Days
                 </button>
-
                 <button
                   onClick={() => setRange("30d")}
-                  className={`px-3 py-1.5 rounded-lg text-xs border ${
-                    range === "30d"
-                      ? "bg-white/10 border-white/20"
-                      : "bg-transparent border-white/10 text-white/70 hover:text-white"
+                  className={`${chipBase} ${
+                    range === "30d" ? chipOn : chipOff
                   }`}
                 >
                   30 Days
                 </button>
-
                 <button
                   onClick={() => setRange("all")}
-                  className={`px-3 py-1.5 rounded-lg text-xs border ${
-                    range === "all"
-                      ? "bg-white/10 border-white/20"
-                      : "bg-transparent border-white/10 text-white/70 hover:text-white"
-                  }`}
+                  className={`${chipBase} ${range === "all" ? chipOn : chipOff}`}
                 >
                   All
                 </button>
@@ -213,33 +311,39 @@ export default function DemoPaymentsClient({ username }: { username: string }) {
 
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <div className="bg-black/20 border border-white/12 rounded-xl p-4">
-                <p className="text-[11px] uppercase text-white/60 mb-1">Total (range)</p>
+                <p className="text-[11px] uppercase text-white/60 mb-1">
+                  Total (range)
+                </p>
                 <p className="text-lg font-semibold">{formatGBP(totalRange)}</p>
               </div>
 
               <div className="bg-black/20 border border-white/12 rounded-xl p-4">
-                <p className="text-[11px] uppercase text-white/60 mb-1">Payments</p>
+                <p className="text-[11px] uppercase text-white/60 mb-1">
+                  Payments
+                </p>
                 <p className="text-lg font-semibold">{filtered.length}</p>
               </div>
 
               <div className="bg-black/20 border border-white/12 rounded-xl p-4">
-                <p className="text-[11px] uppercase text-white/60 mb-1">Average</p>
+                <p className="text-[11px] uppercase text-white/60 mb-1">
+                  Average
+                </p>
                 <p className="text-lg font-semibold">{formatGBP(avg)}</p>
               </div>
             </div>
 
-            <div className="flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between">
+            <div className="flex flex-col gap-3">
               <input
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="Search supporter, message, amount…"
-                className="w-full sm:flex-1 bg-white/10 border border-white/20 rounded-xl px-4 py-2 text-sm text-white placeholder:text-white/40 outline-none"
+                className="w-full bg-white/10 border border-white/20 rounded-xl px-4 py-3 text-sm text-white placeholder:text-white/40 outline-none"
               />
 
-              <div className="flex gap-2">
+              <div className="grid grid-cols-1 sm:grid-cols-[auto_auto] gap-3 sm:justify-end">
                 <button
                   onClick={() => setAnonymousOnly((v) => !v)}
-                  className={`px-3 py-2 rounded-xl text-xs border ${
+                  className={`w-full sm:w-auto px-4 py-3 rounded-xl text-sm border ${
                     anonymousOnly
                       ? "bg-white/10 border-white/20"
                       : "bg-white/10 border-white/20 text-white/70 hover:text-white"
@@ -250,48 +354,90 @@ export default function DemoPaymentsClient({ username }: { username: string }) {
 
                 <button
                   onClick={exportCSV}
-                  className="px-3 py-2 rounded-xl text-xs bg-gradient-to-r from-cyan-400 to-emerald-400 text-black font-semibold"
+                  className="w-full sm:w-auto px-4 py-3 rounded-xl text-sm bg-gradient-to-r from-teal-400 to-emerald-500 text-black font-semibold"
                 >
                   Export CSV
                 </button>
               </div>
             </div>
-
-            <p className="text-[11px] text-white/40">
-              Demo preview — export works, but data is sample-only. Status is shown as Completed.
-            </p>
           </div>
         </div>
+
+        {filtered.length > 0 && (
+          <div className="mb-4 px-1">
+            <p className="text-sm text-white/60">
+              Showing <span className="text-white font-medium">{filtered.length}</span>{" "}
+              payment{filtered.length === 1 ? "" : "s"} •{" "}
+              <span className="text-white font-medium">{formatGBP(totalRange)}</span>{" "}
+              in this range
+            </p>
+          </div>
+        )}
 
         {filtered.length === 0 ? (
           <p className="text-white/70">No payments found for this filter.</p>
         ) : (
-          <div className="space-y-3">
-            {filtered.map((p) => (
-              <div
-                key={p.id}
-                className="bg-black/20 border border-white/12 rounded-xl p-4 flex justify-between gap-4 shadow-[0_12px_40px_rgba(0,0,0,0.45)] ring-1 ring-white/10"
-              >
-                <div className="min-w-0">
-                  <div className="flex items-center gap-2">
-                    <p className="font-semibold">{formatGBP(p.amount / 100)}</p>
+          <div className="space-y-4">
+            {groupedPayments.map((group, index) => {
+              const isOpen = openMonths[group.key] ?? index === 0;
 
-                    <span className="text-[11px] px-2 py-0.5 rounded-full bg-white/10 border border-white/10 text-white/70">
-                      Completed
-                    </span>
-                  </div>
+              return (
+                <div
+                  key={group.key}
+                  className="bg-black/20 border border-white/12 rounded-2xl shadow-[0_12px_40px_rgba(0,0,0,0.45)] ring-1 ring-white/10 overflow-hidden"
+                >
+                  <button
+                    type="button"
+                    onClick={() => toggleMonth(group.key)}
+                    className="w-full px-4 py-4 flex items-center justify-between gap-4 text-left hover:bg-white/[0.03] transition"
+                  >
+                    <div className="min-w-0">
+                      <p className="text-base sm:text-lg font-semibold text-white">
+                        {group.label}
+                      </p>
+                      <p className="text-xs sm:text-sm text-white/60 mt-1">
+                        {group.payments.length} payment{group.payments.length === 1 ? "" : "s"} •{" "}
+                        {formatGBP(group.total / 100)}
+                      </p>
+                    </div>
 
-                  <p className="text-xs text-white/70 truncate">
-                    {p.anonymous ? "Anonymous" : p.gift_name || "Someone"}
-                    {p.gift_message ? ` — “${p.gift_message}”` : ""}
-                  </p>
+                    <div className="shrink-0 text-white/70 text-lg">
+                      {isOpen ? "−" : "+"}
+                    </div>
+                  </button>
+
+                  {isOpen && (
+                    <div className="px-4 pb-4 space-y-3">
+                      {group.payments.map((p) => (
+                        <div
+                          key={p.id}
+                          className="bg-black/20 border border-white/12 rounded-xl p-4 shadow-[0_12px_40px_rgba(0,0,0,0.25)]"
+                        >
+                          <div className="flex items-start justify-between gap-3 mb-2">
+                            <p className="text-xl font-semibold tracking-tight">
+                              {formatGBP(p.amount / 100)}
+                            </p>
+
+                            <span className="shrink-0 text-[11px] px-2 py-0.5 rounded-full bg-white/10 border border-white/10 text-white/70">
+                              Completed
+                            </span>
+                          </div>
+
+                          <p className="text-sm text-white/70 break-words">
+                            {p.anonymous ? "Anonymous" : p.gift_name || "Someone"}
+                            {p.gift_message ? ` — “${p.gift_message}”` : ""}
+                          </p>
+
+                          <p className="mt-1 text-[11px] text-white/40">
+                            {new Date(p.created_at).toLocaleDateString("en-GB")}
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
-
-                <div className="text-xs text-white/60 whitespace-nowrap">
-                  {mounted ? new Date(p.created_at).toLocaleDateString("en-GB") : ""}
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </main>
