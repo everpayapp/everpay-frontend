@@ -39,7 +39,7 @@ export default function ExampleLayout({ children }: { children: React.ReactNode 
             href="/example/payments"
             className="px-4 py-2 rounded-xl border border-white/10 bg-white/5 hover:bg-white/10 transition text-sm font-semibold"
           >
-            Payments
+            Gifts
           </Link>
           <Link
             href="/example/settings"
@@ -64,3 +64,4 @@ export default function ExampleLayout({ children }: { children: React.ReactNode 
     </main>
   );
 }
+

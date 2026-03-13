@@ -9,7 +9,7 @@ export default function NavBar() {
   const pathname = usePathname();
   const { status, data: session } = useSession();
 
-  // ✅ Hide navbar on marketing, example & auth pages
+  // Hide navbar on marketing, example & auth pages
   if (
     pathname === "/" ||
     pathname.startsWith("/example") ||
@@ -21,8 +21,8 @@ export default function NavBar() {
     return null;
   }
 
-  // ✅ Hide navbar on public creator pages (/creator/username)
-  // Show only on creator dashboard routes (dashboard/payments/settings)
+  // Hide navbar on public creator pages (/creator/username)
+  // Show only on creator dashboard routes
   if (
     pathname.startsWith("/creator/") &&
     !pathname.includes("/dashboard") &&
@@ -43,12 +43,13 @@ export default function NavBar() {
     <nav className="sticky top-0 z-50 w-full bg-[#151923] border-b border-white/15 shadow-[0_10px_30px_rgba(0,0,0,0.45)]">
       <div className="mx-auto max-w-6xl px-3 sm:px-6 py-3 sm:py-5">
         <div className="flex items-center gap-6 overflow-x-auto whitespace-nowrap [-webkit-overflow-scrolling:touch]">
+          
           <Link href="/creator/dashboard" className={linkClass("/creator/dashboard")}>
             Dashboard
           </Link>
 
           <Link href="/creator/payments" className={linkClass("/creator/payments")}>
-            Payments
+            Gifts
           </Link>
 
           <Link href="/creator/settings" className={linkClass("/creator/settings")}>

@@ -58,7 +58,7 @@ export default function LoginPage() {
               Sign in to your creator dashboard
             </h1>
             <p className="text-sm text-white/65">
-              Manage your gift page, payments, and settings.
+              Manage your gift page, gifts, and settings.
             </p>
           </div>
 
@@ -117,7 +117,7 @@ export default function LoginPage() {
 
           <div className="pt-2 text-center">
             <p className="text-xs text-white/45">
-              Secure login • Payments powered by Stripe
+              Secure login • Powered by Stripe
             </p>
           </div>
         </form>

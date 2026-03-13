@@ -242,7 +242,7 @@ export default function CreatorPaymentsPage() {
     <div className="min-h-screen" style={{ backgroundColor: PAGE_BG }}>
       <main className="max-w-7xl mx-auto pt-4 sm:pt-10 px-3 sm:px-6 text-white pb-16 sm:pb-24">
         <h1 className="text-[20px] sm:text-2xl font-semibold mb-5 sm:mb-6">
-          Creator Payments
+          Creator Gifts
         </h1>
 
         <div className={`mb-6 sm:mb-8 ${PANEL} p-4 sm:p-6`}>
@@ -295,7 +295,7 @@ export default function CreatorPaymentsPage() {
 
               <div className="bg-black/20 border border-white/12 rounded-xl p-4">
                 <p className="text-[11px] uppercase text-white/60 mb-1">
-                  Payments
+                  Gifts
                 </p>
                 <p className="text-lg font-semibold">{filtered.length}</p>
               </div>
@@ -343,7 +343,7 @@ export default function CreatorPaymentsPage() {
           <div className="mb-4 px-1">
             <p className="text-sm text-white/60">
               Showing <span className="text-white font-medium">{filtered.length}</span>{" "}
-              payment{filtered.length === 1 ? "" : "s"} •{" "}
+              gift{filtered.length === 1 ? "" : "s"} •{" "}
               <span className="text-white font-medium">{formatGBP(totalRange)}</span>{" "}
               in this range
             </p>
@@ -351,9 +351,9 @@ export default function CreatorPaymentsPage() {
         )}
 
         {loading ? (
-          <p className="text-white/70">Loading payments…</p>
+          <p className="text-white/70">Loading gifts…</p>
         ) : filtered.length === 0 ? (
-          <p className="text-white/70">No payments found for this filter.</p>
+          <p className="text-white/70">No gifts found for this filter.</p>
         ) : (
           <div className="space-y-4">
             {groupedPayments.map((group, index) => {
@@ -374,7 +374,7 @@ export default function CreatorPaymentsPage() {
                         {group.label}
                       </p>
                       <p className="text-xs sm:text-sm text-white/60 mt-1">
-                        {group.payments.length} payment{group.payments.length === 1 ? "" : "s"} •{" "}
+                        {group.payments.length} gift{group.payments.length === 1 ? "" : "s"} •{" "}
                         {formatGBP(group.total / 100)}
                       </p>
                     </div>
