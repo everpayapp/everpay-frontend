@@ -1,7 +1,7 @@
 // ~/everpay-frontend/src/app/creator/payments/page.tsx
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 
@@ -22,7 +22,20 @@ const formatGBP = (value: number) =>
     currency: "GBP",
   }).format(value);
 
+const formatMonthLabel = (date: Date) =>
+  new Intl.DateTimeFormat("en-GB", {
+    month: "long",
+    year: "numeric",
+  }).format(date);
+
 type RangeKey = "today" | "7d" | "30d" | "all";
+
+type MonthGroup = {
+  key: string;
+  label: string;
+  payments: Payment[];
+  total: number;
+};
 
 export default function CreatorPaymentsPage() {
   const { status, data: session } = useSession();
@@ -44,6 +57,7 @@ export default function CreatorPaymentsPage() {
   const [range, setRange] = useState<RangeKey>("today");
   const [search, setSearch] = useState("");
   const [anonymousOnly, setAnonymousOnly] = useState(false);
+  const [openMonths, setOpenMonths] = useState<Record<string, boolean>>({});
 
   const mountedRef = useRef(true);
   useEffect(() => {
@@ -80,8 +94,6 @@ export default function CreatorPaymentsPage() {
 
     load();
   }, [status, username]);
-
-  if (status === "loading") return null;
 
   const now = new Date();
 
@@ -140,6 +152,59 @@ export default function CreatorPaymentsPage() {
       .filter((p) => new Date(p.created_at) >= startOfToday)
       .reduce((sum, p) => sum + p.amount, 0) / 100;
 
+  const groupedPayments = useMemo<MonthGroup[]>(() => {
+    const groups = new Map<string, MonthGroup>();
+
+    for (const payment of filtered) {
+      const d = new Date(payment.created_at);
+      const year = d.getFullYear();
+      const month = d.getMonth();
+      const key = `${year}-${String(month + 1).padStart(2, "0")}`;
+      const label = formatMonthLabel(new Date(year, month, 1));
+
+      if (!groups.has(key)) {
+        groups.set(key, {
+          key,
+          label,
+          payments: [],
+          total: 0,
+        });
+      }
+
+      const group = groups.get(key)!;
+      group.payments.push(payment);
+      group.total += payment.amount;
+    }
+
+    return Array.from(groups.values()).sort((a, b) =>
+      b.key.localeCompare(a.key)
+    );
+  }, [filtered]);
+
+  useEffect(() => {
+    if (groupedPayments.length === 0) return;
+
+    const firstMonthKey = groupedPayments[0].key;
+
+    setOpenMonths((prev) => {
+      if (typeof prev[firstMonthKey] !== "undefined") {
+        return prev;
+      }
+
+      return {
+        ...prev,
+        [firstMonthKey]: true,
+      };
+    });
+  }, [groupedPayments]);
+
+  const toggleMonth = (monthKey: string) => {
+    setOpenMonths((prev) => ({
+      ...prev,
+      [monthKey]: !prev[monthKey],
+    }));
+  };
+
   const exportCSV = () => {
     const rows = [
       ["date", "supporter", "amount_gbp", "message", "status"],
@@ -168,7 +233,10 @@ export default function CreatorPaymentsPage() {
   const chipBase =
     "px-3 py-2 rounded-xl text-xs border transition min-w-[78px] text-center";
   const chipOn = "bg-white/10 border-white/20";
-  const chipOff = "bg-transparent border-white/10 text-white/70 hover:text-white";
+  const chipOff =
+    "bg-transparent border-white/10 text-white/70 hover:text-white";
+
+  if (status === "loading") return null;
 
   return (
     <div className="min-h-screen" style={{ backgroundColor: PAGE_BG }}>
@@ -188,7 +256,9 @@ export default function CreatorPaymentsPage() {
               <div className="grid grid-cols-2 gap-2 sm:flex sm:flex-wrap sm:items-center sm:justify-end sm:gap-2">
                 <button
                   onClick={() => setRange("today")}
-                  className={`${chipBase} ${range === "today" ? chipOn : chipOff}`}
+                  className={`${chipBase} ${
+                    range === "today" ? chipOn : chipOff
+                  }`}
                 >
                   Today
                 </button>
@@ -200,7 +270,9 @@ export default function CreatorPaymentsPage() {
                 </button>
                 <button
                   onClick={() => setRange("30d")}
-                  className={`${chipBase} ${range === "30d" ? chipOn : chipOff}`}
+                  className={`${chipBase} ${
+                    range === "30d" ? chipOn : chipOff
+                  }`}
                 >
                   30 Days
                 </button>
@@ -283,32 +355,67 @@ export default function CreatorPaymentsPage() {
         ) : filtered.length === 0 ? (
           <p className="text-white/70">No payments found for this filter.</p>
         ) : (
-          <div className="space-y-3">
-            {filtered.map((p) => (
-              <div
-                key={p.id}
-                className="bg-black/20 border border-white/12 rounded-xl p-4 shadow-[0_12px_40px_rgba(0,0,0,0.45)] ring-1 ring-white/10"
-              >
-                <div className="flex items-start justify-between gap-3 mb-2">
-                  <p className="text-lg font-semibold">
-                    {formatGBP(p.amount / 100)}
-                  </p>
+          <div className="space-y-4">
+            {groupedPayments.map((group, index) => {
+              const isOpen = openMonths[group.key] ?? index === 0;
 
-                  <span className="shrink-0 text-[11px] px-2 py-0.5 rounded-full bg-white/10 border border-white/10 text-white/70">
-                    Completed
-                  </span>
+              return (
+                <div
+                  key={group.key}
+                  className="bg-black/20 border border-white/12 rounded-2xl shadow-[0_12px_40px_rgba(0,0,0,0.45)] ring-1 ring-white/10 overflow-hidden"
+                >
+                  <button
+                    type="button"
+                    onClick={() => toggleMonth(group.key)}
+                    className="w-full px-4 py-4 flex items-center justify-between gap-4 text-left hover:bg-white/[0.03] transition"
+                  >
+                    <div className="min-w-0">
+                      <p className="text-base sm:text-lg font-semibold text-white">
+                        {group.label}
+                      </p>
+                      <p className="text-xs sm:text-sm text-white/60 mt-1">
+                        {group.payments.length} payment{group.payments.length === 1 ? "" : "s"} •{" "}
+                        {formatGBP(group.total / 100)}
+                      </p>
+                    </div>
+
+                    <div className="shrink-0 text-white/70 text-lg">
+                      {isOpen ? "−" : "+"}
+                    </div>
+                  </button>
+
+                  {isOpen && (
+                    <div className="px-4 pb-4 space-y-3">
+                      {group.payments.map((p) => (
+                        <div
+                          key={p.id}
+                          className="bg-black/20 border border-white/12 rounded-xl p-4 shadow-[0_12px_40px_rgba(0,0,0,0.25)]"
+                        >
+                          <div className="flex items-start justify-between gap-3 mb-2">
+                            <p className="text-lg font-semibold">
+                              {formatGBP(p.amount / 100)}
+                            </p>
+
+                            <span className="shrink-0 text-[11px] px-2 py-0.5 rounded-full bg-white/10 border border-white/10 text-white/70">
+                              Completed
+                            </span>
+                          </div>
+
+                          <p className="text-sm text-white/80 break-words">
+                            {p.anonymous ? "Anonymous" : p.gift_name || "Someone"}
+                            {p.gift_message ? ` — “${p.gift_message}”` : ""}
+                          </p>
+
+                          <p className="mt-2 text-[11px] text-white/50">
+                            {new Date(p.created_at).toLocaleDateString()}
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+                  )}
                 </div>
-
-                <p className="text-sm text-white/80 break-words">
-                  {p.anonymous ? "Anonymous" : p.gift_name || "Someone"}
-                  {p.gift_message ? ` — “${p.gift_message}”` : ""}
-                </p>
-
-                <p className="mt-2 text-[11px] text-white/50">
-                  {new Date(p.created_at).toLocaleDateString()}
-                </p>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </main>
