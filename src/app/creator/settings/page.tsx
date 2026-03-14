@@ -277,46 +277,54 @@ export default function CreatorSettingsPage() {
   }, [status, username]);
 
   useEffect(() => {
-    if (typeof window === "undefined" || !username) return;
+  if (typeof window === "undefined" || !username) return;
 
-    const params = new URLSearchParams(window.location.search);
-    const connectState = params.get("connect");
-    if (!connectState) return;
+  const params = new URLSearchParams(window.location.search);
+  const connectState = params.get("connect");
+  if (!connectState) return;
 
-    loadConnectStatus();
+  setConnectLoading(false);
+  loadConnectStatus();
 
-    if (connectState === "refresh") {
-      setConnectError("Stripe onboarding was not completed. Click below to continue setup.");
-    }
+  if (connectState === "refresh") {
+    setConnectError("Stripe onboarding was not completed. Click below to continue setup.");
+  }
 
-    if (connectState === "return") {
-      setSuccess("Returned from Stripe. Refreshing payout status…");
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [username]);
+  if (connectState === "return") {
+    setSuccess("Returned from Stripe. Refreshing payout status…");
+  }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+}, [username]);
 
   const startConnectOnboarding = async () => {
-    if (!username) return;
-    setConnectLoading(true);
-    setConnectError(null);
-    try {
-      const res = await fetch(`${API_URL}/api/stripe/connect/create`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username }),
-      });
-      const data = await res.json().catch(() => ({} as any));
-      if (!res.ok) throw new Error(data?.error || "Failed to create onboarding link");
-      if (data?.url) {
-        window.location.href = data.url;
-        return;
-      }
-      throw new Error("No onboarding URL returned");
-    } catch (e: any) {
-      setConnectError(e?.message || "Failed to start onboarding");
-      setConnectLoading(false);
+  if (!username) return;
+
+  setConnectLoading(true);
+  setConnectError(null);
+
+  try {
+    const res = await fetch(`${API_URL}/api/stripe/connect/create`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ username }),
+    });
+
+    const data = await res.json().catch(() => ({} as any));
+
+    if (!res.ok) {
+      throw new Error(data?.error || "Failed to create onboarding link");
     }
-  };
+
+    if (!data?.url) {
+      throw new Error("No onboarding URL returned");
+    }
+
+    window.location.href = data.url;
+  } catch (e: any) {
+    setConnectError(e?.message || "Failed to start onboarding");
+    setConnectLoading(false);
+  }
+};
 
   const openStripeDashboard = async () => {
     if (!username) return;
