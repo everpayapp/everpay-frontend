@@ -256,16 +256,25 @@ export default function CreatorSettingsPage() {
 
   const loadConnectStatus = async () => {
     if (!username) return;
+
     try {
       setConnectError(null);
+
       const res = await fetch(
         `${API_URL}/api/stripe/connect/status?username=${encodeURIComponent(username)}`
       );
+
       const data = await res.json().catch(() => ({} as any));
-      if (!res.ok) throw new Error(data?.error || "Failed to load Connect status");
+
+      if (!res.ok) {
+        throw new Error(data?.error || "Failed to load Connect status");
+      }
+
       setConnectStatus(data);
     } catch (e: any) {
       setConnectError(e?.message || "Failed to load Connect status");
+    } finally {
+      setConnectLoading(false);
     }
   };
 
@@ -277,54 +286,79 @@ export default function CreatorSettingsPage() {
   }, [status, username]);
 
   useEffect(() => {
-  if (typeof window === "undefined" || !username) return;
+    if (typeof window === "undefined" || !username) return;
 
-  const params = new URLSearchParams(window.location.search);
-  const connectState = params.get("connect");
-  if (!connectState) return;
+    const params = new URLSearchParams(window.location.search);
+    const connectState = params.get("connect");
+    if (!connectState) return;
 
-  setConnectLoading(false);
-  loadConnectStatus();
+    setConnectLoading(false);
+    loadConnectStatus();
 
-  if (connectState === "refresh") {
-    setConnectError("Stripe onboarding was not completed. Click below to continue setup.");
-  }
+    if (connectState === "refresh") {
+      setConnectError("Stripe onboarding was not completed. Click below to continue setup.");
+    }
 
-  if (connectState === "return") {
-    setSuccess("Returned from Stripe. Refreshing payout status…");
-  }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-}, [username]);
+    if (connectState === "return") {
+      setSuccess("Returned from Stripe. Refreshing payout status…");
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [username]);
+
+  useEffect(() => {
+    if (typeof window === "undefined" || !username) return;
+
+    const handleFocus = () => {
+      setConnectLoading(false);
+      loadConnectStatus();
+    };
+
+    const handleVisibility = () => {
+      if (document.visibilityState === "visible") {
+        setConnectLoading(false);
+        loadConnectStatus();
+      }
+    };
+
+    window.addEventListener("focus", handleFocus);
+    document.addEventListener("visibilitychange", handleVisibility);
+
+    return () => {
+      window.removeEventListener("focus", handleFocus);
+      document.removeEventListener("visibilitychange", handleVisibility);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [username]);
 
   const startConnectOnboarding = async () => {
-  if (!username) return;
+    if (!username) return;
 
-  setConnectLoading(true);
-  setConnectError(null);
+    setConnectLoading(true);
+    setConnectError(null);
 
-  try {
-    const res = await fetch(`${API_URL}/api/stripe/connect/create`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ username }),
-    });
+    try {
+      const res = await fetch(`${API_URL}/api/stripe/connect/create`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ username }),
+      });
 
-    const data = await res.json().catch(() => ({} as any));
+      const data = await res.json().catch(() => ({} as any));
 
-    if (!res.ok) {
-      throw new Error(data?.error || "Failed to create onboarding link");
+      if (!res.ok) {
+        throw new Error(data?.error || "Failed to create onboarding link");
+      }
+
+      if (!data?.url) {
+        throw new Error("No onboarding URL returned");
+      }
+
+      window.location.href = data.url;
+    } catch (e: any) {
+      setConnectError(e?.message || "Failed to start onboarding");
+      setConnectLoading(false);
     }
-
-    if (!data?.url) {
-      throw new Error("No onboarding URL returned");
-    }
-
-    window.location.href = data.url;
-  } catch (e: any) {
-    setConnectError(e?.message || "Failed to start onboarding");
-    setConnectLoading(false);
-  }
-};
+  };
 
   const openStripeDashboard = async () => {
     if (!username) return;
@@ -557,18 +591,17 @@ export default function CreatorSettingsPage() {
                   </div>
 
                   {Array.isArray(connectStatus?.requirementsDue) && connectStatus.requirementsDue.length > 0 && (
-                    <div className="mt-2 text-xs text-amber-200/90">
+                    <div className="mt-2 text-xs text-amber-200/90 break-words">
                       Required: {connectStatus.requirementsDue.join(", ")}
                     </div>
                   )}
                 </div>
 
-                <div className="flex gap-2 w-full sm:w-auto">
+                <div className="flex flex-col sm:flex-row gap-2 w-full sm:w-auto">
                   <button
                     type="button"
                     onClick={loadConnectStatus}
-                    className="flex-1 sm:flex-none px-4 py-2 rounded-xl bg-white/10 hover:bg-white/15 border border-white/20 text-sm text-white transition"
-                    disabled={connectLoading}
+                    className="w-full sm:w-auto px-4 py-2 rounded-xl bg-white/10 hover:bg-white/15 border border-white/20 text-sm text-white transition text-center"
                   >
                     Refresh
                   </button>
@@ -577,7 +610,7 @@ export default function CreatorSettingsPage() {
                     <button
                       type="button"
                       onClick={startConnectOnboarding}
-                      className="flex-1 sm:flex-none px-4 py-2 rounded-xl bg-white text-black text-sm font-semibold disabled:opacity-60"
+                      className="w-full sm:w-auto px-4 py-2 rounded-xl bg-white text-black text-sm font-semibold disabled:opacity-60 text-center leading-snug"
                       disabled={connectLoading}
                     >
                       {connectLoading
@@ -590,7 +623,7 @@ export default function CreatorSettingsPage() {
                     <button
                       type="button"
                       onClick={openStripeDashboard}
-                      className="flex-1 sm:flex-none px-4 py-2 rounded-xl bg-white text-black text-sm font-semibold disabled:opacity-60"
+                      className="w-full sm:w-auto px-4 py-2 rounded-xl bg-white text-black text-sm font-semibold disabled:opacity-60 text-center leading-snug"
                       disabled={connectLoading}
                     >
                       {connectLoading ? "Opening…" : "Open Stripe"}
