@@ -4,6 +4,7 @@
 import React, { useEffect, useRef, useState } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
+import StripeConnectBanner from "../components/StripeConnectBanner";
 
 type CreatorProfile = {
   username: string;
@@ -377,6 +378,8 @@ export default function CreatorSettingsPage() {
           </p>
         </div>
 
+        <StripeConnectBanner />
+
         <form className={`${PANEL} p-6 space-y-6`} onSubmit={handleSubmit}>
           <div>
             <label className="text-sm font-medium">Profile Name</label>
@@ -612,7 +615,7 @@ export default function CreatorSettingsPage() {
           <div className="mt-10 bg-red-500/10 border border-red-500/25 rounded-2xl p-5">
             <h3 className="text-lg font-semibold text-red-200">Danger zone</h3>
             <p className="text-sm text-white/70 mt-1">
-              Deleting your account removes your creator profile and associated payment history.
+              Deleting your account removes your creator profile and associated gift history.
             </p>
 
             <div className="mt-4">

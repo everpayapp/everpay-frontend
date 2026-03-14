@@ -4,6 +4,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
+import StripeConnectBanner from "../components/StripeConnectBanner";
 
 type Payment = {
   id: string;
@@ -241,6 +242,9 @@ export default function CreatorPaymentsPage() {
   return (
     <div className="min-h-screen" style={{ backgroundColor: PAGE_BG }}>
       <main className="max-w-7xl mx-auto pt-4 sm:pt-10 px-3 sm:px-6 text-white pb-16 sm:pb-24">
+      
+        <StripeConnectBanner />
+
         <h1 className="text-[20px] sm:text-2xl font-semibold mb-5 sm:mb-6">
           Creator Gifts
         </h1>

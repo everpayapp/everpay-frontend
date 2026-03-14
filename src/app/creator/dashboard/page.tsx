@@ -5,6 +5,7 @@ import { useEffect, useRef, useState } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import QRCode from "react-qr-code";
+import StripeConnectBanner from "../components/StripeConnectBanner";
 
 type Payment = {
   id: string;
@@ -193,6 +194,8 @@ export default function CreatorDashboard() {
   return (
     <div className="min-h-screen" style={{ backgroundColor: PAGE_BG }}>
       <div className="max-w-7xl mx-auto px-3 sm:px-6 text-white pt-4 sm:pt-10 pb-16 sm:pb-32">
+
+         <StripeConnectBanner />
 
         <div className="grid grid-cols-1 lg:grid-cols-[58%_42%] gap-5 sm:gap-8">
 
