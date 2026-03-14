@@ -12,7 +12,6 @@ type ConnectStatus = {
 
 export default function StripeConnectBanner() {
   const { data: session } = useSession();
-
   const username = (session?.user as any)?.username as string | undefined;
 
   const [status, setStatus] = useState<ConnectStatus | null>(null);
@@ -31,11 +30,11 @@ export default function StripeConnectBanner() {
           )}`
         );
 
-        const data = await res.json();
+        const data = await res.json().catch(() => ({} as any));
 
         setStatus({
-          connected: data?.connected,
-          payoutsEnabled: data?.payoutsEnabled,
+          connected: !!data?.connected,
+          payoutsEnabled: !!data?.payoutsEnabled,
         });
       } catch (e) {
         console.error("Failed to load Stripe status", e);
@@ -54,25 +53,31 @@ export default function StripeConnectBanner() {
   }
 
   return (
-    <div className="mb-6 rounded-2xl border border-amber-400/40 bg-amber-400/10 px-5 py-4">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div>
-          <p className="font-semibold text-amber-200">
-            Connect Stripe to receive gifts
-          </p>
+    <div className="mb-6 rounded-3xl border border-white/12 bg-white/[0.04] px-5 py-4 shadow-[0_18px_60px_rgba(0,0,0,0.45)] ring-1 ring-white/8 backdrop-blur-xl">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <div className="min-w-0">
+          <div className="inline-flex items-center rounded-full border border-emerald-400/20 bg-emerald-400/10 px-2.5 py-1 text-[11px] font-medium uppercase tracking-[0.16em] text-emerald-300">
+            Action needed
+          </div>
 
-          <p className="text-sm text-amber-100/80">
+          <h3 className="mt-3 text-base sm:text-lg font-semibold text-white">
+            Connect Stripe to receive gifts
+          </h3>
+
+          <p className="mt-1 text-sm leading-relaxed text-white/70 max-w-2xl">
             Your page is live, but payouts are not enabled yet. Go to Settings
-            and connect Stripe to start receiving gifts.
+            and connect Stripe before sharing your page and receiving gifts.
           </p>
         </div>
 
-        <a
-          href="/creator/settings"
-          className="px-4 py-2 rounded-xl bg-amber-300 text-black font-semibold text-sm whitespace-nowrap"
-        >
-          Go to Settings
-        </a>
+        <div className="w-full sm:w-auto shrink-0">
+          <a
+            href="/creator/settings"
+            className="inline-flex w-full sm:w-auto items-center justify-center rounded-2xl bg-gradient-to-r from-emerald-400 to-teal-400 px-5 py-2.5 text-sm font-semibold text-black shadow-[0_10px_30px_rgba(16,185,129,0.28)] transition hover:opacity-95"
+          >
+            Go to Settings
+          </a>
+        </div>
       </div>
     </div>
   );
