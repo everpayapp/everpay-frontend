@@ -56,6 +56,10 @@ export default function NavBar() {
             Settings
           </Link>
 
+          <Link href="/help" className={linkClass("/help")}>
+           Help
+          </Link>
+
           <div className="hidden sm:block flex-1" />
 
           {status === "authenticated" && (
