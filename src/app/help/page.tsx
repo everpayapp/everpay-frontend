@@ -38,8 +38,8 @@ export default function HelpPage() {
 
       <div className="w-full max-w-3xl mx-auto space-y-8">
 
-        <div>
-          <h1 className="text-3xl font-bold mb-2">Help & Support</h1>
+        <div className="rounded-3xl border border-white/10 bg-white/[0.03] px-6 py-5 shadow-[0_18px_60px_rgba(0,0,0,0.35)] backdrop-blur-xl">
+          <h1 className="text-3xl font-bold mb-2">EverPay Help & Support</h1>
           <p className="text-white/70">
             Need help with EverPay? Here are answers to the most common questions.
           </p>
