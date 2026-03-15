@@ -11,7 +11,7 @@ type Payment = {
   gift_name?: string;
   gift_message?: string;
   anonymous?: number;
-  created_at: string;
+  created_at?: string;
 };
 
 export default function CreatorGiftToast() {
@@ -22,6 +22,7 @@ export default function CreatorGiftToast() {
   const [gift, setGift] = useState<Payment | null>(null);
   const [visible, setVisible] = useState(false);
 
+  const intervalRef = useRef<number | null>(null);
   const hideTimerRef = useRef<number | null>(null);
 
   useEffect(() => {
@@ -36,7 +37,7 @@ export default function CreatorGiftToast() {
       }
     };
 
-    async function checkForNewGift() {
+    const checkForNewGift = async () => {
       try {
         const res = await fetch(
           `${API_URL}/api/payments/creator/${encodeURIComponent(safeUsername)}`,
@@ -47,10 +48,11 @@ export default function CreatorGiftToast() {
 
         if (!Array.isArray(data) || data.length === 0) return;
 
-        const sorted = [...data].sort(
-          (a, b) =>
-            new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-        );
+        const sorted = [...data].sort((a, b) => {
+          const aTime = new Date(a.created_at || 0).getTime();
+          const bTime = new Date(b.created_at || 0).getTime();
+          return bTime - aTime;
+        });
 
         const latest = sorted[0];
         if (!latest?.id) return;
@@ -64,26 +66,44 @@ export default function CreatorGiftToast() {
           setLastGiftId(latest.id);
           setGift(latest);
           setVisible(true);
-
           clearHideTimer();
-          hideTimerRef.current = window.setTimeout(() => {
-            setVisible(false);
-            setGift(null);
-          }, 4500);
         }
       } catch (err) {
         console.error("Gift toast error", err);
       }
-    }
+    };
 
     checkForNewGift();
-    const interval = window.setInterval(checkForNewGift, 8000);
+    intervalRef.current = window.setInterval(checkForNewGift, 8000);
 
     return () => {
-      window.clearInterval(interval);
+      if (intervalRef.current) {
+        window.clearInterval(intervalRef.current);
+        intervalRef.current = null;
+      }
       clearHideTimer();
     };
   }, [username, lastGiftId]);
+
+  useEffect(() => {
+    if (!visible) return;
+
+    if (hideTimerRef.current) {
+      window.clearTimeout(hideTimerRef.current);
+    }
+
+    hideTimerRef.current = window.setTimeout(() => {
+      setVisible(false);
+      setGift(null);
+    }, 4500);
+
+    return () => {
+      if (hideTimerRef.current) {
+        window.clearTimeout(hideTimerRef.current);
+        hideTimerRef.current = null;
+      }
+    };
+  }, [visible, gift]);
 
   if (!gift || !visible) return null;
 
@@ -97,13 +117,13 @@ export default function CreatorGiftToast() {
   });
 
   return (
-    <div className="fixed bottom-20 right-6 z-50 w-[min(92vw,420px)] rounded-2xl border border-white/15 bg-[#11151f]/95 px-5 py-4 shadow-[0_25px_70px_rgba(0,0,0,0.55)] backdrop-blur-xl">
-      <p className="text-base font-semibold text-white">
+    <div className="fixed bottom-32 right-8 z-50 w-[min(92vw,460px)] rounded-2xl border border-white/35 bg-white/[0.08] px-5 py-4 shadow-[0_30px_80px_rgba(0,0,0,0.6)] backdrop-blur-xl">
+      <p className="text-lg font-semibold text-white">
         🎁 {supporterName} sent £{amount}
       </p>
 
       {gift.gift_message && (
-        <p className="mt-2 text-sm leading-relaxed text-white/70 break-words">
+        <p className="mt-2 text-sm leading-relaxed text-white/85 break-words">
           “{gift.gift_message}”
         </p>
       )}
