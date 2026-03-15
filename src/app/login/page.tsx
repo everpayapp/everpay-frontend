@@ -115,11 +115,26 @@ export default function LoginPage() {
             </p>
           </div>
 
-          <div className="pt-2 text-center">
+                    <div className="pt-2 text-center space-y-2">
             <p className="text-xs text-white/45">
               Secure login • Powered by Stripe
             </p>
+
+            <div className="text-xs text-white/40 flex justify-center gap-4">
+              <Link href="/help" className="hover:text-white transition">
+                Help
+              </Link>
+
+              <Link href="/terms" className="hover:text-white transition">
+                Terms
+              </Link>
+
+              <Link href="/privacy" className="hover:text-white transition">
+                Privacy
+              </Link>
+            </div>
           </div>
+
         </form>
       </div>
     </div>
