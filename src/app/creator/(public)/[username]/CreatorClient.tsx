@@ -501,7 +501,7 @@ export default function CreatorClient({ username: propUsername }: { username?: s
     >
       <div className="w-full max-w-7xl space-y-4 sm:space-y-6 px-1 sm:px-0 overflow-x-hidden">
         {successToast && (
-          <div className="fixed inset-x-0 top-1/2 -translate-y-1/2 flex justify-center px-4 sm:inset-x-auto sm:top-auto sm:right-6 sm:bottom-6 sm:translate-y-0 sm:px-0 z-[121] pointer-events-none">
+          <div className="fixed inset-0 z-[121] flex items-center justify-center px-4 pointer-events-none sm:inset-auto sm:bottom-6 sm:right-6 sm:block sm:px-0">
             <div className="px-4 py-3 rounded-2xl border border-white/30 bg-black/78 backdrop-blur-xl shadow-2xl text-white min-w-[240px] max-w-[90vw] animate-[fadeInUp_.25s_ease]">
               <p className="text-sm sm:text-[15px] font-semibold">
                 🎁 Thank you {successNameLabel} — your gift to {creatorFirstName} was sent
