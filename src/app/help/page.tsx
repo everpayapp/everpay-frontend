@@ -1,7 +1,42 @@
+// ~/everpay-frontend/src/app/help/page.tsx
+"use client";
+
+import Link from "next/link";
+import { useState } from "react";
+
 export default function HelpPage() {
+  const [question, setQuestion] = useState("");
+
+  const handleAskQuestion = () => {
+    const subject = encodeURIComponent("EverPay Support Request");
+    const body = encodeURIComponent(
+      question.trim() || "Hi EverPay, I need help with..."
+    );
+
+    window.location.href = `mailto:support@everpayapp.co.uk?subject=${subject}&body=${body}`;
+  };
+
   return (
-    <main className="min-h-screen bg-[#0B0D12] text-white px-6 py-16 flex justify-center">
-      <div className="w-full max-w-3xl space-y-10">
+    <main className="min-h-screen bg-[#0B0D12] text-white px-6 py-12">
+
+      {/* EverPay brand top left */}
+      <div className="max-w-7xl mx-auto mb-10 flex items-center justify-between">
+        <Link
+          href="/"
+          className="text-3xl font-extrabold tracking-tight text-white drop-shadow-[0_0_12px_rgba(255,255,255,0.6)] hover:opacity-80 transition"
+        >
+          EverPay
+        </Link>
+
+        <Link
+          href="/creator/dashboard"
+          className="px-4 py-2 rounded-xl bg-white/10 border border-white/15 text-sm font-medium text-white hover:bg-white/15 transition"
+        >
+          Back to Dashboard
+        </Link>
+      </div>
+
+      <div className="w-full max-w-3xl mx-auto space-y-8">
 
         <div>
           <h1 className="text-3xl font-bold mb-2">Help & Support</h1>
@@ -11,7 +46,9 @@ export default function HelpPage() {
         </div>
 
         <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
-          <h2 className="text-lg font-semibold mb-2">Where do my gifts go?</h2>
+          <h2 className="text-lg font-semibold mb-2">
+            Where do my gifts go?
+          </h2>
           <p className="text-white/70 text-sm">
             All gifts are processed securely through Stripe and paid directly
             to your connected Stripe account.
@@ -19,7 +56,9 @@ export default function HelpPage() {
         </div>
 
         <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
-          <h2 className="text-lg font-semibold mb-2">How do payouts work?</h2>
+          <h2 className="text-lg font-semibold mb-2">
+            How do payouts work?
+          </h2>
           <p className="text-white/70 text-sm">
             Once you connect Stripe in Settings, gifts are sent to your Stripe
             account and paid out to your bank automatically.
@@ -27,22 +66,48 @@ export default function HelpPage() {
         </div>
 
         <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
-          <h2 className="text-lg font-semibold mb-2">How do I start receiving gifts?</h2>
+          <h2 className="text-lg font-semibold mb-2">
+            How do I start receiving gifts?
+          </h2>
           <p className="text-white/70 text-sm">
             Create your account, connect Stripe in Settings, and share your
             EverPay link with supporters.
           </p>
         </div>
 
+        {/* Ask question section */}
+
         <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
-          <h2 className="text-lg font-semibold mb-2">Need more help?</h2>
-          <p className="text-white/70 text-sm">
-            Contact our support team and we’ll respond as soon as possible.
+          <h2 className="text-lg font-semibold mb-2">
+            Ask a question
+          </h2>
+
+          <p className="text-white/70 text-sm mb-3">
+            Send your question to support and we’ll get back to you as soon as possible.
           </p>
 
-          <p className="mt-3 text-sm font-medium">
-            support@everpayapp.co.uk
-          </p>
+          <textarea
+            value={question}
+            onChange={(e) => setQuestion(e.target.value)}
+            placeholder="Type your question here..."
+            className="w-full min-h-[140px] rounded-2xl bg-white/10 border border-white/15 px-4 py-3 text-sm text-white placeholder:text-white/40 outline-none resize-none"
+          />
+
+          <div className="mt-4 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+
+            <p className="text-sm text-white/70">
+              support@everpayapp.co.uk
+            </p>
+
+            <button
+              type="button"
+              onClick={handleAskQuestion}
+              className="inline-flex items-center justify-center px-5 py-2.5 rounded-xl bg-gradient-to-r from-teal-400 to-emerald-500 text-black font-semibold hover:opacity-95 transition"
+            >
+              Send Question
+            </button>
+
+          </div>
         </div>
 
       </div>
