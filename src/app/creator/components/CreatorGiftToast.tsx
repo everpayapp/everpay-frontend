@@ -68,6 +68,7 @@ export default function CreatorGiftToast() {
           clearHideTimer();
           hideTimerRef.current = window.setTimeout(() => {
             setVisible(false);
+            setGift(null);
           }, 4500);
         }
       } catch (err) {
@@ -96,13 +97,13 @@ export default function CreatorGiftToast() {
   });
 
   return (
-    <div className="fixed bottom-6 right-6 z-50 w-[min(92vw,360px)] rounded-2xl border border-white/15 bg-[#11151f]/95 px-4 py-3 shadow-[0_20px_60px_rgba(0,0,0,0.45)] backdrop-blur-xl">
-      <p className="text-sm font-semibold text-white">
+    <div className="fixed bottom-20 right-6 z-50 w-[min(92vw,420px)] rounded-2xl border border-white/15 bg-[#11151f]/95 px-5 py-4 shadow-[0_25px_70px_rgba(0,0,0,0.55)] backdrop-blur-xl">
+      <p className="text-base font-semibold text-white">
         🎁 {supporterName} sent £{amount}
       </p>
 
       {gift.gift_message && (
-        <p className="mt-1 text-xs leading-relaxed text-white/70 break-words">
+        <p className="mt-2 text-sm leading-relaxed text-white/70 break-words">
           “{gift.gift_message}”
         </p>
       )}
