@@ -51,7 +51,7 @@ export default function LoginPage() {
 
         <form
           onSubmit={handleSubmit}
-          className="w-full bg-black/45 border border-white/20 rounded-3xl p-6 sm:p-8 space-y-4 shadow-[0_18px_60px_rgba(0,0,0,0.45)] backdrop-blur-xl"
+          className="w-full bg-black/45 border border-white/25 rounded-3xl p-6 sm:p-8 space-y-4 shadow-[0_18px_60px_rgba(0,0,0,0.45)] backdrop-blur-xl"
         >
           <div className="text-center space-y-2">
             <h1 className="text-2xl sm:text-3xl font-bold">
@@ -104,7 +104,7 @@ export default function LoginPage() {
           </button>
 
           <p className="text-xs text-white/50 mt-3 text-center">
-            No card details needed. Secure login powered by Stripe.
+            Secure login. Start receiving gifts instantly.
           </p>
 
           <div className="pt-2 text-center">
@@ -121,7 +121,7 @@ export default function LoginPage() {
 
           <div className="pt-2 text-center space-y-2">
             <p className="text-xs text-white/45">
-              Secure login • Powered by Stripe
+              Secure login • with EverPay
             </p>
 
             <div className="text-xs text-white/40 flex justify-center gap-3">
