@@ -121,8 +121,8 @@ export default function LoginPage() {
             </p>
 
             <div className="text-xs text-white/40 flex justify-center gap-4">
-              <Link href="/help" className="hover:text-white transition">
-                Help
+              <Link href="/help?from=login" className="hover:text-white transition">
+               Help
               </Link>
 
               <Link href="/terms" className="hover:text-white transition">
