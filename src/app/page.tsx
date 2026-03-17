@@ -16,7 +16,7 @@ export default function HomePage() {
         <div className="mx-auto max-w-6xl flex items-center justify-between gap-3">
           <Link
             href="/"
-            className="text-white font-extrabold tracking-tight text-2xl sm:text-3xl md:text-4xl"
+            className="text-white font-extrabold tracking-tight text-2xl sm:text-3xl md:text-4xl drop-shadow-[0_0_10px_rgba(255,255,255,0.4)]"
           >
             EverPay
           </Link>
@@ -49,11 +49,11 @@ export default function HomePage() {
             <h1 className="mt-4 text-[28px] leading-[1.02] sm:text-5xl md:text-6xl font-extrabold">
               <span className="block">Get gifted online.</span>
 
-              <span className="block text-white/70 sm:hidden">No wallets</span>
-              <span className="block text-white/70 sm:hidden">No balances</span>
-              <span className="block text-white/70 sm:hidden">No delays</span>
+              <span className="block text-white/80 sm:hidden">No wallets</span>
+              <span className="block text-white/80 sm:hidden">No balances</span>
+              <span className="block text-white/80 sm:hidden">No delays</span>
 
-              <span className="hidden sm:block text-white/70">
+              <span className="hidden sm:block text-white/80">
                 No wallets. No balances. No delays.
               </span>
             </h1>
@@ -93,7 +93,7 @@ export default function HomePage() {
 
               <Link
                 href="/example"
-                className="px-6 py-3 rounded-2xl border border-white/15 bg-white/[0.06] hover:bg-white/[0.1] transition font-semibold text-center"
+                className="px-6 py-3 rounded-2xl border border-white/20 bg-white/[0.08] hover:bg-white/[0.12] transition font-semibold text-center"
               >
                 View EverPay demo
               </Link>
@@ -222,7 +222,7 @@ export default function HomePage() {
             </p>
           </div>
 
-          <footer className="mt-10 text-center text-xs text-white/40">
+          <footer className="mt-10 text-center text-xs text-white/55">
             <div className="flex flex-wrap items-center justify-center gap-3">
               <span>© {new Date().getFullYear()} EverPay. Powered by Stripe.</span>
               <span className="opacity-40">•</span>
