@@ -200,20 +200,18 @@ export default function CreatorClient({ username: propUsername }: { username?: s
         const socialLinks = normalizeSocialLinks(data.social_links);
 
         setProfile({
-        username: data.username || username,
-        profile_name: data.profile_name || username,
-        avatar_url: data.avatar_url || "",
-        bio: data.bio || "",
-        social_links: socialLinks,
-
-        theme_start: data.theme_start || "#0B0D12",
-        theme_mid: data.theme_mid || "#121826",
-        theme_end: data.theme_end || "#0B0D12",
-
-        milestone_enabled: data.milestone_enabled,
-        milestone_amount: Number(data.milestone_amount) || 0,
-        milestone_text: data.milestone_text || "",
-       });
+          username: data.username || username,
+          profile_name: data.profile_name || username,
+          avatar_url: data.avatar_url || "",
+          bio: data.bio || "",
+          social_links: socialLinks,
+          theme_start: data.theme_start || "#0B0D12",
+          theme_mid: data.theme_mid || "#121826",
+          theme_end: data.theme_end || "#0B0D12",
+          milestone_enabled: data.milestone_enabled,
+          milestone_amount: Number(data.milestone_amount) || 0,
+          milestone_text: data.milestone_text || "",
+        });
       } catch {
         setProfile(null);
       } finally {
@@ -691,13 +689,12 @@ export default function CreatorClient({ username: propUsername }: { username?: s
               onClick={handlePay}
               disabled={loading}
             >
-              {loading ? "Redirecting..." : `Send ${creatorFirstName} a Gift 🎁`}
+              {loading ? "Redirecting..." : "Send a Gift 🎁"}
             </button>
 
-            <p className="text-center text-[11px] text-white/80">Pay by bank • No card details needed</p>
-            <p className="text-center text-[11px] text-white/60 mt-1 tracking-wide">Secure checkout powered by Stripe</p>
+            <p className="text-center text-[11px] text-white/80">Instant bank payment • No card details needed</p>
 
-            <div className="mt-auto pt-4 pb-2 hidden lg:flex flex-col items-center gap-2">
+            <div className="mt-auto pt-4 pb-2 hidden lg:flex flex-col items-center gap-2 opacity-80 hover:opacity-100 transition">
               <div className="bg-white rounded-2xl p-3 border border-black/20 shadow-xl flex items-center justify-center">
                 {pageUrl ? (
                   <QRCode value={pageUrl} size={138} bgColor="#ffffff" fgColor="#000000" />
