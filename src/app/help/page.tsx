@@ -1,18 +1,20 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
-import { useSearchParams } from "next/navigation";
 
 export default function HelpPage() {
   const [question, setQuestion] = useState("");
+  const [from, setFrom] = useState<string | null>(null);
   const { status } = useSession();
-  const searchParams = useSearchParams();
 
-  const from = searchParams.get("from");
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    setFrom(params.get("from"));
+  }, []);
 
-  // 🔥 Smart back button logic
   const backHref =
     from === "login"
       ? "/login"
@@ -38,9 +40,7 @@ export default function HelpPage() {
 
   return (
     <main className="min-h-screen bg-[#0B0D12] text-white px-6 py-12">
-      {/* 🔥 TOP BAR */}
       <div className="max-w-7xl mx-auto mb-10 flex items-center justify-between">
-        {/* 🔥 EverPay logo with glow */}
         <Link
           href="/"
           className="text-3xl font-extrabold tracking-tight text-white drop-shadow-[0_0_12px_rgba(255,255,255,0.7)] hover:opacity-80 transition"
@@ -48,7 +48,6 @@ export default function HelpPage() {
           EverPay
         </Link>
 
-        {/* 🔥 Dynamic back button */}
         <Link
           href={backHref}
           className="px-4 py-2 rounded-xl bg-white/10 border border-white/15 text-sm font-medium text-white hover:bg-white/15 transition"
@@ -58,7 +57,6 @@ export default function HelpPage() {
       </div>
 
       <div className="w-full max-w-3xl mx-auto space-y-8">
-        {/* HEADER */}
         <div className="rounded-3xl border border-white/10 bg-white/[0.03] px-6 py-5 shadow-[0_18px_60px_rgba(0,0,0,0.35)] backdrop-blur-xl">
           <h1 className="text-3xl font-bold mb-2">Help & Support</h1>
           <p className="text-white/70">
@@ -66,7 +64,6 @@ export default function HelpPage() {
           </p>
         </div>
 
-        {/* FAQ */}
         <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
           <h2 className="text-lg font-semibold mb-2">Where do my gifts go?</h2>
           <p className="text-white/70 text-sm">
@@ -93,7 +90,6 @@ export default function HelpPage() {
           </p>
         </div>
 
-        {/* ASK QUESTION */}
         <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
           <h2 className="text-lg font-semibold mb-2">Ask a question</h2>
 
