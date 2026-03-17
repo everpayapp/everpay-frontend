@@ -40,7 +40,7 @@ export default function LoginPage() {
       }}
     >
       <div className="w-full max-w-md">
-        <div className="text-center mb-5">
+        <div className="text-center mb-6">
           <Link
             href="/"
             className="inline-block text-3xl sm:text-4xl font-extrabold tracking-tight text-white"
@@ -51,7 +51,7 @@ export default function LoginPage() {
 
         <form
           onSubmit={handleSubmit}
-          className="w-full bg-black/45 border border-white/25 rounded-3xl p-6 sm:p-8 space-y-4 shadow-[0_18px_60px_rgba(0,0,0,0.45)] backdrop-blur-xl"
+          className="w-full bg-black/45 border border-white/30 rounded-3xl p-6 sm:p-8 space-y-4 shadow-[0_18px_60px_rgba(0,0,0,0.45)] backdrop-blur-xl"
         >
           <div className="text-center space-y-2">
             <h1 className="text-2xl sm:text-3xl font-bold">
@@ -98,7 +98,7 @@ export default function LoginPage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-3 rounded-xl bg-gradient-to-r from-teal-400 to-emerald-500 text-black font-bold hover:opacity-95 hover:scale-[1.01] transition disabled:opacity-70 shadow-[0_10px_30px_rgba(46,228,165,0.25)]"
+            className="w-full py-3 rounded-xl bg-gradient-to-r from-teal-400 to-emerald-500 text-black font-semibold hover:opacity-95 transition disabled:opacity-70 shadow-[0_10px_30px_rgba(46,228,165,0.25)]"
           >
             {loading ? "Logging in…" : "Log In"}
           </button>
