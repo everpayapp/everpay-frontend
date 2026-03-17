@@ -40,7 +40,7 @@ export default function LoginPage() {
       }}
     >
       <div className="w-full max-w-md">
-        <div className="text-center mb-6">
+        <div className="text-center mb-5">
           <Link
             href="/"
             className="inline-block text-3xl sm:text-4xl font-extrabold tracking-tight text-white"
@@ -51,7 +51,7 @@ export default function LoginPage() {
 
         <form
           onSubmit={handleSubmit}
-          className="w-full bg-black/45 border border-white/30 rounded-3xl p-6 sm:p-8 space-y-4 shadow-[0_18px_60px_rgba(0,0,0,0.45)] backdrop-blur-xl"
+          className="w-full bg-black/45 border border-white/40 rounded-3xl p-6 sm:p-8 space-y-5 backdrop-blur-xl shadow-[0_18px_60px_rgba(0,0,0,0.45),0_0_0_1.5px_rgba(255,255,255,0.25)]"
         >
           <div className="text-center space-y-2">
             <h1 className="text-2xl sm:text-3xl font-bold">
@@ -103,11 +103,11 @@ export default function LoginPage() {
             {loading ? "Logging in…" : "Log In"}
           </button>
 
-          <p className="text-xs text-white/50 mt-3 text-center">
+          <p className="text-xs text-white/50 mt-4 text-center">
             Secure login. Start receiving gifts instantly.
           </p>
 
-          <div className="pt-2 text-center">
+          <div className="pt-3 text-center">
             <p className="text-sm text-white/65">
               Don&apos;t have a page yet?{" "}
               <Link
@@ -119,11 +119,7 @@ export default function LoginPage() {
             </p>
           </div>
 
-          <div className="pt-2 text-center space-y-2">
-            <p className="text-xs text-white/45">
-              Secure login • with EverPay
-            </p>
-
+          <div className="pt-3 text-center">
             <div className="text-xs text-white/40 flex justify-center gap-3">
               <Link href="/help?from=login" className="hover:text-white transition">
                 Help
