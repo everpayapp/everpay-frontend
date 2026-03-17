@@ -51,14 +51,14 @@ export default function LoginPage() {
 
         <form
           onSubmit={handleSubmit}
-          className="w-full bg-black/40 border border-white/10 rounded-3xl p-6 sm:p-8 space-y-4 shadow-[0_18px_60px_rgba(0,0,0,0.45)] backdrop-blur-xl"
+          className="w-full bg-black/45 border border-white/12 rounded-3xl p-6 sm:p-8 space-y-4 shadow-[0_18px_60px_rgba(0,0,0,0.45)] backdrop-blur-xl"
         >
           <div className="text-center space-y-2">
             <h1 className="text-2xl sm:text-3xl font-bold">
-              Sign in to your creator dashboard
+              Sign in to your EverPay dashboard
             </h1>
-            <p className="text-sm text-white/65">
-              Manage your gift page, gifts, and settings.
+            <p className="text-sm text-white/70">
+              Manage your page, track gifts, and get paid instantly.
             </p>
           </div>
 
@@ -73,7 +73,7 @@ export default function LoginPage() {
             placeholder="Email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="w-full p-3 rounded-xl bg-white text-black placeholder:text-black/50 outline-none"
+            className="w-full p-3 rounded-xl bg-white/90 text-black placeholder:text-black/40 outline-none"
             required
           />
 
@@ -82,11 +82,11 @@ export default function LoginPage() {
             placeholder="Password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="w-full p-3 rounded-xl bg-white text-black placeholder:text-black/50 outline-none"
+            className="w-full p-3 rounded-xl bg-white/90 text-black placeholder:text-black/40 outline-none"
             required
           />
 
-          <div className="text-right">
+          <div className="text-right mt-2 mb-4">
             <a
               href="/forgot-password"
               className="text-xs text-white/70 hover:text-white transition"
@@ -98,10 +98,14 @@ export default function LoginPage() {
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-3 rounded-xl bg-gradient-to-r from-teal-400 to-emerald-500 text-black font-semibold hover:opacity-95 transition disabled:opacity-70"
+            className="w-full py-3 rounded-xl bg-gradient-to-r from-teal-400 to-emerald-500 text-black font-semibold hover:opacity-95 transition disabled:opacity-70 shadow-[0_10px_30px_rgba(46,228,165,0.25)]"
           >
             {loading ? "Logging in…" : "Log In"}
           </button>
+
+          <p className="text-xs text-white/50 mt-3 text-center">
+            No card details needed. Secure login powered by Stripe.
+          </p>
 
           <div className="pt-2 text-center">
             <p className="text-sm text-white/65">
@@ -115,14 +119,14 @@ export default function LoginPage() {
             </p>
           </div>
 
-                    <div className="pt-2 text-center space-y-2">
+          <div className="pt-2 text-center space-y-2">
             <p className="text-xs text-white/45">
               Secure login • Powered by Stripe
             </p>
 
-            <div className="text-xs text-white/40 flex justify-center gap-4">
+            <div className="text-xs text-white/40 flex justify-center gap-3">
               <Link href="/help?from=login" className="hover:text-white transition">
-               Help
+                Help
               </Link>
 
               <Link href="/terms" className="hover:text-white transition">
@@ -134,7 +138,6 @@ export default function LoginPage() {
               </Link>
             </div>
           </div>
-
         </form>
       </div>
     </div>
