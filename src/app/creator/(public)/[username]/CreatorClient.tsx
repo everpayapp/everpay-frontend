@@ -146,6 +146,7 @@ export default function CreatorClient({ username: propUsername }: { username?: s
   const toastQueueRef = useRef<Payment[]>([]);
   const toastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const successToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const suppressNextLiveToastRef = useRef(false);
 
   const presetAmounts = [2, 5, 10, 20, 50];
 
@@ -282,22 +283,22 @@ export default function CreatorClient({ username: propUsername }: { username?: s
 
         if (nextPayments.length > 0) {
           const newest = nextPayments[0];
+          if (!newest?.id) return;
 
           if (!latestSeenPaymentIdRef.current) {
             latestSeenPaymentIdRef.current = newest.id;
-          } else if (newest.id !== latestSeenPaymentIdRef.current) {
-            const previousTopId = latestSeenPaymentIdRef.current;
-            const previousTopIndex = nextPayments.findIndex((p) => p.id === previousTopId);
+            return;
+          }
 
-            const unseenPayments =
-              previousTopIndex > 0 ? nextPayments.slice(0, previousTopIndex) : [newest];
-
-            unseenPayments
-              .slice()
-              .reverse()
-              .forEach((payment) => enqueueToast(payment));
+          if (newest.id !== latestSeenPaymentIdRef.current) {
+            if (suppressNextLiveToastRef.current) {
+              suppressNextLiveToastRef.current = false;
+              latestSeenPaymentIdRef.current = newest.id;
+              return;
+            }
 
             latestSeenPaymentIdRef.current = newest.id;
+            enqueueToast(newest);
           }
         }
       } catch {
@@ -330,6 +331,7 @@ export default function CreatorClient({ username: propUsername }: { username?: s
 
     const storedName = (window.localStorage.getItem(pendingNameKey) || "").trim();
 
+    suppressNextLiveToastRef.current = true;
     setSuccessToastName(storedName);
     setSuccessToast(true);
 
@@ -481,7 +483,14 @@ export default function CreatorClient({ username: propUsername }: { username?: s
     background: `linear-gradient(90deg, ${bgStart}, ${bgMid}, ${bgEnd})`,
   };
 
-  const panelClass = "bg-black/45 backdrop-blur-md rounded-3xl border border-white/18 shadow-2xl";
+  const panelClass =
+    "bg-black/45 backdrop-blur-md rounded-3xl border-2 border-white/30 shadow-[0_20px_80px_rgba(0,0,0,0.6)]";
+
+  const fieldClass =
+    "w-full rounded-xl bg-[#0B0D12] border-[1.5px] border-white/30 px-3 text-white placeholder-white/50 outline-none focus:border-white/50";
+
+  const rowClass = "bg-black/20 border-[1.5px] border-white/35 rounded-xl";
+  const supporterCardClass = "bg-black/20 border-[1.5px] border-white/35 rounded-2xl";
 
   const toastName = activeToastPayment
     ? activeToastPayment.anonymous
@@ -494,13 +503,13 @@ export default function CreatorClient({ username: propUsername }: { username?: s
 
   return (
     <div
-      className="min-h-screen text-white flex justify-center px-4 py-6 sm:py-8 transition-[background] duration-[600ms] overflow-x-hidden"
+      className="min-h-screen text-white flex justify-center px-4 py-5 sm:py-6 transition-[background] duration-[600ms] overflow-x-hidden"
       style={{ background: `linear-gradient(to bottom right, ${bgStart}, ${bgMid}, ${bgEnd})` }}
     >
-      <div className="w-full max-w-7xl space-y-4 sm:space-y-6 px-1 sm:px-0 overflow-x-hidden">
+      <div className="w-full max-w-7xl space-y-4 sm:space-y-5 px-1 sm:px-0 overflow-x-hidden">
         {successToast && (
           <div className="fixed inset-0 z-[121] flex items-center justify-center px-4 pointer-events-none sm:inset-auto sm:bottom-6 sm:right-6 sm:block sm:px-0">
-            <div className="px-4 py-3 rounded-2xl border border-white/30 bg-black/78 backdrop-blur-xl shadow-2xl text-white min-w-[240px] max-w-[90vw] animate-[fadeInUp_.25s_ease]">
+            <div className="px-4 py-3 rounded-2xl border-[1.5px] border-white/30 bg-black/78 backdrop-blur-xl shadow-2xl text-white min-w-[240px] max-w-[90vw] animate-[fadeInUp_.25s_ease]">
               <p className="text-sm sm:text-[15px] font-semibold">
                 🎁 Thank you {successNameLabel} — your gift to {creatorFirstName} was sent
               </p>
@@ -511,7 +520,7 @@ export default function CreatorClient({ username: propUsername }: { username?: s
 
         {activeToastPayment && (
           <div className="fixed left-1/2 -translate-x-1/2 bottom-5 sm:left-auto sm:right-6 sm:translate-x-0 sm:bottom-6 z-[120] pointer-events-none">
-            <div className="px-4 py-3 rounded-2xl border border-white/30 bg-black/75 backdrop-blur-xl shadow-2xl text-white min-w-[220px] max-w-[88vw] animate-[fadeInUp_.25s_ease]">
+            <div className="px-4 py-3 rounded-2xl border-[1.5px] border-white/30 bg-black/75 backdrop-blur-xl shadow-2xl text-white min-w-[220px] max-w-[88vw] animate-[fadeInUp_.25s_ease]">
               <p className="text-sm sm:text-[15px] font-semibold truncate">
                 🔥 {toastName} just gifted {toastAmount}
               </p>
@@ -520,7 +529,7 @@ export default function CreatorClient({ username: propUsername }: { username?: s
           </div>
         )}
 
-        <section className={`w-full ${panelClass} px-5 sm:px-8 py-4 sm:py-6 overflow-x-hidden`}>
+        <section className={`w-full ${panelClass} px-5 sm:px-8 py-4 sm:py-5 overflow-x-hidden`}>
           <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 sm:gap-6">
             <div className="flex items-center gap-4 sm:gap-6 min-w-0 flex-1">
               <button
@@ -558,7 +567,7 @@ export default function CreatorClient({ username: propUsername }: { username?: s
                               href={url}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="shrink-0 inline-flex items-center px-3 py-1 rounded-full bg-white/10 border border-white/20 text-xs text-white/90 hover:bg-white/15 transition"
+                              className="shrink-0 inline-flex items-center px-3 py-1 rounded-full bg-white/10 border border-white/25 text-xs text-white/90 hover:bg-white/15 transition"
                               title={url}
                             >
                               <span>{meta.label}</span>
@@ -577,7 +586,7 @@ export default function CreatorClient({ username: propUsername }: { username?: s
                             href={url}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 border border-white/20 text-xs text-white/90 hover:bg-white/15 transition"
+                            className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 border border-white/25 text-xs text-white/90 hover:bg-white/15 transition"
                             title={url}
                           >
                             <span>{meta.label}</span>
@@ -624,8 +633,8 @@ export default function CreatorClient({ username: propUsername }: { username?: s
           </section>
         )}
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8 items-start lg:items-stretch overflow-x-hidden">
-          <section className={`${panelClass} p-4 sm:p-8 flex flex-col min-h-0 overflow-hidden lg:h-[720px]`}>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-7 items-start lg:items-stretch overflow-x-hidden">
+          <section className={`${panelClass} p-4 sm:p-7 flex flex-col min-h-0 overflow-hidden lg:h-[620px]`}>
             <h2 className="text-lg sm:text-xl font-semibold mb-3">Send a Gift</h2>
 
             <div className="flex flex-wrap gap-2 mb-3">
@@ -637,7 +646,7 @@ export default function CreatorClient({ username: propUsername }: { username?: s
                     type="button"
                     onClick={() => setAmount(String(v))}
                     className={`px-4 py-2 rounded-full border text-sm font-semibold transition ${
-                      selected ? "bg-white text-black border-white/70" : "bg-white/10 text-white border-white/20 hover:bg-white/15"
+                      selected ? "bg-white text-black border-white/75" : "bg-white/10 text-white border-white/30 hover:bg-white/15"
                     }`}
                   >
                     £{v}
@@ -658,7 +667,7 @@ export default function CreatorClient({ username: propUsername }: { username?: s
                   setAmount(raw);
                 }}
                 placeholder="0.00"
-                className="min-w-0 flex-1 rounded-xl bg-white/10 border border-white/20 px-3 py-2 sm:py-2.5 text-base text-white placeholder-white/60 outline-none focus:border-white/35"
+                className={`${fieldClass} min-w-0 flex-1 py-2.5`}
               />
             </div>
 
@@ -668,14 +677,16 @@ export default function CreatorClient({ username: propUsername }: { username?: s
               onChange={(e) => setSupporterName(e.target.value)}
               placeholder="Your name (optional)"
               disabled={anonymous}
-              className="w-full rounded-xl bg-white/10 border border-white/20 px-3 py-2 text-sm text-white placeholder-white/60 outline-none mb-3 focus:border-white/35"
+              className={`${fieldClass} mb-3 py-2.5`}
             />
 
             <textarea
               value={message}
               onChange={(e) => setMessage(e.target.value.slice(0, 120))}
               placeholder="Leave a message (optional)"
-              className="w-full rounded-xl bg-white/10 border border-white/20 px-3 py-2 text-sm text-white placeholder-white/60 outline-none h-12 sm:h-24 resize-none mb-3 focus:border-white/35"
+              rows={3}
+              style={{ minHeight: 88, height: 88 }}
+              className={`${fieldClass} mb-3 py-3 resize-none overflow-hidden leading-5`}
             />
 
             <label className="flex items-center gap-2 text-xs sm:text-sm mb-3 cursor-pointer">
@@ -684,7 +695,7 @@ export default function CreatorClient({ username: propUsername }: { username?: s
             </label>
 
             <button
-              className="w-full py-3 rounded-xl text-white font-semibold active:scale-[0.98] transition mb-2 shadow-xl border-2 border-white/70 hover:border-white hover:opacity-[0.97]"
+              className="w-full py-3 rounded-xl text-white font-semibold active:scale-[0.98] transition mb-2 shadow-xl border-2 border-white/90 hover:border-white hover:opacity-[0.97]"
               style={ctaStyle}
               onClick={handlePay}
               disabled={loading}
@@ -694,10 +705,10 @@ export default function CreatorClient({ username: propUsername }: { username?: s
 
             <p className="text-center text-[11px] text-white/80">Instant bank payment • No card details needed</p>
 
-            <div className="mt-auto pt-4 pb-2 hidden lg:flex flex-col items-center gap-2 opacity-80 hover:opacity-100 transition">
+            <div className="mt-3 lg:mt-auto pt-1 pb-0 hidden lg:flex flex-col items-center gap-2 opacity-95 hover:opacity-100 transition">
               <div className="bg-white rounded-2xl p-3 border border-black/20 shadow-xl flex items-center justify-center">
                 {pageUrl ? (
-                  <QRCode value={pageUrl} size={138} bgColor="#ffffff" fgColor="#000000" />
+                  <QRCode value={pageUrl} size={120} bgColor="#ffffff" fgColor="#000000" />
                 ) : (
                   <span className="text-black/70 text-xs">QR unavailable</span>
                 )}
@@ -708,7 +719,7 @@ export default function CreatorClient({ username: propUsername }: { username?: s
             </div>
           </section>
 
-          <section className={`${panelClass} p-4 sm:p-8 flex flex-col min-h-0 overflow-hidden lg:h-[720px]`}>
+          <section className={`${panelClass} p-4 sm:p-7 flex flex-col min-h-0 overflow-hidden lg:h-[620px]`}>
             <div className="mb-4 flex items-center justify-start lg:justify-between">
               <h2 className="text-lg sm:text-xl font-semibold">Recent Gifts 🎁</h2>
             </div>
@@ -718,16 +729,13 @@ export default function CreatorClient({ username: propUsername }: { username?: s
             ) : payments.length === 0 ? (
               <p className="text-center text-white/70 text-sm">No gifts yet — be the first! 🎁</p>
             ) : (
-              <div className="w-full overflow-y-auto pr-1 everpay-scroll mb-4 space-y-2 max-h-[260px] sm:max-h-[360px] lg:max-h-none lg:flex-1 lg:min-h-0">
+              <div className="w-full overflow-y-auto pr-1 everpay-scroll mb-3 space-y-2 max-h-[260px] sm:max-h-[340px] lg:max-h-none lg:flex-1 lg:min-h-0">
                 {payments.map((p) => {
                   const displayName = p.anonymous ? "Anonymous" : p.gift_name?.trim() ? p.gift_name : "Someone";
                   const giftPence = getGiftPence(p);
 
                   return (
-                    <div
-                      key={p.id}
-                      className="bg-white/6 border border-white/10 rounded-xl px-3 py-2 text-sm flex justify-between gap-3 shadow-sm overflow-hidden"
-                    >
+                    <div key={p.id} className={`${rowClass} px-3 py-2 text-sm flex justify-between gap-3 shadow-sm overflow-hidden`}>
                       <div className="flex-1 min-w-0">
                         <p className="font-semibold text-[13px] sm:text-sm truncate">
                           {displayName} gifted {formatGBP(giftPence)}
@@ -750,7 +758,7 @@ export default function CreatorClient({ username: propUsername }: { username?: s
                   <button
                     type="button"
                     onClick={() => setShowTopSupportersMobile((v) => !v)}
-                    className="w-full rounded-2xl bg-white/6 border border-white/15 px-4 py-3 flex items-center justify-between"
+                    className={`w-full ${supporterCardClass} px-4 py-3 flex items-center justify-between`}
                     aria-expanded={showTopSupportersMobile}
                   >
                     <div className="text-left">
@@ -761,15 +769,15 @@ export default function CreatorClient({ username: propUsername }: { username?: s
                   </button>
 
                   {showTopSupportersMobile && (
-                    <div className="mt-3 rounded-2xl bg-white/6 border border-white/15 p-4">
+                    <div className={`mt-3 ${supporterCardClass} p-4`}>
                       <div className="space-y-2">
                         {topSupporters.map((s, idx) => (
                           <div
                             key={`${s.label}-${idx}`}
-                            className="flex items-center justify-between gap-3 rounded-xl bg-white/6 border border-white/10 px-3 py-2 overflow-hidden"
+                            className={`${rowClass} flex items-center justify-between gap-3 px-3 py-2 overflow-hidden`}
                           >
                             <div className="flex items-center gap-3 min-w-0">
-                              <div className="w-7 h-7 rounded-full bg-white/10 border border-white/15 flex items-center justify-center text-[12px] font-bold text-white/85 shrink-0">
+                              <div className="w-7 h-7 rounded-full bg-white/10 border-[1.5px] border-white/30 flex items-center justify-center text-[12px] font-bold text-white/85 shrink-0">
                                 {idx + 1}
                               </div>
 
@@ -789,20 +797,17 @@ export default function CreatorClient({ username: propUsername }: { username?: s
                   )}
                 </div>
 
-                <div className="hidden lg:block rounded-2xl bg-white/6 border border-white/15 p-4">
-                  <div className="flex items-center justify-between mb-3">
+                <div className={`hidden lg:block ${supporterCardClass} p-3`}>
+                  <div className="flex items-center justify-between mb-2">
                     <p className="text-[11px] uppercase tracking-[0.18em] text-white/70">Top Supporters</p>
                     <p className="text-[11px] text-white/55">This month</p>
                   </div>
 
                   <div className="space-y-2">
                     {topSupporters.map((s, idx) => (
-                      <div
-                        key={`${s.label}-${idx}`}
-                        className="flex items-center justify-between gap-3 rounded-xl bg-white/6 border border-white/10 px-3 py-2"
-                      >
+                      <div key={`${s.label}-${idx}`} className={`${rowClass} flex items-center justify-between gap-3 px-3 py-2`}>
                         <div className="flex items-center gap-3 min-w-0">
-                          <div className="w-7 h-7 rounded-full bg-white/10 border border-white/15 flex items-center justify-center text-[12px] font-bold text-white/85 shrink-0">
+                          <div className="w-7 h-7 rounded-full bg-white/10 border-[1.5px] border-white/30 flex items-center justify-center text-[12px] font-bold text-white/85 shrink-0">
                             {idx + 1}
                           </div>
 
@@ -863,12 +868,12 @@ export default function CreatorClient({ username: propUsername }: { username?: s
             aria-modal="true"
           >
             <div
-              className="relative w-full max-w-md sm:max-w-lg rounded-3xl border border-white/15 bg-black/40 shadow-2xl overflow-hidden"
+              className="relative w-full max-w-md sm:max-w-lg rounded-3xl border-[1.5px] border-white/25 bg-black/40 shadow-2xl overflow-hidden"
               onClick={(e) => e.stopPropagation()}
             >
               <button
                 onClick={() => setShowAvatar(false)}
-                className="absolute top-3 right-3 w-9 h-9 rounded-full bg-white/10 border border-white/15 text-white/90 hover:bg-white/15 transition flex items-center justify-center"
+                className="absolute top-3 right-3 w-9 h-9 rounded-full bg-white/10 border border-white/25 text-white/90 hover:bg-white/15 transition flex items-center justify-center"
                 aria-label="Close"
                 type="button"
               >
@@ -876,7 +881,7 @@ export default function CreatorClient({ username: propUsername }: { username?: s
               </button>
 
               <div className="p-4 sm:p-6">
-                <div className="w-full aspect-square rounded-2xl bg-white/5 border border-white/10 overflow-hidden flex items-center justify-center">
+                <div className="w-full aspect-square rounded-2xl bg-white/5 border border-white/20 overflow-hidden flex items-center justify-center">
                   <img src={profile.avatar_url} alt="Profile picture" className="w-full h-full object-contain" />
                 </div>
                 <p className="mt-3 text-center text-sm text-white/80">{profile.profile_name}</p>
@@ -888,7 +893,7 @@ export default function CreatorClient({ username: propUsername }: { username?: s
         <style jsx global>{`
           .everpay-scroll {
             scrollbar-width: thin;
-            scrollbar-color: rgba(255, 255, 255, 0.22) rgba(255, 255, 255, 0.05);
+            scrollbar-color: rgba(255, 255, 255, 0.24) rgba(255, 255, 255, 0.05);
           }
           .everpay-scroll::-webkit-scrollbar {
             width: 5px;
@@ -898,11 +903,11 @@ export default function CreatorClient({ username: propUsername }: { username?: s
             border-radius: 999px;
           }
           .everpay-scroll::-webkit-scrollbar-thumb {
-            background: rgba(255, 255, 255, 0.22);
+            background: rgba(255, 255, 255, 0.24);
             border-radius: 999px;
           }
           .everpay-scroll::-webkit-scrollbar-thumb:hover {
-            background: rgba(255, 255, 255, 0.32);
+            background: rgba(255, 255, 255, 0.34);
           }
 
           @keyframes fadeInUp {
