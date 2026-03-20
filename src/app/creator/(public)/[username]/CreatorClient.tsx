@@ -634,7 +634,7 @@ export default function CreatorClient({ username: propUsername }: { username?: s
         )}
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-7 items-start lg:items-stretch overflow-x-hidden">
-          <section className={`${panelClass} p-5 sm:p-8 flex flex-col min-h-0 overflow-hidden lg:h-[620px]`}>
+          <section className={`${panelClass} p-5 sm:p-8 flex flex-col min-h-0 overflow-hidden lg:h-[660px]`}>
             <h2 className="text-lg sm:text-xl font-semibold mb-3">Send a Gift</h2>
 
             <div className="flex flex-wrap gap-2 mb-3">
@@ -719,7 +719,7 @@ export default function CreatorClient({ username: propUsername }: { username?: s
             </div>
           </section>
 
-          <section className={`${panelClass} p-5 sm:p-8 flex flex-col min-h-0 overflow-hidden lg:h-[620px]`}>
+          <section className={`${panelClass} p-5 sm:p-8 flex flex-col min-h-0 overflow-hidden lg:h-[660px]`}>
             <div className="mb-4 flex items-center justify-start lg:justify-between">
               <h2 className="text-lg sm:text-xl font-semibold">Recent Gifts 🎁</h2>
             </div>
