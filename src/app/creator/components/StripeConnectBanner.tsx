@@ -18,33 +18,48 @@ export default function StripeConnectBanner() {
   const [loading, setLoading] = useState(true);
   const [connecting, setConnecting] = useState(false);
 
+  async function loadStatus(safeUsername: string) {
+    try {
+      const res = await fetch(
+        `${API_URL}/api/stripe/connect/status?username=${encodeURIComponent(
+          safeUsername
+        )}`
+      );
+
+      const data = await res.json().catch(() => ({} as any));
+
+      setStatus({
+        connected: !!data?.connected,
+        payoutsEnabled: !!data?.payoutsEnabled,
+      });
+    } catch (e) {
+      console.error("Failed to load Stripe status", e);
+    } finally {
+      setLoading(false);
+      setConnecting(false);
+    }
+  }
+
+  useEffect(() => {
+    if (!username) return;
+    loadStatus(username);
+  }, [username]);
+
   useEffect(() => {
     if (!username) return;
 
-    const safeUsername: string = username;
+    const handleReturn = () => {
+      setConnecting(false);
+      loadStatus(username);
+    };
 
-    async function loadStatus() {
-      try {
-        const res = await fetch(
-          `${API_URL}/api/stripe/connect/status?username=${encodeURIComponent(
-            safeUsername
-          )}`
-        );
+    window.addEventListener("focus", handleReturn);
+    window.addEventListener("pageshow", handleReturn);
 
-        const data = await res.json().catch(() => ({} as any));
-
-        setStatus({
-          connected: !!data?.connected,
-          payoutsEnabled: !!data?.payoutsEnabled,
-        });
-      } catch (e) {
-        console.error("Failed to load Stripe status", e);
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    loadStatus();
+    return () => {
+      window.removeEventListener("focus", handleReturn);
+      window.removeEventListener("pageshow", handleReturn);
+    };
   }, [username]);
 
   async function handleConnectStripe() {
