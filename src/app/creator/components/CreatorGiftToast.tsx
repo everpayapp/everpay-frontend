@@ -18,23 +18,34 @@ export default function CreatorGiftToast() {
   const { data: session } = useSession();
   const username = (session?.user as any)?.username as string | undefined;
 
-  const [lastGiftId, setLastGiftId] = useState<string | null>(null);
   const [gift, setGift] = useState<Payment | null>(null);
   const [visible, setVisible] = useState(false);
 
+  const lastGiftIdRef = useRef<string | null>(null);
   const intervalRef = useRef<number | null>(null);
   const hideTimerRef = useRef<number | null>(null);
 
   useEffect(() => {
     if (!username) return;
 
-    const safeUsername: string = username;
+    const safeUsername = username;
 
     const clearHideTimer = () => {
       if (hideTimerRef.current) {
         window.clearTimeout(hideTimerRef.current);
         hideTimerRef.current = null;
       }
+    };
+
+    const showToast = (payment: Payment) => {
+      clearHideTimer();
+      setGift(payment);
+      setVisible(true);
+
+      hideTimerRef.current = window.setTimeout(() => {
+        setVisible(false);
+        setGift(null);
+      }, 4500);
     };
 
     const checkForNewGift = async () => {
@@ -51,22 +62,22 @@ export default function CreatorGiftToast() {
         const sorted = [...data].sort((a, b) => {
           const aTime = new Date(a.created_at || 0).getTime();
           const bTime = new Date(b.created_at || 0).getTime();
-          return bTime - aTime;
+          const aSafe = Number.isFinite(aTime) ? aTime : 0;
+          const bSafe = Number.isFinite(bTime) ? bTime : 0;
+          return bSafe - aSafe;
         });
 
         const latest = sorted[0];
         if (!latest?.id) return;
 
-        if (!lastGiftId) {
-          setLastGiftId(latest.id);
+        if (!lastGiftIdRef.current) {
+          lastGiftIdRef.current = latest.id;
           return;
         }
 
-        if (latest.id !== lastGiftId) {
-          setLastGiftId(latest.id);
-          setGift(latest);
-          setVisible(true);
-          clearHideTimer();
+        if (latest.id !== lastGiftIdRef.current) {
+          lastGiftIdRef.current = latest.id;
+          showToast(latest);
         }
       } catch (err) {
         console.error("Gift toast error", err);
@@ -83,33 +94,13 @@ export default function CreatorGiftToast() {
       }
       clearHideTimer();
     };
-  }, [username, lastGiftId]);
-
-  useEffect(() => {
-    if (!visible) return;
-
-    if (hideTimerRef.current) {
-      window.clearTimeout(hideTimerRef.current);
-    }
-
-    hideTimerRef.current = window.setTimeout(() => {
-      setVisible(false);
-      setGift(null);
-    }, 4500);
-
-    return () => {
-      if (hideTimerRef.current) {
-        window.clearTimeout(hideTimerRef.current);
-        hideTimerRef.current = null;
-      }
-    };
-  }, [visible, gift]);
+  }, [username]);
 
   if (!gift || !visible) return null;
 
   const supporterName = gift.anonymous
     ? "Anonymous"
-    : gift.gift_name || "Someone";
+    : gift.gift_name?.trim() || "Someone";
 
   const amount = (gift.amount / 100).toLocaleString("en-GB", {
     minimumFractionDigits: 2,
