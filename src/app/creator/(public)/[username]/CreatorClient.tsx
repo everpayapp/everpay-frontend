@@ -94,7 +94,7 @@ function getGiftPence(payment: Payment) {
 
 function VerifiedBadge() {
   return (
-    <span className="inline-flex items-center gap-1.5 text-[12px] text-white/80 shrink-0">
+    <span className="inline-flex items-center gap-1.5 text-[12px] text-white/85 shrink-0">
       <span className="inline-flex items-center justify-center w-[18px] h-[18px] rounded-full bg-[#1d9bf0] shadow-sm">
         <svg viewBox="0 0 24 24" width="12" height="12" aria-hidden="true" className="fill-white">
           <path d="M9.0 16.2 4.8 12l1.4-1.4L9 13.4l8.8-8.8L19.2 6z" />
@@ -484,13 +484,13 @@ export default function CreatorClient({ username: propUsername }: { username?: s
   };
 
   const panelClass =
-    "bg-black/45 backdrop-blur-md rounded-3xl border-2 border-white/60 shadow-[0_20px_80px_rgba(0,0,0,0.6)]";
+    "bg-black/45 backdrop-blur-md rounded-3xl border-[2.5px] border-white/70 shadow-[0_20px_80px_rgba(0,0,0,0.6)]";
 
   const fieldClass =
-    "w-full rounded-xl bg-[#0B0D12] border-[1.5px] border-white/60 px-3 text-white placeholder-white/50 outline-none focus:border-white/80";
+    "w-full rounded-xl bg-[#0B0D12] border-2 border-white/65 px-4 text-white placeholder-white/80 outline-none focus:border-white";
 
-  const rowClass = "bg-black/20 border-[1.5px] border-white/60 rounded-xl";
-  const supporterCardClass = "bg-black/20 border-[1.5px] border-white/60 rounded-2xl";
+  const rowClass = "bg-black/20 border-2 border-white/65 rounded-xl";
+  const supporterCardClass = "bg-black/20 border-[2.5px] border-white/70 rounded-2xl";
 
   const toastName = activeToastPayment
     ? activeToastPayment.anonymous
@@ -503,13 +503,13 @@ export default function CreatorClient({ username: propUsername }: { username?: s
 
   return (
     <div
-      className="min-h-screen text-white flex justify-center px-4 py-6 sm:py-8 transition-[background] duration-[600ms] overflow-x-hidden"
+      className="min-h-screen text-white flex justify-center px-5 py-7 sm:py-9 transition-[background] duration-[600ms] overflow-x-hidden"
       style={{ background: `linear-gradient(to bottom right, ${bgStart}, ${bgMid}, ${bgEnd})` }}
     >
-      <div className="w-full max-w-[1550px] space-y-5 sm:space-y-6 px-1 sm:px-0 overflow-x-hidden">
+      <div className="w-full max-w-[1500px] space-y-5 sm:space-y-6 px-1 sm:px-0 overflow-x-hidden">
         {successToast && (
           <div className="fixed inset-0 z-[121] flex items-center justify-center px-4 pointer-events-none sm:inset-auto sm:bottom-6 sm:right-6 sm:block sm:px-0">
-            <div className="px-4 py-3 rounded-2xl border-[1.5px] border-white/60 bg-black/78 backdrop-blur-xl shadow-2xl text-white min-w-[240px] max-w-[90vw] animate-[fadeInUp_.25s_ease]">
+            <div className="px-4 py-3 rounded-2xl border-2 border-white/70 bg-black/78 backdrop-blur-xl shadow-2xl text-white min-w-[240px] max-w-[90vw] animate-[fadeInUp_.25s_ease]">
               <p className="text-sm sm:text-[15px] font-semibold">
                 🎁 Thank you {successNameLabel} — your gift to {creatorFirstName} was sent
               </p>
@@ -520,7 +520,7 @@ export default function CreatorClient({ username: propUsername }: { username?: s
 
         {activeToastPayment && (
           <div className="fixed left-1/2 -translate-x-1/2 bottom-5 sm:left-auto sm:right-6 sm:translate-x-0 sm:bottom-6 z-[120] pointer-events-none">
-            <div className="px-4 py-3 rounded-2xl border-[1.5px] border-white/60 bg-black/75 backdrop-blur-xl shadow-2xl text-white min-w-[220px] max-w-[88vw] animate-[fadeInUp_.25s_ease]">
+            <div className="px-4 py-3 rounded-2xl border-2 border-white/70 bg-black/75 backdrop-blur-xl shadow-2xl text-white min-w-[220px] max-w-[88vw] animate-[fadeInUp_.25s_ease]">
               <p className="text-sm sm:text-[15px] font-semibold truncate">
                 🔥 {toastName} just gifted {toastAmount}
               </p>
@@ -531,12 +531,12 @@ export default function CreatorClient({ username: propUsername }: { username?: s
 
         <section className={`w-full ${panelClass} px-6 sm:px-9 py-5 sm:py-6 overflow-x-hidden`}>
           <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 sm:gap-6">
-            <div className="flex items-center gap-4 sm:gap-6 min-w-0 flex-1">
+            <div className="flex items-center gap-5 sm:gap-7 min-w-0 flex-1">
               <button
                 type="button"
                 onClick={() => profile.avatar_url && setShowAvatar(true)}
                 title="View profile picture"
-                className="w-16 h-16 sm:w-20 sm:h-20 rounded-full border-[4px] border-white/40 bg-white/10 flex items-center justify-center overflow-hidden shadow-xl shrink-0 cursor-pointer hover:opacity-90 transition active:scale-[0.98]"
+                className="w-16 h-16 sm:w-20 sm:h-20 rounded-full border-[4px] border-white/70 bg-white/10 flex items-center justify-center overflow-hidden shadow-xl shrink-0 cursor-pointer hover:opacity-90 transition active:scale-[0.98]"
               >
                 {profile.avatar_url ? (
                   <img src={profile.avatar_url} alt="Profile picture" className="w-full h-full object-contain" />
@@ -547,10 +547,10 @@ export default function CreatorClient({ username: propUsername }: { username?: s
 
               <div className="flex flex-col min-w-0 flex-1">
                 <div className="flex flex-wrap items-start gap-2 min-w-0">
-                  <h1 className="text-2xl sm:text-3xl font-bold tracking-tight leading-tight whitespace-normal break-words sm:truncate">
+                  <h1 className="text-[28px] sm:text-[32px] font-bold tracking-tight leading-tight whitespace-normal break-words sm:truncate">
                     {profile.profile_name || username}
                   </h1>
-                  <div className="pt-1">
+                  <div className="pt-1.5">
                     <VerifiedBadge />
                   </div>
                 </div>
@@ -567,7 +567,7 @@ export default function CreatorClient({ username: propUsername }: { username?: s
                               href={url}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="shrink-0 inline-flex items-center px-3 py-1 rounded-full bg-white/10 border border-white/60 text-xs text-white/90 hover:bg-white/15 transition"
+                              className="shrink-0 inline-flex items-center px-3 py-1 rounded-full bg-white/10 border-2 border-white/65 text-xs text-white/95 hover:bg-white/15 transition"
                               title={url}
                             >
                               <span>{meta.label}</span>
@@ -577,7 +577,7 @@ export default function CreatorClient({ username: propUsername }: { username?: s
                       </div>
                     </div>
 
-                    <div className="hidden sm:flex mt-2 flex-wrap gap-2">
+                    <div className="hidden sm:flex mt-3 flex-wrap gap-2">
                       {profile.social_links.map((url) => {
                         const meta = getSocialMeta(url);
                         return (
@@ -586,7 +586,7 @@ export default function CreatorClient({ username: propUsername }: { username?: s
                             href={url}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 border border-white/60 text-xs text-white/90 hover:bg-white/15 transition"
+                            className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 border-2 border-white/65 text-xs text-white/95 hover:bg-white/15 transition"
                             title={url}
                           >
                             <span>{meta.label}</span>
@@ -598,24 +598,24 @@ export default function CreatorClient({ username: propUsername }: { username?: s
                 )}
 
                 <div className="sm:hidden mt-3 w-full flex justify-center">
-                  <span className="text-[11px] text-white/55 tracking-wide text-center">Powered by EverPay</span>
+                  <span className="text-[12px] text-white/70 tracking-wide text-center">Powered by EverPay</span>
                 </div>
               </div>
             </div>
 
             <div className="hidden sm:flex items-start justify-end pt-1">
-              <span className="text-[12px] text-white/70 font-medium tracking-wide">Powered by EverPay</span>
+              <span className="text-[13px] text-white/80 font-medium tracking-wide">Powered by EverPay</span>
             </div>
           </div>
         </section>
 
         {milestoneEnabled && (
           <section className={`${panelClass} px-6 sm:px-9 py-5 overflow-x-hidden`}>
-            <p className="text-[11px] uppercase tracking-[0.18em] text-white/70 mb-1">Goal</p>
+            <p className="text-[11px] uppercase tracking-[0.18em] text-white/75 mb-1">Goal</p>
 
             {profile.milestone_text && <p className="text-sm font-semibold mb-1">{profile.milestone_text}</p>}
 
-            <p className="text-[13px] text-white/80 mb-3">
+            <p className="text-[14px] text-white/85 mb-3">
               £{totalEarned.toLocaleString("en-GB", { minimumFractionDigits: 2 })} of £
               {milestoneTarget.toLocaleString("en-GB", { minimumFractionDigits: 2 })} raised
             </p>
@@ -627,17 +627,17 @@ export default function CreatorClient({ username: propUsername }: { username?: s
               />
             </div>
 
-            <p className="mt-1 text-[11px] text-white/65">
+            <p className="mt-1 text-[11px] text-white/70">
               {displayMilestonePercent >= 100 ? "Goal reached 🎉 — you smashed it!" : `${displayMilestonePercent}% complete`}
             </p>
           </section>
         )}
 
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-7 sm:gap-8 items-start lg:items-stretch overflow-x-hidden">
-          <section className={`${panelClass} p-6 sm:p-9 flex flex-col min-h-0 overflow-hidden lg:h-[760px]`}>
-            <h2 className="text-xl sm:text-[30px] font-semibold mb-4">Send a Gift</h2>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 sm:gap-9 items-start lg:items-stretch overflow-x-hidden">
+          <section className={`${panelClass} p-7 sm:p-10 flex flex-col min-h-0 overflow-hidden lg:h-[790px]`}>
+            <h2 className="text-[34px] sm:text-[38px] font-semibold mb-5">Send a Gift</h2>
 
-            <div className="flex flex-wrap gap-2 mb-4">
+            <div className="flex flex-wrap gap-3 mb-5">
               {presetAmounts.map((v) => {
                 const selected = Number(amount) === v;
                 return (
@@ -645,8 +645,10 @@ export default function CreatorClient({ username: propUsername }: { username?: s
                     key={v}
                     type="button"
                     onClick={() => setAmount(String(v))}
-                    className={`px-5 py-2.5 rounded-full border text-sm font-semibold transition ${
-                      selected ? "bg-white text-black border-white/80" : "bg-white/10 text-white border-[1.5px] border-white/60 hover:bg-white/15"
+                    className={`px-5 py-2.5 rounded-full text-sm font-semibold transition ${
+                      selected
+                        ? "bg-white text-black border-2 border-white"
+                        : "bg-white/10 text-white border-2 border-white/65 hover:bg-white/15"
                     }`}
                   >
                     £{v}
@@ -656,7 +658,7 @@ export default function CreatorClient({ username: propUsername }: { username?: s
             </div>
 
             <div className="flex items-center gap-3 mb-4 w-full min-w-0">
-              <span className="text-2xl font-bold shrink-0">£</span>
+              <span className="text-[34px] font-bold shrink-0 text-white">£</span>
               <input
                 type="text"
                 inputMode="decimal"
@@ -667,7 +669,7 @@ export default function CreatorClient({ username: propUsername }: { username?: s
                   setAmount(raw);
                 }}
                 placeholder="0.00"
-                className={`${fieldClass} min-w-0 flex-1 py-3.5 text-base`}
+                className={`${fieldClass} min-w-0 flex-1 py-4 text-lg`}
               />
             </div>
 
@@ -677,7 +679,7 @@ export default function CreatorClient({ username: propUsername }: { username?: s
               onChange={(e) => setSupporterName(e.target.value)}
               placeholder="Your name (optional)"
               disabled={anonymous}
-              className={`${fieldClass} mb-4 py-3.5`}
+              className={`${fieldClass} mb-4 py-4 text-base`}
             />
 
             <textarea
@@ -685,17 +687,17 @@ export default function CreatorClient({ username: propUsername }: { username?: s
               onChange={(e) => setMessage(e.target.value.slice(0, 120))}
               placeholder="Leave a message (optional)"
               rows={3}
-              style={{ minHeight: 100, height: 100 }}
-              className={`${fieldClass} mb-4 py-3 resize-none overflow-hidden leading-5`}
+              style={{ minHeight: 110, height: 110 }}
+              className={`${fieldClass} mb-4 py-4 text-base resize-none overflow-hidden leading-5`}
             />
 
-            <label className="flex items-center gap-2 text-sm mb-4 cursor-pointer">
+            <label className="flex items-center gap-2 text-[15px] mb-5 cursor-pointer">
               <input type="checkbox" checked={anonymous} onChange={(e) => setAnonymous(e.target.checked)} />
               <span>Gift anonymously</span>
             </label>
 
             <button
-              className="w-full py-4 rounded-xl text-white font-semibold active:scale-[0.98] transition mb-2 shadow-xl border-[2.5px] border-white hover:border-white hover:opacity-[0.97]"
+              className="w-full py-4 rounded-xl text-white text-lg font-semibold active:scale-[0.98] transition mb-3 shadow-xl border-[2.5px] border-white hover:border-white hover:opacity-[0.97]"
               style={ctaStyle}
               onClick={handlePay}
               disabled={loading}
@@ -703,26 +705,28 @@ export default function CreatorClient({ username: propUsername }: { username?: s
               {loading ? "Redirecting..." : "Send a Gift 🎁"}
             </button>
 
-            <p className="text-center text-[12px] text-white/85">Instant bank payment • No card details needed</p>
-            <p className="text-center text-[11px] text-white/65 mt-1 tracking-wide">Powered by Stripe</p>
+            <p className="text-center text-[14px] font-medium text-white/95 mt-1">
+              Instant bank payment • No card details needed
+            </p>
+            <p className="text-center text-[13px] text-white/80 mt-1">Powered by Stripe</p>
 
-            <div className="mt-4 lg:mt-auto pt-1 pb-0 hidden lg:flex flex-col items-center gap-2 opacity-95 hover:opacity-100 transition">
+            <div className="mt-5 lg:mt-auto pt-1 pb-0 hidden lg:flex flex-col items-center gap-2.5 opacity-95 hover:opacity-100 transition">
               <div className="bg-white rounded-2xl p-3 border-2 border-black/20 shadow-xl flex items-center justify-center">
                 {pageUrl ? (
-                  <QRCode value={pageUrl} size={132} bgColor="#ffffff" fgColor="#000000" />
+                  <QRCode value={pageUrl} size={138} bgColor="#ffffff" fgColor="#000000" />
                 ) : (
                   <span className="text-black/70 text-xs">QR unavailable</span>
                 )}
               </div>
 
-              <p className="text-[13px] text-white/85">Scan to gift</p>
-              <p className="text-[11px] text-white/65 tracking-wide">Powered by EverPay</p>
+              <p className="text-[14px] text-white/90">Scan to gift</p>
+              <p className="text-[13px] text-white/80 tracking-wide">Powered by EverPay</p>
             </div>
           </section>
 
-          <section className={`${panelClass} p-6 sm:p-9 flex flex-col min-h-0 overflow-hidden lg:h-[760px]`}>
-            <div className="mb-4 flex items-center justify-start lg:justify-between">
-              <h2 className="text-xl sm:text-[30px] font-semibold">Recent Gifts 🎁</h2>
+          <section className={`${panelClass} p-7 sm:p-10 flex flex-col min-h-0 overflow-hidden lg:h-[790px]`}>
+            <div className="mb-5 flex items-center justify-start lg:justify-between">
+              <h2 className="text-[34px] sm:text-[38px] font-semibold">Recent Gifts 🎁</h2>
             </div>
 
             {loadingPayments ? (
@@ -730,7 +734,7 @@ export default function CreatorClient({ username: propUsername }: { username?: s
             ) : payments.length === 0 ? (
               <p className="text-center text-white/70 text-sm">No gifts yet — be the first! 🎁</p>
             ) : (
-              <div className="w-full overflow-y-auto pr-1 everpay-scroll mb-4 space-y-2 max-h-[300px] sm:max-h-[400px] lg:max-h-none lg:flex-1 lg:min-h-0">
+              <div className="w-full overflow-y-auto pr-1 everpay-scroll mb-5 space-y-3 max-h-[310px] sm:max-h-[420px] lg:max-h-none lg:flex-1 lg:min-h-0">
                 {payments.map((p) => {
                   const displayName = p.anonymous ? "Anonymous" : p.gift_name?.trim() ? p.gift_name : "Someone";
                   const giftPence = getGiftPence(p);
@@ -738,15 +742,15 @@ export default function CreatorClient({ username: propUsername }: { username?: s
                   return (
                     <div key={p.id} className={`${rowClass} px-4 py-3 text-sm flex justify-between gap-3 shadow-sm overflow-hidden`}>
                       <div className="flex-1 min-w-0">
-                        <p className="font-semibold text-[14px] sm:text-[15px] truncate">
+                        <p className="font-semibold text-[15px] truncate">
                           {displayName} gifted {formatGBP(giftPence)}
                         </p>
                         {p.gift_message && (
-                          <p className="text-[11px] sm:text-xs opacity-80 mt-1 italic line-clamp-2">“{p.gift_message}”</p>
+                          <p className="text-[12px] opacity-80 mt-1 italic line-clamp-2">“{p.gift_message}”</p>
                         )}
                       </div>
 
-                      <p className="text-[10px] opacity-60 whitespace-nowrap mt-1">{new Date(p.created_at).toLocaleDateString()}</p>
+                      <p className="text-[11px] opacity-65 whitespace-nowrap mt-1">{new Date(p.created_at).toLocaleDateString()}</p>
                     </div>
                   );
                 })}
@@ -763,28 +767,28 @@ export default function CreatorClient({ username: propUsername }: { username?: s
                     aria-expanded={showTopSupportersMobile}
                   >
                     <div className="text-left">
-                      <p className="text-[11px] uppercase tracking-[0.18em] text-white/70">Top Supporters</p>
-                      <p className="text-[11px] text-white/55">This month</p>
+                      <p className="text-[11px] uppercase tracking-[0.18em] text-white/75">Top Supporters</p>
+                      <p className="text-[11px] text-white/60">This month</p>
                     </div>
-                    <span className="text-sm text-white/80">{showTopSupportersMobile ? "Hide" : "Show"}</span>
+                    <span className="text-sm text-white/85">{showTopSupportersMobile ? "Hide" : "Show"}</span>
                   </button>
 
                   {showTopSupportersMobile && (
                     <div className={`mt-3 ${supporterCardClass} p-4`}>
-                      <div className="space-y-2">
+                      <div className="space-y-3">
                         {topSupporters.map((s, idx) => (
                           <div
                             key={`${s.label}-${idx}`}
                             className={`${rowClass} flex items-center justify-between gap-3 px-4 py-3 overflow-hidden`}
                           >
                             <div className="flex items-center gap-3 min-w-0">
-                              <div className="w-8 h-8 rounded-full bg-white/10 border-[1.5px] border-white/60 flex items-center justify-center text-[12px] font-bold text-white/85 shrink-0">
+                              <div className="w-8 h-8 rounded-full bg-white/10 border-2 border-white/65 flex items-center justify-center text-[12px] font-bold text-white/90 shrink-0">
                                 {idx + 1}
                               </div>
 
                               <div className="min-w-0">
                                 <p className="text-sm font-semibold truncate">{s.label}</p>
-                                <p className="text-[11px] text-white/60">
+                                <p className="text-[11px] text-white/65">
                                   {s.gifts} gift{s.gifts === 1 ? "" : "s"}
                                 </p>
                               </div>
@@ -800,21 +804,21 @@ export default function CreatorClient({ username: propUsername }: { username?: s
 
                 <div className={`hidden lg:block ${supporterCardClass} p-4`}>
                   <div className="flex items-center justify-between mb-3">
-                    <p className="text-[11px] uppercase tracking-[0.18em] text-white/70">Top Supporters</p>
-                    <p className="text-[11px] text-white/55">This month</p>
+                    <p className="text-[11px] uppercase tracking-[0.18em] text-white/75">Top Supporters</p>
+                    <p className="text-[11px] text-white/60">This month</p>
                   </div>
 
-                  <div className="space-y-2">
+                  <div className="space-y-3">
                     {topSupporters.map((s, idx) => (
                       <div key={`${s.label}-${idx}`} className={`${rowClass} flex items-center justify-between gap-3 px-4 py-3`}>
                         <div className="flex items-center gap-3 min-w-0">
-                          <div className="w-8 h-8 rounded-full bg-white/10 border-[1.5px] border-white/60 flex items-center justify-center text-[12px] font-bold text-white/85 shrink-0">
+                          <div className="w-8 h-8 rounded-full bg-white/10 border-2 border-white/65 flex items-center justify-center text-[12px] font-bold text-white/90 shrink-0">
                             {idx + 1}
                           </div>
 
                           <div className="min-w-0">
                             <p className="text-sm font-semibold truncate">{s.label}</p>
-                            <p className="text-[11px] text-white/60">
+                            <p className="text-[11px] text-white/65">
                               {s.gifts} gift{s.gifts === 1 ? "" : "s"}
                             </p>
                           </div>
@@ -856,7 +860,7 @@ export default function CreatorClient({ username: propUsername }: { username?: s
               </div>
 
               <p className="mt-3 text-center text-xs text-white/80">Scan to gift</p>
-              <p className="mt-1 text-center text-[11px] text-white/60 tracking-wide">Powered by EverPay</p>
+              <p className="mt-1 text-center text-[12px] text-white/75 tracking-wide">Powered by EverPay</p>
             </>
           )}
         </section>
@@ -869,12 +873,12 @@ export default function CreatorClient({ username: propUsername }: { username?: s
             aria-modal="true"
           >
             <div
-              className="relative w-full max-w-md sm:max-w-lg rounded-3xl border-2 border-white/60 bg-black/40 shadow-2xl overflow-hidden"
+              className="relative w-full max-w-md sm:max-w-lg rounded-3xl border-[2.5px] border-white/70 bg-black/40 shadow-2xl overflow-hidden"
               onClick={(e) => e.stopPropagation()}
             >
               <button
                 onClick={() => setShowAvatar(false)}
-                className="absolute top-3 right-3 w-9 h-9 rounded-full bg-white/10 border-2 border-white/60 text-white/90 hover:bg-white/15 transition flex items-center justify-center"
+                className="absolute top-3 right-3 w-9 h-9 rounded-full bg-white/10 border-2 border-white/65 text-white/90 hover:bg-white/15 transition flex items-center justify-center"
                 aria-label="Close"
                 type="button"
               >
@@ -882,10 +886,10 @@ export default function CreatorClient({ username: propUsername }: { username?: s
               </button>
 
               <div className="p-4 sm:p-6">
-                <div className="w-full aspect-square rounded-2xl bg-white/5 border-2 border-white/60 overflow-hidden flex items-center justify-center">
+                <div className="w-full aspect-square rounded-2xl bg-white/5 border-2 border-white/65 overflow-hidden flex items-center justify-center">
                   <img src={profile.avatar_url} alt="Profile picture" className="w-full h-full object-contain" />
                 </div>
-                <p className="mt-3 text-center text-sm text-white/80">{profile.profile_name}</p>
+                <p className="mt-3 text-center text-sm text-white/85">{profile.profile_name}</p>
               </div>
             </div>
           </div>
@@ -894,21 +898,21 @@ export default function CreatorClient({ username: propUsername }: { username?: s
         <style jsx global>{`
           .everpay-scroll {
             scrollbar-width: thin;
-            scrollbar-color: rgba(255, 255, 255, 0.3) rgba(255, 255, 255, 0.05);
+            scrollbar-color: rgba(255, 255, 255, 0.32) rgba(255, 255, 255, 0.05);
           }
           .everpay-scroll::-webkit-scrollbar {
-            width: 5px;
+            width: 6px;
           }
           .everpay-scroll::-webkit-scrollbar-track {
             background: rgba(255, 255, 255, 0.05);
             border-radius: 999px;
           }
           .everpay-scroll::-webkit-scrollbar-thumb {
-            background: rgba(255, 255, 255, 0.3);
+            background: rgba(255, 255, 255, 0.32);
             border-radius: 999px;
           }
           .everpay-scroll::-webkit-scrollbar-thumb:hover {
-            background: rgba(255, 255, 255, 0.42);
+            background: rgba(255, 255, 255, 0.46);
           }
 
           @keyframes fadeInUp {
