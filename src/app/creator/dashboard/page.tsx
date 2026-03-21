@@ -6,6 +6,7 @@ import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import QRCode from "react-qr-code";
 import StripeConnectBanner from "../components/StripeConnectBanner";
+import CreatorGiftToast from "../components/CreatorGiftToast";
 
 type Payment = {
   id: string;
