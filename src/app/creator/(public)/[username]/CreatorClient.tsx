@@ -710,10 +710,10 @@ export default function CreatorClient({ username: propUsername }: { username?: s
             </p>
             <p className="text-center text-[13px] text-white/80 mt-1">Powered by Stripe</p>
 
-            <div className="mt-5 lg:mt-auto pt-1 pb-0 hidden lg:flex flex-col items-center gap-2.5 opacity-95 hover:opacity-100 transition">
+            <div className="mt-3 lg:mt-auto pt-0 pb-1 hidden lg:flex flex-col items-center gap-1.5 opacity-95 hover:opacity-100 transition">
               <div className="bg-white rounded-2xl p-3 border-2 border-black/20 shadow-xl flex items-center justify-center">
                 {pageUrl ? (
-                  <QRCode value={pageUrl} size={138} bgColor="#ffffff" fgColor="#000000" />
+                  <QRCode value={pageUrl} size={126} bgColor="#ffffff" fgColor="#000000" />
                 ) : (
                   <span className="text-black/70 text-xs">QR unavailable</span>
                 )}
