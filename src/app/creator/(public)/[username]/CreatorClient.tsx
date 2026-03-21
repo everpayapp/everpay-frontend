@@ -165,18 +165,19 @@ export default function CreatorClient({ username: propUsername }: { username?: s
     }
   }
 
-  function showNextToast() {
-    if (toastTimeoutRef.current) clearTimeout(toastTimeoutRef.current);
+function showNextToast() {
+  if (toastTimeoutRef.current) clearTimeout(toastTimeoutRef.current);
 
-    const next = toastQueueRef.current.shift() || null;
-    setActiveToastPayment(next);
+  const next = toastQueueRef.current.shift() || null;
+  setActiveToastPayment(next);
 
-    if (next) {
-      toastTimeoutRef.current = setTimeout(() => {
-        setActiveToastPayment(null);
-      }, 3200);
-    }
+  if (next) {
+    toastTimeoutRef.current = setTimeout(() => {
+      setActiveToastPayment(null);
+      toastTimeoutRef.current = null;
+    }, 3200);
   }
+}
 
   useEffect(() => {
     if (!activeToastPayment && toastQueueRef.current.length > 0) {
@@ -316,7 +317,7 @@ export default function CreatorClient({ username: propUsername }: { username?: s
       if (toastTimeoutRef.current) clearTimeout(toastTimeoutRef.current);
       if (successToastTimeoutRef.current) clearTimeout(successToastTimeoutRef.current);
     };
-  }, [apiUrl, username, activeToastPayment]);
+  }, [apiUrl, username]);
 
   useEffect(() => {
     const success = searchParams.get("success");
