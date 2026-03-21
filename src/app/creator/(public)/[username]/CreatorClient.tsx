@@ -484,13 +484,13 @@ export default function CreatorClient({ username: propUsername }: { username?: s
   };
 
   const panelClass =
-    "bg-black/45 backdrop-blur-md rounded-3xl border-2 border-white/30 shadow-[0_20px_80px_rgba(0,0,0,0.6)]";
+    "bg-black/45 backdrop-blur-md rounded-3xl border-[2.5px] border-white/40 shadow-[0_20px_80px_rgba(0,0,0,0.6)]";
 
   const fieldClass =
-    "w-full rounded-xl bg-[#0B0D12] border-[1.5px] border-white/30 px-3 text-white placeholder-white/50 outline-none focus:border-white/50";
+    "w-full rounded-xl bg-[#0B0D12] border-2 border-white/35 px-3 text-white placeholder-white/50 outline-none focus:border-white/55";
 
-  const rowClass = "bg-black/20 border-[1.5px] border-white/35 rounded-xl";
-  const supporterCardClass = "bg-black/20 border-[1.5px] border-white/35 rounded-2xl";
+  const rowClass = "bg-black/20 border-2 border-white/40 rounded-xl";
+  const supporterCardClass = "bg-black/20 border-2 border-white/40 rounded-2xl";
 
   const toastName = activeToastPayment
     ? activeToastPayment.anonymous
@@ -509,7 +509,7 @@ export default function CreatorClient({ username: propUsername }: { username?: s
       <div className="w-full max-w-[1400px] space-y-4 sm:space-y-5 px-1 sm:px-0 overflow-x-hidden">
         {successToast && (
           <div className="fixed inset-0 z-[121] flex items-center justify-center px-4 pointer-events-none sm:inset-auto sm:bottom-6 sm:right-6 sm:block sm:px-0">
-            <div className="px-4 py-3 rounded-2xl border-[1.5px] border-white/30 bg-black/78 backdrop-blur-xl shadow-2xl text-white min-w-[240px] max-w-[90vw] animate-[fadeInUp_.25s_ease]">
+            <div className="px-4 py-3 rounded-2xl border-2 border-white/40 bg-black/78 backdrop-blur-xl shadow-2xl text-white min-w-[240px] max-w-[90vw] animate-[fadeInUp_.25s_ease]">
               <p className="text-sm sm:text-[15px] font-semibold">
                 🎁 Thank you {successNameLabel} — your gift to {creatorFirstName} was sent
               </p>
@@ -520,7 +520,7 @@ export default function CreatorClient({ username: propUsername }: { username?: s
 
         {activeToastPayment && (
           <div className="fixed left-1/2 -translate-x-1/2 bottom-5 sm:left-auto sm:right-6 sm:translate-x-0 sm:bottom-6 z-[120] pointer-events-none">
-            <div className="px-4 py-3 rounded-2xl border-[1.5px] border-white/30 bg-black/75 backdrop-blur-xl shadow-2xl text-white min-w-[220px] max-w-[88vw] animate-[fadeInUp_.25s_ease]">
+            <div className="px-4 py-3 rounded-2xl border-2 border-white/40 bg-black/75 backdrop-blur-xl shadow-2xl text-white min-w-[220px] max-w-[88vw] animate-[fadeInUp_.25s_ease]">
               <p className="text-sm sm:text-[15px] font-semibold truncate">
                 🔥 {toastName} just gifted {toastAmount}
               </p>
@@ -536,7 +536,7 @@ export default function CreatorClient({ username: propUsername }: { username?: s
                 type="button"
                 onClick={() => profile.avatar_url && setShowAvatar(true)}
                 title="View profile picture"
-                className="w-16 h-16 sm:w-20 sm:h-20 rounded-full border-[4px] border-white/35 bg-white/10 flex items-center justify-center overflow-hidden shadow-xl shrink-0 cursor-pointer hover:opacity-90 transition active:scale-[0.98]"
+                className="w-16 h-16 sm:w-20 sm:h-20 rounded-full border-[4px] border-white/40 bg-white/10 flex items-center justify-center overflow-hidden shadow-xl shrink-0 cursor-pointer hover:opacity-90 transition active:scale-[0.98]"
               >
                 {profile.avatar_url ? (
                   <img src={profile.avatar_url} alt="Profile picture" className="w-full h-full object-contain" />
@@ -567,7 +567,7 @@ export default function CreatorClient({ username: propUsername }: { username?: s
                               href={url}
                               target="_blank"
                               rel="noopener noreferrer"
-                              className="shrink-0 inline-flex items-center px-3 py-1 rounded-full bg-white/10 border border-white/25 text-xs text-white/90 hover:bg-white/15 transition"
+                              className="shrink-0 inline-flex items-center px-3 py-1 rounded-full bg-white/10 border-2 border-white/35 text-xs text-white/90 hover:bg-white/15 transition"
                               title={url}
                             >
                               <span>{meta.label}</span>
@@ -586,7 +586,7 @@ export default function CreatorClient({ username: propUsername }: { username?: s
                             href={url}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 border border-white/25 text-xs text-white/90 hover:bg-white/15 transition"
+                            className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 border-2 border-white/35 text-xs text-white/90 hover:bg-white/15 transition"
                             title={url}
                           >
                             <span>{meta.label}</span>
@@ -646,7 +646,7 @@ export default function CreatorClient({ username: propUsername }: { username?: s
                     type="button"
                     onClick={() => setAmount(String(v))}
                     className={`px-4 py-2 rounded-full border text-sm font-semibold transition ${
-                      selected ? "bg-white text-black border-white/75" : "bg-white/10 text-white border-white/30 hover:bg-white/15"
+                      selected ? "bg-white text-black border-white/75" : "bg-white/10 text-white border-2 border-white/35 hover:bg-white/15"
                     }`}
                   >
                     £{v}
@@ -695,7 +695,7 @@ export default function CreatorClient({ username: propUsername }: { username?: s
             </label>
 
             <button
-              className="w-full py-3.5 rounded-xl text-white font-semibold active:scale-[0.98] transition mb-2 shadow-xl border-2 border-white/90 hover:border-white hover:opacity-[0.97]"
+              className="w-full py-3.5 rounded-xl text-white font-semibold active:scale-[0.98] transition mb-2 shadow-xl border-[2.5px] border-white/95 hover:border-white hover:opacity-[0.97]"
               style={ctaStyle}
               onClick={handlePay}
               disabled={loading}
@@ -706,7 +706,7 @@ export default function CreatorClient({ username: propUsername }: { username?: s
             <p className="text-center text-[11px] text-white/80">Instant bank payment • No card details needed</p>
 
             <div className="mt-3 lg:mt-auto pt-1 pb-0 hidden lg:flex flex-col items-center gap-2 opacity-95 hover:opacity-100 transition">
-              <div className="bg-white rounded-2xl p-3 border border-black/20 shadow-xl flex items-center justify-center">
+              <div className="bg-white rounded-2xl p-3 border-2 border-black/20 shadow-xl flex items-center justify-center">
                 {pageUrl ? (
                   <QRCode value={pageUrl} size={120} bgColor="#ffffff" fgColor="#000000" />
                 ) : (
@@ -777,7 +777,7 @@ export default function CreatorClient({ username: propUsername }: { username?: s
                             className={`${rowClass} flex items-center justify-between gap-3 px-3 py-2 overflow-hidden`}
                           >
                             <div className="flex items-center gap-3 min-w-0">
-                              <div className="w-7 h-7 rounded-full bg-white/10 border-[1.5px] border-white/30 flex items-center justify-center text-[12px] font-bold text-white/85 shrink-0">
+                              <div className="w-7 h-7 rounded-full bg-white/10 border-2 border-white/35 flex items-center justify-center text-[12px] font-bold text-white/85 shrink-0">
                                 {idx + 1}
                               </div>
 
@@ -807,7 +807,7 @@ export default function CreatorClient({ username: propUsername }: { username?: s
                     {topSupporters.map((s, idx) => (
                       <div key={`${s.label}-${idx}`} className={`${rowClass} flex items-center justify-between gap-3 px-3 py-2`}>
                         <div className="flex items-center gap-3 min-w-0">
-                          <div className="w-7 h-7 rounded-full bg-white/10 border-[1.5px] border-white/30 flex items-center justify-center text-[12px] font-bold text-white/85 shrink-0">
+                          <div className="w-7 h-7 rounded-full bg-white/10 border-2 border-white/35 flex items-center justify-center text-[12px] font-bold text-white/85 shrink-0">
                             {idx + 1}
                           </div>
 
@@ -846,7 +846,7 @@ export default function CreatorClient({ username: propUsername }: { username?: s
 
           {showMobileQR && (
             <>
-              <div className="mt-4 mx-auto w-full max-w-[240px] bg-white rounded-2xl p-3 border border-black/20 shadow-xl flex items-center justify-center">
+              <div className="mt-4 mx-auto w-full max-w-[240px] bg-white rounded-2xl p-3 border-2 border-black/20 shadow-xl flex items-center justify-center">
                 {pageUrl ? (
                   <QRCode value={pageUrl} size={185} bgColor="#ffffff" fgColor="#000000" />
                 ) : (
@@ -868,12 +868,12 @@ export default function CreatorClient({ username: propUsername }: { username?: s
             aria-modal="true"
           >
             <div
-              className="relative w-full max-w-md sm:max-w-lg rounded-3xl border-[1.5px] border-white/25 bg-black/40 shadow-2xl overflow-hidden"
+              className="relative w-full max-w-md sm:max-w-lg rounded-3xl border-2 border-white/35 bg-black/40 shadow-2xl overflow-hidden"
               onClick={(e) => e.stopPropagation()}
             >
               <button
                 onClick={() => setShowAvatar(false)}
-                className="absolute top-3 right-3 w-9 h-9 rounded-full bg-white/10 border border-white/25 text-white/90 hover:bg-white/15 transition flex items-center justify-center"
+                className="absolute top-3 right-3 w-9 h-9 rounded-full bg-white/10 border-2 border-white/30 text-white/90 hover:bg-white/15 transition flex items-center justify-center"
                 aria-label="Close"
                 type="button"
               >
@@ -881,7 +881,7 @@ export default function CreatorClient({ username: propUsername }: { username?: s
               </button>
 
               <div className="p-4 sm:p-6">
-                <div className="w-full aspect-square rounded-2xl bg-white/5 border border-white/20 overflow-hidden flex items-center justify-center">
+                <div className="w-full aspect-square rounded-2xl bg-white/5 border-2 border-white/30 overflow-hidden flex items-center justify-center">
                   <img src={profile.avatar_url} alt="Profile picture" className="w-full h-full object-contain" />
                 </div>
                 <p className="mt-3 text-center text-sm text-white/80">{profile.profile_name}</p>
