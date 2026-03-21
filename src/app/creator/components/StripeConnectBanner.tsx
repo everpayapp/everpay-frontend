@@ -16,6 +16,7 @@ export default function StripeConnectBanner() {
 
   const [status, setStatus] = useState<ConnectStatus | null>(null);
   const [loading, setLoading] = useState(true);
+  const [connecting, setConnecting] = useState(false);
 
   useEffect(() => {
     if (!username) return;
@@ -46,6 +47,41 @@ export default function StripeConnectBanner() {
     loadStatus();
   }, [username]);
 
+  async function handleConnectStripe() {
+    if (!username || connecting) return;
+
+    setConnecting(true);
+
+    try {
+      const res = await fetch(`${API_URL}/api/stripe/connect/create`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          username,
+        }),
+      });
+
+      const data = await res.json().catch(() => ({} as any));
+
+      if (!res.ok) {
+        throw new Error(data?.error || "Unable to start Stripe onboarding");
+      }
+
+      if (data?.url) {
+        window.location.href = data.url;
+        return;
+      }
+
+      throw new Error("No onboarding URL returned");
+    } catch (e) {
+      console.error("Stripe connect failed", e);
+      alert("Unable to start Stripe onboarding right now.");
+      setConnecting(false);
+    }
+  }
+
   if (loading || !status) return null;
 
   if (status.connected && status.payoutsEnabled) {
@@ -65,18 +101,19 @@ export default function StripeConnectBanner() {
           </h3>
 
           <p className="mt-1 text-sm leading-relaxed text-white/70 max-w-2xl">
-            Your page is live, but payouts are not enabled yet. Go to Settings
-            and connect Stripe before sharing your page and receiving gifts.
+            Your page is live, but payouts are not enabled yet. Connect Stripe
+            before sharing your page and receiving gifts.
           </p>
         </div>
 
         <div className="w-full sm:w-auto shrink-0">
-          <a
-            href="/creator/settings"
-            className="inline-flex w-full sm:w-auto items-center justify-center rounded-2xl bg-gradient-to-r from-emerald-400 to-teal-400 px-5 py-2.5 text-sm font-semibold text-black shadow-[0_10px_30px_rgba(16,185,129,0.28)] transition hover:opacity-95"
+          <button
+            onClick={handleConnectStripe}
+            disabled={connecting}
+            className="inline-flex w-full sm:w-auto items-center justify-center rounded-2xl bg-gradient-to-r from-emerald-400 to-teal-400 px-5 py-2.5 text-sm font-semibold text-black shadow-[0_10px_30px_rgba(16,185,129,0.28)] transition hover:opacity-95 disabled:cursor-not-allowed disabled:opacity-70"
           >
-            Go to Settings
-          </a>
+            {connecting ? "Connecting..." : "Connect Stripe"}
+          </button>
         </div>
       </div>
     </div>
