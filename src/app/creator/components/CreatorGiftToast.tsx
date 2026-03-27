@@ -25,6 +25,7 @@ export default function CreatorGiftToast() {
   const intervalRef = useRef<number | null>(null);
   const hideTimerRef = useRef<number | null>(null);
   const audioCtxRef = useRef<AudioContext | null>(null);
+  const audioUnlockedRef = useRef(false);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
@@ -37,7 +38,28 @@ export default function CreatorGiftToast() {
       audioCtxRef.current = new AudioContextClass();
     }
 
+    const unlockAudio = async () => {
+      try {
+        const ctx = audioCtxRef.current;
+        if (!ctx) return;
+        if (ctx.state === "suspended") {
+          await ctx.resume();
+        }
+        audioUnlockedRef.current = true;
+      } catch {
+        // ignore
+      }
+    };
+
+    window.addEventListener("click", unlockAudio, { passive: true });
+    window.addEventListener("touchstart", unlockAudio, { passive: true });
+    window.addEventListener("keydown", unlockAudio);
+
     return () => {
+      window.removeEventListener("click", unlockAudio);
+      window.removeEventListener("touchstart", unlockAudio);
+      window.removeEventListener("keydown", unlockAudio);
+
       if (audioCtxRef.current) {
         void audioCtxRef.current.close();
         audioCtxRef.current = null;
@@ -66,22 +88,33 @@ export default function CreatorGiftToast() {
           await ctx.resume();
         }
 
-        const oscillator = ctx.createOscillator();
+        if (!audioUnlockedRef.current) return;
+
+        const oscillator1 = ctx.createOscillator();
+        const oscillator2 = ctx.createOscillator();
         const gainNode = ctx.createGain();
 
-        oscillator.type = "sine";
-        oscillator.frequency.setValueAtTime(880, ctx.currentTime);
-        oscillator.frequency.exponentialRampToValueAtTime(1320, ctx.currentTime + 0.12);
+        oscillator1.type = "sine";
+        oscillator2.type = "triangle";
+
+        oscillator1.frequency.setValueAtTime(880, ctx.currentTime);
+        oscillator1.frequency.exponentialRampToValueAtTime(1320, ctx.currentTime + 0.14);
+
+        oscillator2.frequency.setValueAtTime(660, ctx.currentTime);
+        oscillator2.frequency.exponentialRampToValueAtTime(990, ctx.currentTime + 0.14);
 
         gainNode.gain.setValueAtTime(0.0001, ctx.currentTime);
-        gainNode.gain.exponentialRampToValueAtTime(0.14, ctx.currentTime + 0.01);
-        gainNode.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.28);
+        gainNode.gain.exponentialRampToValueAtTime(0.22, ctx.currentTime + 0.01);
+        gainNode.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.35);
 
-        oscillator.connect(gainNode);
+        oscillator1.connect(gainNode);
+        oscillator2.connect(gainNode);
         gainNode.connect(ctx.destination);
 
-        oscillator.start(ctx.currentTime);
-        oscillator.stop(ctx.currentTime + 0.3);
+        oscillator1.start(ctx.currentTime);
+        oscillator2.start(ctx.currentTime);
+        oscillator1.stop(ctx.currentTime + 0.35);
+        oscillator2.stop(ctx.currentTime + 0.35);
       } catch {
         // ignore browser sound restrictions
       }
