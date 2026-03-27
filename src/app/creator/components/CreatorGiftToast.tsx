@@ -24,45 +24,19 @@ export default function CreatorGiftToast() {
   const lastGiftIdRef = useRef<string | null>(null);
   const intervalRef = useRef<number | null>(null);
   const hideTimerRef = useRef<number | null>(null);
-  const audioCtxRef = useRef<AudioContext | null>(null);
-  const audioUnlockedRef = useRef(false);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
 
-    const AudioContextClass =
-      window.AudioContext ||
-      (window as typeof window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
-
-    if (AudioContextClass) {
-      audioCtxRef.current = new AudioContextClass();
-    }
-
-    const unlockAudio = async () => {
-      try {
-        const ctx = audioCtxRef.current;
-        if (!ctx) return;
-        if (ctx.state === "suspended") {
-          await ctx.resume();
-        }
-        audioUnlockedRef.current = true;
-      } catch {
-        // ignore
-      }
-    };
-
-    window.addEventListener("click", unlockAudio, { passive: true });
-    window.addEventListener("touchstart", unlockAudio, { passive: true });
-    window.addEventListener("keydown", unlockAudio);
+    audioRef.current = new Audio("/sounds/gift-pop.wav");
+    audioRef.current.preload = "auto";
+    audioRef.current.volume = 0.9;
 
     return () => {
-      window.removeEventListener("click", unlockAudio);
-      window.removeEventListener("touchstart", unlockAudio);
-      window.removeEventListener("keydown", unlockAudio);
-
-      if (audioCtxRef.current) {
-        void audioCtxRef.current.close();
-        audioCtxRef.current = null;
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current = null;
       }
     };
   }, []);
@@ -81,42 +55,11 @@ export default function CreatorGiftToast() {
 
     const playSound = async () => {
       try {
-        const ctx = audioCtxRef.current;
-        if (!ctx) return;
-
-        if (ctx.state === "suspended") {
-          await ctx.resume();
-        }
-
-        if (!audioUnlockedRef.current) return;
-
-        const oscillator1 = ctx.createOscillator();
-        const oscillator2 = ctx.createOscillator();
-        const gainNode = ctx.createGain();
-
-        oscillator1.type = "sine";
-        oscillator2.type = "triangle";
-
-        oscillator1.frequency.setValueAtTime(880, ctx.currentTime);
-        oscillator1.frequency.exponentialRampToValueAtTime(1320, ctx.currentTime + 0.14);
-
-        oscillator2.frequency.setValueAtTime(660, ctx.currentTime);
-        oscillator2.frequency.exponentialRampToValueAtTime(990, ctx.currentTime + 0.14);
-
-        gainNode.gain.setValueAtTime(0.0001, ctx.currentTime);
-        gainNode.gain.exponentialRampToValueAtTime(0.22, ctx.currentTime + 0.01);
-        gainNode.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.35);
-
-        oscillator1.connect(gainNode);
-        oscillator2.connect(gainNode);
-        gainNode.connect(ctx.destination);
-
-        oscillator1.start(ctx.currentTime);
-        oscillator2.start(ctx.currentTime);
-        oscillator1.stop(ctx.currentTime + 0.35);
-        oscillator2.stop(ctx.currentTime + 0.35);
+        if (!audioRef.current) return;
+        audioRef.current.currentTime = 0;
+        await audioRef.current.play();
       } catch {
-        // ignore browser sound restrictions
+        // ignore browser autoplay restrictions
       }
     };
 
