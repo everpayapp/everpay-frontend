@@ -148,7 +148,7 @@ export default function CreatorClient({ username: propUsername }: { username?: s
   const successToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const suppressNextLiveToastRef = useRef(false);
 
-  const presetAmounts = [2, 5, 10, 20, 50];
+  const presetAmounts = [5, 10, 20, 50, 100];
 
   const creatorDisplayName = (profile?.profile_name || username || "").trim();
   const creatorFirstName = creatorDisplayName.split(" ")[0] || creatorDisplayName || "Creator";
