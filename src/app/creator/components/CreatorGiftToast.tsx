@@ -24,6 +24,26 @@ export default function CreatorGiftToast() {
   const lastGiftIdRef = useRef<string | null>(null);
   const intervalRef = useRef<number | null>(null);
   const hideTimerRef = useRef<number | null>(null);
+  const audioCtxRef = useRef<AudioContext | null>(null);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+
+    const AudioContextClass =
+      window.AudioContext ||
+      (window as typeof window & { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+
+    if (AudioContextClass) {
+      audioCtxRef.current = new AudioContextClass();
+    }
+
+    return () => {
+      if (audioCtxRef.current) {
+        void audioCtxRef.current.close();
+        audioCtxRef.current = null;
+      }
+    };
+  }, []);
 
   useEffect(() => {
     if (!username) return;
@@ -37,10 +57,41 @@ export default function CreatorGiftToast() {
       }
     };
 
+    const playSound = async () => {
+      try {
+        const ctx = audioCtxRef.current;
+        if (!ctx) return;
+
+        if (ctx.state === "suspended") {
+          await ctx.resume();
+        }
+
+        const oscillator = ctx.createOscillator();
+        const gainNode = ctx.createGain();
+
+        oscillator.type = "sine";
+        oscillator.frequency.setValueAtTime(880, ctx.currentTime);
+        oscillator.frequency.exponentialRampToValueAtTime(1320, ctx.currentTime + 0.12);
+
+        gainNode.gain.setValueAtTime(0.0001, ctx.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.14, ctx.currentTime + 0.01);
+        gainNode.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + 0.28);
+
+        oscillator.connect(gainNode);
+        gainNode.connect(ctx.destination);
+
+        oscillator.start(ctx.currentTime);
+        oscillator.stop(ctx.currentTime + 0.3);
+      } catch {
+        // ignore browser sound restrictions
+      }
+    };
+
     const showToast = (payment: Payment) => {
       clearHideTimer();
       setGift(payment);
       setVisible(true);
+      void playSound();
 
       hideTimerRef.current = window.setTimeout(() => {
         setVisible(false);
