@@ -194,6 +194,8 @@ export default function CreatorDashboard() {
 
   return (
     <div className="min-h-screen" style={{ backgroundColor: PAGE_BG }}>
+      <CreatorGiftToast />
+
       <div className="max-w-7xl mx-auto px-3 sm:px-6 text-white pt-4 sm:pt-10 pb-16 sm:pb-32">
 
          <StripeConnectBanner />
