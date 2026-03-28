@@ -31,7 +31,15 @@ export default function CreatorGiftToast() {
 
     audioRef.current = new Audio("/sounds/gift-pop.wav");
     audioRef.current.preload = "auto";
-    audioRef.current.volume = 0.9;
+    audioRef.current.volume = 1;
+
+    audioRef.current.oncanplaythrough = () => {
+      console.log("✅ sound ready");
+    };
+
+    audioRef.current.onerror = () => {
+      console.error("❌ sound failed to load");
+    };
 
     return () => {
       if (audioRef.current) {
@@ -58,8 +66,9 @@ export default function CreatorGiftToast() {
         if (!audioRef.current) return;
         audioRef.current.currentTime = 0;
         await audioRef.current.play();
-      } catch {
-        // ignore browser autoplay restrictions
+        console.log("🔊 sound played");
+      } catch (err) {
+        console.error("❌ sound blocked", err);
       }
     };
 
@@ -89,9 +98,7 @@ export default function CreatorGiftToast() {
         const sorted = [...data].sort((a, b) => {
           const aTime = new Date(a.created_at || 0).getTime();
           const bTime = new Date(b.created_at || 0).getTime();
-          const aSafe = Number.isFinite(aTime) ? aTime : 0;
-          const bSafe = Number.isFinite(bTime) ? bTime : 0;
-          return bSafe - aSafe;
+          return bTime - aTime;
         });
 
         const latest = sorted[0];
@@ -123,28 +130,49 @@ export default function CreatorGiftToast() {
     };
   }, [username]);
 
-  if (!gift || !visible) return null;
-
-  const supporterName = gift.anonymous
+  const supporterName = gift?.anonymous
     ? "Anonymous"
-    : gift.gift_name?.trim() || "Someone";
+    : gift?.gift_name?.trim() || "Someone";
 
-  const amount = (gift.amount / 100).toLocaleString("en-GB", {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  });
+  const amount = gift
+    ? (gift.amount / 100).toLocaleString("en-GB", {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      })
+    : "0.00";
 
   return (
-    <div className="fixed bottom-28 right-10 z-50 w-[min(92vw,460px)] rounded-2xl border border-white/40 bg-[#131a26]/96 px-5 py-4 shadow-[0_30px_80px_rgba(0,0,0,0.62)] backdrop-blur-xl animate-gift-glow">
-      <p className="text-lg font-semibold text-white">
-        🎁 {supporterName} sent £{amount}
-      </p>
+    <>
+      <button
+        type="button"
+        onClick={async () => {
+          try {
+            if (!audioRef.current) return;
+            audioRef.current.currentTime = 0;
+            await audioRef.current.play();
+            console.log("🔊 manual test played");
+          } catch (err) {
+            console.error("❌ manual test failed", err);
+          }
+        }}
+        className="fixed bottom-6 right-6 z-[70] rounded-xl border border-white/30 bg-black/80 px-4 py-2 text-sm text-white"
+      >
+        Test sound
+      </button>
 
-      {gift.gift_message && (
-        <p className="mt-2 text-sm leading-relaxed text-white/85 break-words">
-          “{gift.gift_message}”
-        </p>
+      {gift && visible && (
+        <div className="fixed bottom-28 right-10 z-50 w-[min(92vw,460px)] rounded-2xl border border-white/40 bg-[#131a26]/96 px-5 py-4 shadow-[0_30px_80px_rgba(0,0,0,0.62)] backdrop-blur-xl animate-gift-glow">
+          <p className="text-lg font-semibold text-white">
+            🎁 {supporterName} sent £{amount}
+          </p>
+
+          {gift.gift_message && (
+            <p className="mt-2 text-sm leading-relaxed text-white/85 break-words">
+              “{gift.gift_message}”
+            </p>
+          )}
+        </div>
       )}
-    </div>
+    </>
   );
 }
