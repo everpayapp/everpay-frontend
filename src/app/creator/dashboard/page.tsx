@@ -15,6 +15,11 @@ type Payment = {
   gift_message?: string;
   anonymous?: number;
   created_at: string;
+  stripe_fee_amount?: number;
+  net_amount?: number;
+  gift_amount?: number;
+  fee_amount?: number;
+  total_paid?: number;
 };
 
 type CreatorProfile = {
@@ -26,6 +31,24 @@ type CreatorProfile = {
   milestone_amount?: number;
   milestone_text?: string;
 };
+
+function getNetPence(payment: Payment) {
+  if (typeof payment.net_amount === "number" && payment.net_amount > 0) {
+    return payment.net_amount;
+  }
+
+  const base =
+    typeof payment.gift_amount === "number"
+      ? payment.gift_amount
+      : payment.amount || 0;
+
+  const stripeFee =
+    typeof payment.stripe_fee_amount === "number"
+      ? payment.stripe_fee_amount
+      : 0;
+
+  return Math.max(base - stripeFee, 0);
+}
 
 export default function CreatorDashboard() {
   const apiUrl = process.env.NEXT_PUBLIC_API_URL!;
@@ -125,7 +148,7 @@ export default function CreatorDashboard() {
   }, [apiUrl, username, status]);
 
   const totalEarned =
-    payments.reduce((sum, p) => sum + p.amount, 0) / 100;
+    payments.reduce((sum, p) => sum + getNetPence(p), 0) / 100;
 
   const formattedTotal =
     totalEarned.toLocaleString("en-GB", {
@@ -253,7 +276,7 @@ export default function CreatorDashboard() {
 
             <div className={`${PANEL} px-5 py-5 sm:p-7`}>
               <p className="text-sm uppercase text-white/60">
-                Total Earnings
+                Total Received
               </p>
 
               <p className="text-[44px] leading-none sm:text-5xl font-bold mt-2 sm:mt-0">
@@ -323,7 +346,7 @@ export default function CreatorDashboard() {
 
                   <p className="font-semibold text-[15px] sm:text-base mt-1">
                     £
-                    {(p.amount / 100).toLocaleString("en-GB", {
+                    {(getNetPence(p) / 100).toLocaleString("en-GB", {
                       minimumFractionDigits: 2,
                     })}
                   </p>
