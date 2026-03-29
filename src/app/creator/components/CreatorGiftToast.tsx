@@ -143,23 +143,6 @@ export default function CreatorGiftToast() {
 
   return (
     <>
-      <button
-        type="button"
-        onClick={async () => {
-          try {
-            if (!audioRef.current) return;
-            audioRef.current.currentTime = 0;
-            await audioRef.current.play();
-            console.log("🔊 manual test played");
-          } catch (err) {
-            console.error("❌ manual test failed", err);
-          }
-        }}
-        className="fixed bottom-6 right-6 z-[70] rounded-xl border border-white/30 bg-black/80 px-4 py-2 text-sm text-white"
-      >
-        Test sound
-      </button>
-
       {gift && visible && (
         <div className="fixed bottom-28 right-10 z-50 w-[min(92vw,460px)] rounded-2xl border border-white/40 bg-[#131a26]/96 px-5 py-4 shadow-[0_30px_80px_rgba(0,0,0,0.62)] backdrop-blur-xl animate-gift-glow">
           <p className="text-lg font-semibold text-white">
