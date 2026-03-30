@@ -9,10 +9,16 @@ import StripeConnectBanner from "../components/StripeConnectBanner";
 type Payment = {
   id: string;
   amount: number;
+  gift_amount?: number;
+  fee_amount?: number;
+  total_paid?: number;
+  stripe_fee_amount?: number;
+  net_amount?: number;
   gift_name?: string;
   gift_message?: string;
   anonymous?: number;
   created_at: string;
+  status?: string;
 };
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL!;
@@ -36,6 +42,18 @@ type MonthGroup = {
   label: string;
   payments: Payment[];
   total: number;
+};
+
+function getDisplayAmountPence(payment: Payment) {
+  const net = Number(payment.net_amount || 0);
+  if (net > 0) return net;
+
+  const amount = Number(payment.amount || 0);
+  return amount > 0 ? amount : 0;
+}
+
+type DecoratedPayment = Payment & {
+  display_amount_pence: number;
 };
 
 export default function CreatorPaymentsPage() {
@@ -96,6 +114,15 @@ export default function CreatorPaymentsPage() {
     load();
   }, [status, username]);
 
+  const decoratedPayments = useMemo<DecoratedPayment[]>(
+    () =>
+      payments.map((payment) => ({
+        ...payment,
+        display_amount_pence: getDisplayAmountPence(payment),
+      })),
+    [payments]
+  );
+
   const now = new Date();
 
   const startOfToday = new Date(now);
@@ -116,13 +143,13 @@ export default function CreatorPaymentsPage() {
       ? startOf30d
       : null;
 
-  const withinRange = (p: Payment) => {
+  const withinRange = (p: DecoratedPayment) => {
     if (!rangeStart) return true;
     const d = new Date(p.created_at);
     return d >= rangeStart;
   };
 
-  const matchesSearch = (p: Payment) => {
+  const matchesSearch = (p: DecoratedPayment) => {
     const q = search.trim().toLowerCase();
     if (!q) return true;
 
@@ -130,7 +157,7 @@ export default function CreatorPaymentsPage() {
       p.anonymous ? "anonymous" : p.gift_name || "someone"
     ).toLowerCase();
     const message = (p.gift_message || "").toLowerCase();
-    const amount = (p.amount / 100).toFixed(2);
+    const amount = (p.display_amount_pence / 100).toFixed(2);
 
     return (
       supporter.includes(q) ||
@@ -140,18 +167,20 @@ export default function CreatorPaymentsPage() {
     );
   };
 
-  const filtered = payments
+  const filtered = decoratedPayments
     .filter(withinRange)
     .filter((p) => (anonymousOnly ? !!p.anonymous : true))
     .filter(matchesSearch);
 
-  const totalRange = filtered.reduce((sum, p) => sum + p.amount, 0) / 100;
+  const totalRange =
+    filtered.reduce((sum, p) => sum + p.display_amount_pence, 0) / 100;
+
   const avg = filtered.length > 0 ? totalRange / filtered.length : 0;
 
   const todaysTotal =
-    payments
+    decoratedPayments
       .filter((p) => new Date(p.created_at) >= startOfToday)
-      .reduce((sum, p) => sum + p.amount, 0) / 100;
+      .reduce((sum, p) => sum + p.display_amount_pence, 0) / 100;
 
   const groupedPayments = useMemo<MonthGroup[]>(() => {
     const groups = new Map<string, MonthGroup>();
@@ -174,7 +203,7 @@ export default function CreatorPaymentsPage() {
 
       const group = groups.get(key)!;
       group.payments.push(payment);
-      group.total += payment.amount;
+      group.total += payment.display_amount_pence;
     }
 
     return Array.from(groups.values()).sort((a, b) =>
@@ -208,13 +237,13 @@ export default function CreatorPaymentsPage() {
 
   const exportCSV = () => {
     const rows = [
-      ["date", "supporter", "amount_gbp", "message", "status"],
+      ["date", "supporter", "amount_received_gbp", "message", "status"],
       ...filtered.map((p) => [
         new Date(p.created_at).toISOString(),
         p.anonymous ? "Anonymous" : p.gift_name || "Someone",
-        (p.amount / 100).toFixed(2),
+        (p.display_amount_pence / 100).toFixed(2),
         (p.gift_message || "").replaceAll('"', '""'),
-        "Completed",
+        p.status || "Completed",
       ]),
     ];
 
@@ -242,7 +271,6 @@ export default function CreatorPaymentsPage() {
   return (
     <div className="min-h-screen" style={{ backgroundColor: PAGE_BG }}>
       <main className="max-w-7xl mx-auto pt-4 sm:pt-10 px-3 sm:px-6 text-white pb-16 sm:pb-24">
-      
         <StripeConnectBanner />
 
         <h1 className="text-[20px] sm:text-2xl font-semibold mb-5 sm:mb-6">
@@ -253,7 +281,9 @@ export default function CreatorPaymentsPage() {
           <div className="flex flex-col gap-4">
             <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
               <div>
-                <p className="text-sm uppercase text-white/60 mb-1">Today</p>
+                <p className="text-sm uppercase text-white/60 mb-1">
+                  Today received
+                </p>
                 <p className="text-4xl font-bold">{formatGBP(todaysTotal)}</p>
               </div>
 
@@ -292,7 +322,7 @@ export default function CreatorPaymentsPage() {
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <div className="bg-black/20 border border-white/12 rounded-xl p-4">
                 <p className="text-[11px] uppercase text-white/60 mb-1">
-                  Total (range)
+                  Total received
                 </p>
                 <p className="text-lg font-semibold">{formatGBP(totalRange)}</p>
               </div>
@@ -306,7 +336,7 @@ export default function CreatorPaymentsPage() {
 
               <div className="bg-black/20 border border-white/12 rounded-xl p-4">
                 <p className="text-[11px] uppercase text-white/60 mb-1">
-                  Average
+                  Average received
                 </p>
                 <p className="text-lg font-semibold">{formatGBP(avg)}</p>
               </div>
@@ -349,7 +379,7 @@ export default function CreatorPaymentsPage() {
               Showing <span className="text-white font-medium">{filtered.length}</span>{" "}
               gift{filtered.length === 1 ? "" : "s"} •{" "}
               <span className="text-white font-medium">{formatGBP(totalRange)}</span>{" "}
-              in this range
+              received in this range
             </p>
           </div>
         )}
@@ -397,7 +427,7 @@ export default function CreatorPaymentsPage() {
                         >
                           <div className="flex items-start justify-between gap-3 mb-2">
                             <p className="text-lg font-semibold">
-                              {formatGBP(p.amount / 100)}
+                              {formatGBP(p.display_amount_pence / 100)}
                             </p>
 
                             <span className="shrink-0 text-[11px] px-2 py-0.5 rounded-full bg-white/10 border border-white/10 text-white/70">
