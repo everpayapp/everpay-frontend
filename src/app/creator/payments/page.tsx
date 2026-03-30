@@ -21,6 +21,10 @@ type Payment = {
   status?: string;
 };
 
+type DecoratedPayment = Payment & {
+  display_amount_pence: number;
+};
+
 const API_URL = process.env.NEXT_PUBLIC_API_URL!;
 
 const formatGBP = (value: number) =>
@@ -40,7 +44,7 @@ type RangeKey = "today" | "7d" | "30d" | "all";
 type MonthGroup = {
   key: string;
   label: string;
-  payments: Payment[];
+  payments: DecoratedPayment[];
   total: number;
 };
 
@@ -51,10 +55,6 @@ function getDisplayAmountPence(payment: Payment) {
   const amount = Number(payment.amount || 0);
   return amount > 0 ? amount : 0;
 }
-
-type DecoratedPayment = Payment & {
-  display_amount_pence: number;
-};
 
 export default function CreatorPaymentsPage() {
   const { status, data: session } = useSession();
