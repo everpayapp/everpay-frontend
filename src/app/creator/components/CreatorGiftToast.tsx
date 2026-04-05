@@ -25,13 +25,42 @@ export default function CreatorGiftToast() {
   const intervalRef = useRef<number | null>(null);
   const hideTimerRef = useRef<number | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const audioUnlockedRef = useRef(false);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
 
-    audioRef.current = new Audio("/sounds/gift-pop.wav");
-    audioRef.current.preload = "auto";
-    audioRef.current.volume = 1;
+    const audio = new Audio("/sounds/gift-pop.wav");
+    audio.preload = "auto";
+    audio.volume = 1;
+    audioRef.current = audio;
+
+    const unlockAudio = async () => {
+      if (!audioRef.current || audioUnlockedRef.current) return;
+
+      try {
+        audioRef.current.muted = true;
+        await audioRef.current.play();
+        audioRef.current.pause();
+        audioRef.current.currentTime = 0;
+        audioRef.current.muted = false;
+        audioUnlockedRef.current = true;
+        console.log("✅ audio unlocked");
+      } catch (err) {
+        console.error("❌ audio unlock failed", err);
+      }
+    };
+
+    const handleFirstInteraction = () => {
+      void unlockAudio();
+      window.removeEventListener("click", handleFirstInteraction);
+      window.removeEventListener("touchstart", handleFirstInteraction);
+      window.removeEventListener("keydown", handleFirstInteraction);
+    };
+
+    window.addEventListener("click", handleFirstInteraction, { passive: true });
+    window.addEventListener("touchstart", handleFirstInteraction, { passive: true });
+    window.addEventListener("keydown", handleFirstInteraction);
 
     audioRef.current.oncanplaythrough = () => {
       console.log("✅ sound ready");
@@ -42,6 +71,10 @@ export default function CreatorGiftToast() {
     };
 
     return () => {
+      window.removeEventListener("click", handleFirstInteraction);
+      window.removeEventListener("touchstart", handleFirstInteraction);
+      window.removeEventListener("keydown", handleFirstInteraction);
+
       if (audioRef.current) {
         audioRef.current.pause();
         audioRef.current = null;
@@ -64,6 +97,7 @@ export default function CreatorGiftToast() {
     const playSound = async () => {
       try {
         if (!audioRef.current) return;
+
         audioRef.current.currentTime = 0;
         await audioRef.current.play();
         console.log("🔊 sound played");
@@ -98,7 +132,9 @@ export default function CreatorGiftToast() {
         const sorted = [...data].sort((a, b) => {
           const aTime = new Date(a.created_at || 0).getTime();
           const bTime = new Date(b.created_at || 0).getTime();
-          return bTime - aTime;
+          const aSafe = Number.isFinite(aTime) ? aTime : 0;
+          const bSafe = Number.isFinite(bTime) ? bTime : 0;
+          return bSafe - aSafe;
         });
 
         const latest = sorted[0];
