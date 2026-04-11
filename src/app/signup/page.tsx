@@ -131,7 +131,7 @@ export default function SignupPage() {
                 className="w-full rounded-2xl bg-white/85 border border-white/30 px-4 py-3.5 text-base text-black placeholder:text-black/45 outline-none transition focus:border-white/60 focus:bg-white"
               />
               <p className="mt-2 text-xs text-white/55 break-all">
-                This becomes your link: everpayapp.co.uk/{previewUsername || "everpayapp.co.uk/your username"}
+                This becomes your link: everpayapp.co.uk/{previewUsername || "your username"}
               </p>
             </div>
 
