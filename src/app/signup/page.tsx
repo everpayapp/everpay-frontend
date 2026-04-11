@@ -130,13 +130,10 @@ export default function SignupPage() {
                 spellCheck={false}
                 className="w-full rounded-2xl bg-white/85 border border-white/30 px-4 py-3.5 text-base text-black placeholder:text-black/45 outline-none transition focus:border-white/60 focus:bg-white"
               />
-
-             <p className="mt-2 text-xs text-white/55">
-               Your page:
-             </p>
-             <p className="text-xs text-white/80 font-medium truncate">
-              everpayapp.co.uk/{previewUsername || "everpayapp.co.uk/your username"}
-             </p>
+              <p className="mt-2 text-xs text-white/55">Your page:</p>
+              <p className="text-xs text-white/80 font-medium break-all">
+                everpayapp.co.uk/{previewUsername || "everpayapp.co.uk/you usernam"}
+              </p>
             </div>
 
             <div>
@@ -144,7 +141,7 @@ export default function SignupPage() {
               <input
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="you@email.com"
+                placeholder="your@email.com"
                 type="email"
                 autoComplete="email"
                 className="w-full rounded-2xl bg-white/85 border border-white/30 px-4 py-3.5 text-base text-black placeholder:text-black/45 outline-none transition focus:border-white/60 focus:bg-white"
