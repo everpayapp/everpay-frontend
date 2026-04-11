@@ -11,6 +11,7 @@ export default function SignupPage() {
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -23,7 +24,6 @@ export default function SignupPage() {
       return;
     }
 
-    // ✅ Normalize: lowercase, remove spaces, keep only safe chars
     const cleanUsername = username
       .trim()
       .toLowerCase()
@@ -32,15 +32,33 @@ export default function SignupPage() {
 
     const cleanEmail = email.trim().toLowerCase();
 
-    if (!cleanUsername) return setError("Username is required");
-    if (!/^[a-z0-9._-]{3,30}$/.test(cleanUsername)) {
-      return setError("Username must be 3–30 chars and use letters/numbers/._- only (no spaces).");
+    if (!cleanUsername) {
+      setError("Username is required");
+      return;
     }
 
-    if (!cleanEmail) return setError("Email is required");
-    if (password.length < 6) return setError("Password must be at least 6 characters");
+    if (!/^[a-z0-9._-]{3,30}$/.test(cleanUsername)) {
+      setError("Username must be 3–30 chars and use letters/numbers/._- only.");
+      return;
+    }
+
+    if (!cleanEmail) {
+      setError("Email is required");
+      return;
+    }
+
+    if (password.length < 6) {
+      setError("Password must be at least 6 characters");
+      return;
+    }
+
+    if (password !== confirmPassword) {
+      setError("Passwords do not match");
+      return;
+    }
 
     setLoading(true);
+
     try {
       const res = await fetch(`${API_URL}/api/auth/signup`, {
         method: "POST",
@@ -68,67 +86,113 @@ export default function SignupPage() {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-4">
-      <div className="w-full max-w-md bg-black/30 border border-white/15 rounded-3xl p-6 sm:p-8 backdrop-blur-xl shadow-2xl text-white">
-        <h1 className="text-2xl font-bold mb-1">Create your EverPay account</h1>
-        <p className="text-sm text-white/70 mb-6">
-          Set up your creator dashboard and start receiving gifts.
-        </p>
+    <div className="min-h-screen bg-[#041b4d] bg-[radial-gradient(circle_at_top,_rgba(30,64,175,0.35),_transparent_35%),linear-gradient(to_bottom,_#041b4d,_#020817)] flex items-center justify-center px-4">
+      <div className="w-full max-w-md">
+        <div className="mb-6 text-center">
+          <h1 className="text-4xl sm:text-5xl font-extrabold tracking-tight text-white">
+            EverPay
+          </h1>
+        </div>
 
-        {error && (
-          <div className="mb-4 rounded-xl border border-red-500/40 bg-red-500/10 px-4 py-3 text-sm">
-            {error}
+        <div className="w-full rounded-[28px] border border-white/20 bg-black/45 px-6 py-7 sm:px-8 sm:py-8 backdrop-blur-xl shadow-[0_20px_80px_rgba(0,0,0,0.55)] text-white">
+          <h2 className="text-3xl sm:text-4xl font-extrabold text-center leading-tight">
+            Create your EverPay
+            <br />
+            page
+          </h2>
+
+          <p className="mt-3 text-center text-white/70 text-base">
+            Set up your page, receive gifts, and get paid instantly.
+          </p>
+
+          {error && (
+            <div className="mt-5 rounded-2xl border border-red-500/40 bg-red-500/10 px-4 py-3 text-sm text-red-100">
+              {error}
+            </div>
+          )}
+
+          <form onSubmit={handleSubmit} className="mt-6 space-y-4">
+            <div>
+              <label className="mb-1.5 block text-xs text-white/70">Username</label>
+              <input
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                placeholder="yourname"
+                autoComplete="username"
+                className="w-full rounded-2xl bg-white/85 border border-white/30 px-4 py-3.5 text-base text-black placeholder:text-black/45 outline-none"
+              />
+              <p className="mt-2 text-xs text-white/55">
+                This becomes your page link: everpayapp.co.uk/yourname
+              </p>
+            </div>
+
+            <div>
+              <label className="mb-1.5 block text-xs text-white/70">Email</label>
+              <input
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="you@email.com"
+                type="email"
+                autoComplete="email"
+                className="w-full rounded-2xl bg-white/85 border border-white/30 px-4 py-3.5 text-base text-black placeholder:text-black/45 outline-none"
+              />
+            </div>
+
+            <div>
+              <label className="mb-1.5 block text-xs text-white/70">Password</label>
+              <input
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                placeholder="••••••••"
+                type="password"
+                autoComplete="new-password"
+                className="w-full rounded-2xl bg-white/85 border border-white/30 px-4 py-3.5 text-base text-black placeholder:text-black/45 outline-none"
+              />
+            </div>
+
+            <div>
+              <label className="mb-1.5 block text-xs text-white/70">Confirm password</label>
+              <input
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                placeholder="••••••••"
+                type="password"
+                autoComplete="new-password"
+                className="w-full rounded-2xl bg-white/85 border border-white/30 px-4 py-3.5 text-base text-black placeholder:text-black/45 outline-none"
+              />
+            </div>
+
+            <button
+              type="submit"
+              disabled={loading}
+              className="mt-2 w-full rounded-2xl bg-gradient-to-r from-teal-400 to-emerald-500 py-4 text-lg font-bold text-black shadow-[0_0_28px_rgba(45,212,191,0.35)] transition hover:opacity-95 active:scale-[0.99] disabled:opacity-60"
+            >
+              {loading ? "Creating account..." : "Create Account"}
+            </button>
+          </form>
+
+          <p className="mt-5 text-center text-sm text-white/65">
+            Already have an account?{" "}
+            <Link
+              href="/login"
+              className="font-semibold text-white underline underline-offset-4"
+            >
+              Log in
+            </Link>
+          </p>
+
+          <div className="mt-6 flex items-center justify-center gap-4 text-xs text-white/45">
+            <Link href="/help" className="hover:text-white/70">
+              Help
+            </Link>
+            <Link href="/terms" className="hover:text-white/70">
+              Terms
+            </Link>
+            <Link href="/privacy" className="hover:text-white/70">
+              Privacy
+            </Link>
           </div>
-        )}
-
-        <form onSubmit={handleSubmit} className="space-y-3">
-          <div>
-            <label className="text-xs text-white/70">Username</label>
-            <input
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              placeholder="e.g. lee2417"
-              className="mt-1 w-full rounded-xl bg-white/10 border border-white/20 px-3 py-2 text-sm text-white placeholder-white/40 outline-none"
-            />
-          </div>
-
-          <div>
-            <label className="text-xs text-white/70">Email</label>
-            <input
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              placeholder="you@email.com"
-              type="email"
-              className="mt-1 w-full rounded-xl bg-white/10 border border-white/20 px-3 py-2 text-sm text-white placeholder-white/40 outline-none"
-            />
-          </div>
-
-          <div>
-            <label className="text-xs text-white/70">Password</label>
-            <input
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
-              placeholder="••••••••"
-              type="password"
-              className="mt-1 w-full rounded-xl bg-white/10 border border-white/20 px-3 py-2 text-sm text-white placeholder-white/40 outline-none"
-            />
-          </div>
-
-          <button
-            type="submit"
-            disabled={loading}
-            className="w-full py-3 rounded-xl bg-white text-black font-semibold hover:bg-white/90 active:scale-[0.98] transition disabled:opacity-60"
-          >
-            {loading ? "Creating…" : "Create account"}
-          </button>
-        </form>
-
-        <p className="mt-5 text-sm text-white/70">
-          Already have an account?{" "}
-          <Link href="/login" className="text-white underline underline-offset-4">
-            Log in
-          </Link>
-        </p>
+        </div>
       </div>
     </div>
   );
