@@ -110,7 +110,7 @@ export default function SignupPage() {
           </h2>
 
           <p className="mt-3 text-center text-white/72 text-base">
-            Set up your page, receive gifts, and get paid today.
+            Set up your page, receive gifts, and start getting paid.
           </p>
 
           {error && (
@@ -180,7 +180,7 @@ export default function SignupPage() {
             </button>
 
             <p className="text-center text-[13px] text-white/60">
-              Secure signup • Start receiving gifts instantly
+              Secure signup • Start receiving gifts today
             </p>
           </form>
 
