@@ -110,7 +110,7 @@ export default function SignupPage() {
           </h2>
 
           <p className="mt-3 text-center text-white/72 text-base">
-            Set up your page, receive gifts, and get paid instantly.
+            Set up your page, receive gifts, and get paid today.
           </p>
 
           {error && (
@@ -130,9 +130,8 @@ export default function SignupPage() {
                 spellCheck={false}
                 className="w-full rounded-2xl bg-white/85 border border-white/30 px-4 py-3.5 text-base text-black placeholder:text-black/45 outline-none transition focus:border-white/60 focus:bg-white"
               />
-              <p className="mt-2 text-xs text-white/55">Your page:</p>
-              <p className="text-xs text-white/80 font-medium break-all">
-                everpayapp.co.uk/{previewUsername || "everpayapp.co.uk/you usernam"}
+              <p className="mt-2 text-xs text-white/55 break-all">
+                This becomes your link: everpayapp.co.uk/{previewUsername || "everpayapp.co.uk/your username"}
               </p>
             </div>
 
