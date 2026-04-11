@@ -58,7 +58,7 @@ export default function LoginPage() {
               Sign in to your EverPay dashboard
             </h1>
             <p className="text-sm text-white/70">
-              Manage your page, track gifts, and get paid instantly.
+              Manage your page, track gifts, and get paid today.
             </p>
           </div>
 
