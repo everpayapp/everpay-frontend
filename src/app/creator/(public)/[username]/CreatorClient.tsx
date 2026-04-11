@@ -138,53 +138,16 @@ export default function CreatorClient({ username: propUsername }: { username?: s
   const [showMobileQR, setShowMobileQR] = useState(false);
   const [showTopSupportersMobile, setShowTopSupportersMobile] = useState(false);
 
-  const [activeToastPayment, setActiveToastPayment] = useState<Payment | null>(null);
   const [successToast, setSuccessToast] = useState(false);
   const [successToastName, setSuccessToastName] = useState("");
 
   const latestSeenPaymentIdRef = useRef<string | null>(null);
-  const toastQueueRef = useRef<Payment[]>([]);
-  const toastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const successToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const suppressNextLiveToastRef = useRef(false);
 
   const presetAmounts = [5, 10, 20, 50, 100];
 
   const creatorDisplayName = (profile?.profile_name || username || "").trim();
   const creatorFirstName = creatorDisplayName.split(" ")[0] || creatorDisplayName || "Creator";
-
-  function enqueueToast(payment: Payment) {
-    const alreadyQueued = toastQueueRef.current.some((p) => p.id === payment.id);
-    const isActive = activeToastPayment?.id === payment.id;
-    if (alreadyQueued || isActive) return;
-
-    toastQueueRef.current.push(payment);
-
-    if (!activeToastPayment) {
-      showNextToast();
-    }
-  }
-
-function showNextToast() {
-  if (toastTimeoutRef.current) clearTimeout(toastTimeoutRef.current);
-
-  const next = toastQueueRef.current.shift() || null;
-  setActiveToastPayment(next);
-
-  if (next) {
-    toastTimeoutRef.current = setTimeout(() => {
-      setActiveToastPayment(null);
-      toastTimeoutRef.current = null;
-    }, 3200);
-  }
-}
-
-  useEffect(() => {
-    if (!activeToastPayment && toastQueueRef.current.length > 0) {
-      showNextToast();
-    }
-    return undefined;
-  }, [activeToastPayment]);
 
   useEffect(() => {
     async function load() {
@@ -292,14 +255,7 @@ function showNextToast() {
           }
 
           if (newest.id !== latestSeenPaymentIdRef.current) {
-            if (suppressNextLiveToastRef.current) {
-              suppressNextLiveToastRef.current = false;
-              latestSeenPaymentIdRef.current = newest.id;
-              return;
-            }
-
             latestSeenPaymentIdRef.current = newest.id;
-            enqueueToast(newest);
           }
         }
       } catch {
@@ -314,7 +270,6 @@ function showNextToast() {
 
     return () => {
       clearInterval(interval);
-      if (toastTimeoutRef.current) clearTimeout(toastTimeoutRef.current);
       if (successToastTimeoutRef.current) clearTimeout(successToastTimeoutRef.current);
     };
   }, [apiUrl, username]);
@@ -332,7 +287,6 @@ function showNextToast() {
 
     const storedName = (window.localStorage.getItem(pendingNameKey) || "").trim();
 
-    suppressNextLiveToastRef.current = true;
     setSuccessToastName(storedName);
     setSuccessToast(true);
 
@@ -493,13 +447,6 @@ function showNextToast() {
   const rowClass = "bg-black/20 border-2 border-white/65 rounded-xl";
   const supporterCardClass = "bg-black/20 border-[2.5px] border-white/70 rounded-2xl";
 
-  const toastName = activeToastPayment
-    ? activeToastPayment.anonymous
-      ? "Someone"
-      : activeToastPayment.gift_name?.trim() || "Someone"
-    : "";
-
-  const toastAmount = activeToastPayment ? formatGBP(getGiftPence(activeToastPayment)) : "";
   const successNameLabel = successToastName || "there";
 
   return (
@@ -513,17 +460,6 @@ function showNextToast() {
             <div className="px-4 py-3 rounded-2xl border-2 border-white/70 bg-black/78 backdrop-blur-xl shadow-2xl text-white min-w-[240px] max-w-[90vw] animate-[fadeInUp_.25s_ease]">
               <p className="text-sm sm:text-[15px] font-semibold">
                 🎁 Thank you {successNameLabel} — your gift to {creatorFirstName} was sent
-              </p>
-              <p className="text-[11px] sm:text-xs text-white/65 mt-1">Added to Recent Gifts</p>
-            </div>
-          </div>
-        )}
-
-        {activeToastPayment && (
-          <div className="fixed left-1/2 -translate-x-1/2 bottom-5 sm:left-auto sm:right-6 sm:translate-x-0 sm:bottom-6 z-[120] pointer-events-none">
-            <div className="px-4 py-3 rounded-2xl border-2 border-white/70 bg-black/75 backdrop-blur-xl shadow-2xl text-white min-w-[220px] max-w-[88vw] animate-[fadeInUp_.25s_ease]">
-              <p className="text-sm sm:text-[15px] font-semibold truncate">
-                🔥 {toastName} just gifted {toastAmount}
               </p>
               <p className="text-[11px] sm:text-xs text-white/65 mt-1">Added to Recent Gifts</p>
             </div>
