@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 
@@ -14,6 +14,14 @@ export default function SignupPage() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const previewUsername = useMemo(() => {
+    return username
+      .trim()
+      .toLowerCase()
+      .replace(/\s+/g, "")
+      .replace(/[^a-z0-9._-]/g, "");
+  }, [username]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -86,22 +94,22 @@ export default function SignupPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#041b4d] bg-[radial-gradient(circle_at_top,_rgba(30,64,175,0.35),_transparent_35%),linear-gradient(to_bottom,_#041b4d,_#020817)] flex items-center justify-center px-4">
+    <div className="min-h-screen bg-[#041b4d] bg-[radial-gradient(circle_at_top,_rgba(30,64,175,0.35),_transparent_35%),linear-gradient(to_bottom,_#041b4d,_#020817)] flex items-center justify-center px-4 py-8">
       <div className="w-full max-w-md">
-        <div className="mb-6 text-center">
+        <div className="mb-4 text-center sm:mb-5">
           <h1 className="text-4xl sm:text-5xl font-extrabold tracking-tight text-white">
             EverPay
           </h1>
         </div>
 
         <div className="w-full rounded-[28px] border border-white/20 bg-black/45 px-6 py-7 sm:px-8 sm:py-8 backdrop-blur-xl shadow-[0_20px_80px_rgba(0,0,0,0.55)] text-white">
-          <h2 className="text-3xl sm:text-4xl font-extrabold text-center leading-tight">
+          <h2 className="text-3xl sm:text-4xl font-extrabold text-center leading-[1.05]">
             Create your EverPay
             <br />
             page
           </h2>
 
-          <p className="mt-3 text-center text-white/70 text-base">
+          <p className="mt-3 text-center text-white/72 text-base">
             Set up your page, receive gifts, and get paid instantly.
           </p>
 
@@ -119,10 +127,11 @@ export default function SignupPage() {
                 onChange={(e) => setUsername(e.target.value)}
                 placeholder="yourname"
                 autoComplete="username"
-                className="w-full rounded-2xl bg-white/85 border border-white/30 px-4 py-3.5 text-base text-black placeholder:text-black/45 outline-none"
+                spellCheck={false}
+                className="w-full rounded-2xl bg-white/85 border border-white/30 px-4 py-3.5 text-base text-black placeholder:text-black/45 outline-none transition focus:border-white/60 focus:bg-white"
               />
-              <p className="mt-2 text-xs text-white/55">
-                This becomes your page link: everpayapp.co.uk/yourname
+              <p className="mt-2 text-xs text-white/55 break-all">
+                This becomes your page link: everpayapp.co.uk/{previewUsername || "yourname"}
               </p>
             </div>
 
@@ -134,7 +143,7 @@ export default function SignupPage() {
                 placeholder="you@email.com"
                 type="email"
                 autoComplete="email"
-                className="w-full rounded-2xl bg-white/85 border border-white/30 px-4 py-3.5 text-base text-black placeholder:text-black/45 outline-none"
+                className="w-full rounded-2xl bg-white/85 border border-white/30 px-4 py-3.5 text-base text-black placeholder:text-black/45 outline-none transition focus:border-white/60 focus:bg-white"
               />
             </div>
 
@@ -146,7 +155,7 @@ export default function SignupPage() {
                 placeholder="••••••••"
                 type="password"
                 autoComplete="new-password"
-                className="w-full rounded-2xl bg-white/85 border border-white/30 px-4 py-3.5 text-base text-black placeholder:text-black/45 outline-none"
+                className="w-full rounded-2xl bg-white/85 border border-white/30 px-4 py-3.5 text-base text-black placeholder:text-black/45 outline-none transition focus:border-white/60 focus:bg-white"
               />
             </div>
 
@@ -158,7 +167,7 @@ export default function SignupPage() {
                 placeholder="••••••••"
                 type="password"
                 autoComplete="new-password"
-                className="w-full rounded-2xl bg-white/85 border border-white/30 px-4 py-3.5 text-base text-black placeholder:text-black/45 outline-none"
+                className="w-full rounded-2xl bg-white/85 border border-white/30 px-4 py-3.5 text-base text-black placeholder:text-black/45 outline-none transition focus:border-white/60 focus:bg-white"
               />
             </div>
 
@@ -169,26 +178,30 @@ export default function SignupPage() {
             >
               {loading ? "Creating account..." : "Create Account"}
             </button>
+
+            <p className="text-center text-[13px] text-white/60">
+              Secure signup • Start receiving gifts instantly
+            </p>
           </form>
 
-          <p className="mt-5 text-center text-sm text-white/65">
+          <p className="mt-5 text-center text-sm text-white/68">
             Already have an account?{" "}
             <Link
               href="/login"
               className="font-semibold text-white underline underline-offset-4"
             >
-              Log in
+              Log in →
             </Link>
           </p>
 
           <div className="mt-6 flex items-center justify-center gap-4 text-xs text-white/45">
-            <Link href="/help" className="hover:text-white/70">
+            <Link href="/help" className="hover:text-white/70 transition">
               Help
             </Link>
-            <Link href="/terms" className="hover:text-white/70">
+            <Link href="/terms" className="hover:text-white/70 transition">
               Terms
             </Link>
-            <Link href="/privacy" className="hover:text-white/70">
+            <Link href="/privacy" className="hover:text-white/70 transition">
               Privacy
             </Link>
           </div>
