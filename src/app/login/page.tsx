@@ -104,7 +104,7 @@ export default function LoginPage() {
           </button>
 
           <p className="text-xs text-white/50 mt-4 text-center">
-            Secure login. Start receiving gifts instantly.
+            Secure login. Start receiving gifts today.
           </p>
 
           <div className="pt-3 text-center">
