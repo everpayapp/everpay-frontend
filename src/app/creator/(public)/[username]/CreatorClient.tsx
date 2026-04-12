@@ -679,7 +679,7 @@ export default function CreatorClient({ username: propUsername }: { username?: s
                   return (
                     <div key={p.id} className={`${rowClass} px-4 py-3 text-sm flex justify-between gap-3 shadow-sm overflow-hidden`}>
                       <div className="flex-1 min-w-0">
-                        <p className="font-semibold text-[15px] truncate">
+                        <p className="font-semibold text-[15px] leading-tight break-words line-clamp-2">
                           {displayName} gifted {formatGBP(giftPence)}
                         </p>
                         {p.gift_message && (
