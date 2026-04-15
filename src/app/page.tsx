@@ -1,4 +1,4 @@
-"use client";
+k"use client";
 
 import Link from "next/link";
 
@@ -59,13 +59,17 @@ export default function HomePage() {
             </h1>
 
             <p className="mt-4 text-white/90 font-semibold text-sm sm:text-base">
-              Creators keep 100% of gifts. Only Stripe processing applies.
+              Creators keep the gift amount. Only Stripe processing applies.
+            </p>
+
+            <p className="mt-2 text-white/70 text-sm sm:text-base">
+              Not a new platform just a link in your bio
             </p>
 
             <p className="mt-3 max-w-2xl text-white/80 leading-relaxed text-sm sm:text-base">
-              EverPay gives creators a clean page to receive gifts online. People
-              can choose an amount, leave a message, and pay securely with no card
-              details needed.
+              EverPay gives creators a clean page to receive gifts from their audience. Supporters
+              can choose an amount, leave a message, and pay securely by bank with no card details
+              needed.
             </p>
 
             <div className="mt-6 flex flex-wrap gap-2 text-xs">
@@ -100,8 +104,8 @@ export default function HomePage() {
             </div>
 
             <p className="mt-5 text-xs text-white/55">
-              Share one clean link across your social platforms and give people a
-              faster, safer way to send you a gift.
+              Share one clean link across your social platforms and give people a faster, safer way
+              to send you a gift.
             </p>
           </div>
         </div>
@@ -120,8 +124,8 @@ export default function HomePage() {
               <div className="text-xs text-white/50 font-semibold">STEP 1</div>
               <div className="mt-2 font-semibold text-lg">Create your page</div>
               <p className="mt-2 text-white/65 text-sm">
-                Add your name, profile picture, and links. Your EverPay page
-                becomes your single shareable gift link.
+                Add your name, profile picture, and links. Your EverPay page becomes your single
+                shareable gift link.
               </p>
             </div>
 
@@ -129,8 +133,8 @@ export default function HomePage() {
               <div className="text-xs text-white/50 font-semibold">STEP 2</div>
               <div className="mt-2 font-semibold text-lg">Share it anywhere</div>
               <p className="mt-2 text-white/65 text-sm">
-                Put it across your social platforms, livestreams, bio links, or
-                anywhere your audience already follows you.
+                Put it across your social platforms, livestreams, bio links, or anywhere your
+                audience already follows you.
               </p>
             </div>
 
@@ -138,8 +142,8 @@ export default function HomePage() {
               <div className="text-xs text-white/50 font-semibold">STEP 3</div>
               <div className="mt-2 font-semibold text-lg">Receive gifts</div>
               <p className="mt-2 text-white/65 text-sm">
-                People choose an amount, add a message, and check out securely
-                through a clean pay-by-bank flow.
+                People choose an amount, add a message, and check out securely through a clean
+                pay-by-bank flow.
               </p>
             </div>
           </div>
@@ -151,40 +155,39 @@ export default function HomePage() {
         <div className="mx-auto max-w-6xl">
           <h2 className="text-2xl md:text-3xl font-bold">Built on trust</h2>
           <p className="mt-2 text-white/60 max-w-2xl">
-            Clear, simple, and designed to make gifting feel safer and more
-            premium.
+            Clear, simple, and designed to make gifting feel safer and more premium.
           </p>
 
           <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="rounded-2xl border border-white/15 bg-white/[0.06] p-6 transition hover:-translate-y-[2px] hover:bg-white/[0.08]">
               <div className="font-semibold text-white">Secure checkout by Stripe</div>
               <p className="mt-2 text-white/65 text-sm">
-                Checkout is powered by Stripe, helping EverPay feel familiar and
-                secure from the moment someone pays.
+                Checkout is powered by Stripe, helping EverPay feel familiar and secure from the
+                moment someone pays.
               </p>
             </div>
 
             <div className="rounded-2xl border border-white/15 bg-white/[0.06] p-6 transition hover:-translate-y-[2px] hover:bg-white/[0.08]">
               <div className="font-semibold text-white">No card details needed</div>
               <p className="mt-2 text-white/65 text-sm">
-                Pay by bank keeps the gifting flow simple and can feel safer for
-                people sending money online.
+                Pay by bank keeps the gifting flow simple and can feel safer for people sending
+                money online.
               </p>
             </div>
 
             <div className="rounded-2xl border border-white/15 bg-white/[0.06] p-6 transition hover:-translate-y-[2px] hover:bg-white/[0.08]">
               <div className="font-semibold text-white">Cleaner than a payment link</div>
               <p className="mt-2 text-white/65 text-sm">
-                EverPay is built to give creators a cleaner, more premium gift
-                page instead of a basic payment link alone.
+                EverPay is built to give creators a cleaner, more premium gift page instead of a
+                basic payment link alone.
               </p>
             </div>
 
             <div className="rounded-2xl border border-white/15 bg-white/[0.06] p-6 transition hover:-translate-y-[2px] hover:bg-white/[0.08]">
               <div className="font-semibold text-white">Simple fee structure</div>
               <p className="mt-2 text-white/65 text-sm">
-                No confusing wallets, stored balances, or cluttered checkout
-                journey just a simple gift experience.
+                No confusing wallets, stored balances, or cluttered checkout journey. Just a simple
+                gift experience.
               </p>
             </div>
           </div>
