@@ -102,13 +102,14 @@ export default function DemoCreatorClient({ username }: { username: string }) {
     milestone_text: "",
   };
 
+  // Demo amounts below are the full gift amount shown to supporters
   const payments: Payment[] = [
     {
       id: "ep_demo_001",
-      amount: 205,
-      gift_amount: 205,
+      amount: 500,
+      gift_amount: 500,
       fee_amount: 0,
-      total_paid: 205,
+      total_paid: 500,
       gift_name: "Ariana",
       anonymous: 0,
       gift_message: "Keep going",
@@ -116,10 +117,10 @@ export default function DemoCreatorClient({ username }: { username: string }) {
     },
     {
       id: "ep_demo_002",
-      amount: 205,
-      gift_amount: 205,
+      amount: 1000,
+      gift_amount: 1000,
       fee_amount: 0,
-      total_paid: 205,
+      total_paid: 1000,
       gift_name: "Leo",
       anonymous: 0,
       gift_message: "You got this",
@@ -127,10 +128,10 @@ export default function DemoCreatorClient({ username }: { username: string }) {
     },
     {
       id: "ep_demo_003",
-      amount: 205,
-      gift_amount: 205,
+      amount: 500,
+      gift_amount: 500,
       fee_amount: 0,
-      total_paid: 205,
+      total_paid: 500,
       gift_name: null,
       anonymous: 1,
       gift_message: "Keep going!",
@@ -138,11 +139,11 @@ export default function DemoCreatorClient({ username }: { username: string }) {
     },
     {
       id: "ep_demo_004",
-      amount: 513,
-      gift_amount: 513,
+      amount: 3000,
+      gift_amount: 3000,
       fee_amount: 0,
-      total_paid: 513,
-      gift_name: "Lee",
+      total_paid: 3000,
+      gift_name: "Mia",
       anonymous: 0,
       gift_message: "Looking great",
       created_at: "2026-03-07T19:20:00.000Z",
@@ -434,7 +435,7 @@ export default function DemoCreatorClient({ username }: { username: string }) {
                       className="bg-white/6 border border-white/10 rounded-xl px-3 py-2 text-sm flex justify-between gap-3 shadow-sm overflow-hidden"
                     >
                       <div className="flex-1 min-w-0">
-                        <p className="font-semibold text-[13px] sm:text-sm truncate">
+                        <p className="font-semibold text-[13px] sm:text-sm break-words leading-tight">
                           {displayName} gifted {formatGBP(giftPence)}
                         </p>
                         {p.gift_message && (
@@ -625,4 +626,3 @@ export default function DemoCreatorClient({ username }: { username: string }) {
     </div>
   );
 }
-
