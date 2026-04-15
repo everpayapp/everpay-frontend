@@ -66,8 +66,8 @@ export default function HomePage() {
              Not a new platform. Just a link in your bio.
             </p>
 
-            <p className="mt-1 text-xs sm:text-sm text-white/60">
-               Works with TikTok, Instagram, YouTube — anywhere you have an audience
+            <p className="mt-1 text-sm text-white/60">
+             Works with TikTok, Instagram, YouTube — anywhere you have an audience
             </p>
 
             <p className="mt-3 max-w-2xl text-white/80 leading-relaxed text-sm sm:text-base">
