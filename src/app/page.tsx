@@ -11,7 +11,7 @@ export default function HomePage() {
           "radial-gradient(circle at top, rgba(0,61,245,0.18), transparent 32%), linear-gradient(to bottom right, #050816, #071227 45%, #0a1630 100%)",
       }}
     >
-      {/* Top bar (homepage only) */}
+      {/* Top bar */}
       <header className="w-full px-4 sm:px-6 pt-4 sm:pt-6">
         <div className="mx-auto max-w-6xl flex items-center justify-between gap-3">
           <Link
@@ -47,7 +47,7 @@ export default function HomePage() {
             </div>
 
             <h1 className="mt-4 text-[28px] leading-[1.02] sm:text-5xl md:text-6xl font-extrabold">
-              <span className="block">Get gifted online.</span>
+              <span className="block">Get gifted by your audience.</span>
 
               <span className="block text-white/80 sm:hidden">No wallets</span>
               <span className="block text-white/80 sm:hidden">No balances</span>
@@ -59,17 +59,20 @@ export default function HomePage() {
             </h1>
 
             <p className="mt-4 text-white/90 font-semibold text-sm sm:text-base">
-              Creators keep the gift amount. Only Stripe processing applies.
+              Creators receive the full gift. Only Stripe processing fees apply.
             </p>
 
-            <p className="mt-2 text-white/70 text-sm sm:text-base">
-              Not a new platform just a link in your bio
+            <p className="mt-2 text-white/70 text-sm sm:text-base font-medium">
+              Not a new platform. Just a link in your bio.
             </p>
 
             <p className="mt-3 max-w-2xl text-white/80 leading-relaxed text-sm sm:text-base">
-              EverPay gives creators a clean page to receive gifts from their audience. Supporters
-              can choose an amount, leave a message, and pay securely by bank with no card details
-              needed.
+              EverPay gives creators a clean page to receive gifts from their audience.
+              Supporters choose an amount, leave a message, and pay securely by bank with no card details needed.
+            </p>
+
+            <p className="mt-2 text-white/60 text-xs sm:text-sm">
+              Works alongside TikTok, Instagram, YouTube and live streams.
             </p>
 
             <div className="mt-6 flex flex-wrap gap-2 text-xs">
@@ -104,8 +107,8 @@ export default function HomePage() {
             </div>
 
             <p className="mt-5 text-xs text-white/55">
-              Share one clean link across your social platforms and give people a faster, safer way
-              to send you a gift.
+              Share one clean link across your social platforms and give people a
+              faster, safer way to send you a gift.
             </p>
           </div>
         </div>
@@ -120,74 +123,27 @@ export default function HomePage() {
           </p>
 
           <div className="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="rounded-2xl border border-white/15 bg-white/[0.06] p-6 transition hover:-translate-y-[2px] hover:bg-white/[0.08]">
+            <div className="rounded-2xl border border-white/15 bg-white/[0.06] p-6">
               <div className="text-xs text-white/50 font-semibold">STEP 1</div>
               <div className="mt-2 font-semibold text-lg">Create your page</div>
               <p className="mt-2 text-white/65 text-sm">
-                Add your name, profile picture, and links. Your EverPay page becomes your single
-                shareable gift link.
+                Set up your page in minutes and get your personal gift link.
               </p>
             </div>
 
-            <div className="rounded-2xl border border-white/15 bg-white/[0.06] p-6 transition hover:-translate-y-[2px] hover:bg-white/[0.08]">
+            <div className="rounded-2xl border border-white/15 bg-white/[0.06] p-6">
               <div className="text-xs text-white/50 font-semibold">STEP 2</div>
               <div className="mt-2 font-semibold text-lg">Share it anywhere</div>
               <p className="mt-2 text-white/65 text-sm">
-                Put it across your social platforms, livestreams, bio links, or anywhere your
-                audience already follows you.
+                Add it to your bio, livestreams, or anywhere your audience follows you.
               </p>
             </div>
 
-            <div className="rounded-2xl border border-white/15 bg-white/[0.06] p-6 transition hover:-translate-y-[2px] hover:bg-white/[0.08]">
+            <div className="rounded-2xl border border-white/15 bg-white/[0.06] p-6">
               <div className="text-xs text-white/50 font-semibold">STEP 3</div>
               <div className="mt-2 font-semibold text-lg">Receive gifts</div>
               <p className="mt-2 text-white/65 text-sm">
-                People choose an amount, add a message, and check out securely through a clean
-                pay-by-bank flow.
-              </p>
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Trust */}
-      <section className="px-4 sm:px-6 py-12">
-        <div className="mx-auto max-w-6xl">
-          <h2 className="text-2xl md:text-3xl font-bold">Built on trust</h2>
-          <p className="mt-2 text-white/60 max-w-2xl">
-            Clear, simple, and designed to make gifting feel safer and more premium.
-          </p>
-
-          <div className="mt-6 grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="rounded-2xl border border-white/15 bg-white/[0.06] p-6 transition hover:-translate-y-[2px] hover:bg-white/[0.08]">
-              <div className="font-semibold text-white">Secure checkout by Stripe</div>
-              <p className="mt-2 text-white/65 text-sm">
-                Checkout is powered by Stripe, helping EverPay feel familiar and secure from the
-                moment someone pays.
-              </p>
-            </div>
-
-            <div className="rounded-2xl border border-white/15 bg-white/[0.06] p-6 transition hover:-translate-y-[2px] hover:bg-white/[0.08]">
-              <div className="font-semibold text-white">No card details needed</div>
-              <p className="mt-2 text-white/65 text-sm">
-                Pay by bank keeps the gifting flow simple and can feel safer for people sending
-                money online.
-              </p>
-            </div>
-
-            <div className="rounded-2xl border border-white/15 bg-white/[0.06] p-6 transition hover:-translate-y-[2px] hover:bg-white/[0.08]">
-              <div className="font-semibold text-white">Cleaner than a payment link</div>
-              <p className="mt-2 text-white/65 text-sm">
-                EverPay is built to give creators a cleaner, more premium gift page instead of a
-                basic payment link alone.
-              </p>
-            </div>
-
-            <div className="rounded-2xl border border-white/15 bg-white/[0.06] p-6 transition hover:-translate-y-[2px] hover:bg-white/[0.08]">
-              <div className="font-semibold text-white">Simple fee structure</div>
-              <p className="mt-2 text-white/65 text-sm">
-                No confusing wallets, stored balances, or cluttered checkout journey. Just a simple
-                gift experience.
+                Supporters send gifts instantly through a clean, secure pay by bank flow.
               </p>
             </div>
           </div>
@@ -199,8 +155,9 @@ export default function HomePage() {
         <div className="mx-auto max-w-6xl">
           <div className="rounded-3xl border border-white/15 bg-white/[0.06] backdrop-blur-xl p-8 sm:p-10 text-center">
             <h3 className="text-2xl md:text-3xl font-bold">
-              Start receiving gifts today
+              Start getting gifted today
             </h3>
+
             <p className="mt-2 text-white/65">
               Set up your page in minutes, then share your link anywhere.
             </p>
@@ -212,6 +169,7 @@ export default function HomePage() {
               >
                 Create your EverPay page
               </Link>
+
               <Link
                 href="/login"
                 className="px-6 py-3 rounded-2xl border border-white/15 bg-white/[0.06] hover:bg-white/[0.1] transition font-semibold"
