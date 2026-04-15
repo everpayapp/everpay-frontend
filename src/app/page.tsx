@@ -62,15 +62,13 @@ export default function HomePage() {
               Creators receive the full gift. Only Stripe processing fees apply.
             </p>
 
-            <div className="mt-4 flex flex-col sm:flex-row sm:items-center sm:gap-4">
-            <p className="text-lg sm:text-2xl font-bold text-white">
-               Not a new platform. Just a link in your bio.
+            <p className="mt-4 text-white font-semibold text-lg sm:text-xl">
+             Not a new platform. Just a link in your bio.
             </p>
-             
-             <p className="mt-1 sm:mt-0 text-xs sm:text-sm text-white/60">
-              Works with TikTok, Instagram, YouTube and more
+
+            <p className="mt-1 text-xs sm:text-sm text-white/60">
+               Works with TikTok, Instagram, YouTube — anywhere you have an audience
             </p>
-            </div>
 
             <p className="mt-3 max-w-2xl text-white/80 leading-relaxed text-sm sm:text-base">
               EverPay gives creators a clean page to receive gifts from their audience. People
