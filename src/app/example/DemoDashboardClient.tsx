@@ -59,26 +59,27 @@ export default function DemoDashboardClient({ username }: { username: string }) 
     milestone_text: "",
   };
 
+  // Demo amounts below are NET received after Stripe fees
   const payments: Payment[] = [
     {
       id: "ep_demo_dash_001",
-      amount: 205,
+      amount: 1912,
       gift_name: "Ariana",
-      gift_message: "Keep going",
+      gift_message: "Keep building this 👏",
       anonymous: 0,
       created_at: "2026-03-08T08:10:00.000Z",
     },
     {
       id: "ep_demo_dash_002",
-      amount: 205,
+      amount: 956,
       gift_name: "Leo",
-      gift_message: "You got this",
+      gift_message: "Love this idea",
       anonymous: 0,
       created_at: "2026-03-08T07:30:00.000Z",
     },
     {
       id: "ep_demo_dash_003",
-      amount: 205,
+      amount: 478,
       gift_name: "",
       gift_message: "Keep going!",
       anonymous: 1,
@@ -86,17 +87,17 @@ export default function DemoDashboardClient({ username }: { username: string }) 
     },
     {
       id: "ep_demo_dash_004",
-      amount: 513,
-      gift_name: "Lee",
-      gift_message: "Looking great",
+      amount: 2870,
+      gift_name: "Mia",
+      gift_message: "This looks premium",
       anonymous: 0,
       created_at: "2026-03-07T19:20:00.000Z",
     },
   ];
 
-  const totalEarned = payments.reduce((sum, p) => sum + p.amount, 0) / 100;
+  const totalReceived = payments.reduce((sum, p) => sum + p.amount, 0) / 100;
 
-  const formattedTotal = totalEarned.toLocaleString("en-GB", {
+  const formattedTotal = totalReceived.toLocaleString("en-GB", {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   });
@@ -108,7 +109,7 @@ export default function DemoDashboardClient({ username }: { username: string }) 
 
   const milestoneTarget = profile.milestone_amount || 0;
   const progress =
-    milestoneTarget > 0 ? Math.min(1, totalEarned / milestoneTarget) : 0;
+    milestoneTarget > 0 ? Math.min(1, totalReceived / milestoneTarget) : 0;
   const progressPercent = Math.round(progress * 100);
 
   const handleCopy = async () => {
@@ -151,13 +152,11 @@ export default function DemoDashboardClient({ username }: { username: string }) 
     <>
       <div className="min-h-screen" style={{ backgroundColor: PAGE_BG }}>
         <div className="max-w-7xl mx-auto px-3 sm:px-6 text-white pt-4 sm:pt-10 pb-16 sm:pb-32">
-
           <div className="rounded-2xl border border-emerald-400/25 bg-emerald-400/10 px-4 py-3 text-sm text-emerald-100 mb-5 sm:mb-6">
             Demo preview — actions are safe and do not affect a real account.
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-[58%_42%] gap-5 sm:gap-8">
-
             <div
               className={`lg:col-span-2 ${PANEL} px-4 py-4 sm:p-9 flex items-center gap-4 sm:gap-7`}
             >
@@ -189,7 +188,6 @@ export default function DemoDashboardClient({ username }: { username: string }) 
             </div>
 
             <div className="space-y-5 sm:space-y-8">
-
               {milestoneEnabled && (
                 <div className={`${PANEL} px-5 py-5 sm:px-7 sm:py-6`}>
                   <p className="text-[11px] sm:text-xs uppercase text-white/70 mb-1">
@@ -200,7 +198,8 @@ export default function DemoDashboardClient({ username }: { username: string }) 
                     £{formattedTotal} of £
                     {milestoneTarget.toLocaleString("en-GB", {
                       minimumFractionDigits: 2,
-                    })} raised
+                    })}{" "}
+                    raised
                   </p>
 
                   <div className="w-full h-2.5 rounded-full bg-white/10 overflow-hidden">
@@ -214,7 +213,7 @@ export default function DemoDashboardClient({ username }: { username: string }) 
 
               <div className={`${PANEL} px-5 py-5 sm:p-7`}>
                 <p className="text-sm uppercase text-white/60">
-                  Total Earnings
+                  Total Received
                 </p>
 
                 <p className="text-[44px] leading-none sm:text-5xl font-bold mt-2 sm:mt-0">
@@ -302,7 +301,6 @@ export default function DemoDashboardClient({ username }: { username: string }) 
                 ))}
               </div>
             </div>
-
           </div>
         </div>
       </div>

@@ -38,10 +38,11 @@ export default function DemoPaymentsClient({ username }: { username: string }) {
   const PANEL =
     "bg-black/25 rounded-3xl border border-white/18 shadow-[0_18px_60px_rgba(0,0,0,0.55)] ring-1 ring-white/10";
 
+  // Demo amounts below are NET received after Stripe fees
   const payments: Payment[] = [
     {
       id: "ep_demo_pay_001",
-      amount: 500,
+      amount: 478,
       gift_name: "Sarah",
       gift_message: "Love your content 🎁",
       anonymous: 0,
@@ -49,7 +50,7 @@ export default function DemoPaymentsClient({ username }: { username: string }) {
     },
     {
       id: "ep_demo_pay_002",
-      amount: 1000,
+      amount: 956,
       gift_name: "",
       gift_message: "Keep going 👏",
       anonymous: 1,
@@ -57,7 +58,7 @@ export default function DemoPaymentsClient({ username }: { username: string }) {
     },
     {
       id: "ep_demo_pay_003",
-      amount: 2500,
+      amount: 2391,
       gift_name: "Tom",
       gift_message: "Legend 🙌",
       anonymous: 0,
@@ -65,7 +66,7 @@ export default function DemoPaymentsClient({ username }: { username: string }) {
     },
     {
       id: "ep_demo_pay_004",
-      amount: 300,
+      amount: 287,
       gift_name: "Mia",
       gift_message: "",
       anonymous: 0,
@@ -73,7 +74,7 @@ export default function DemoPaymentsClient({ username }: { username: string }) {
     },
     {
       id: "ep_demo_pay_005",
-      amount: 1200,
+      amount: 1146,
       gift_name: "Ariana",
       gift_message: "You got this",
       anonymous: 0,
@@ -81,7 +82,7 @@ export default function DemoPaymentsClient({ username }: { username: string }) {
     },
     {
       id: "ep_demo_pay_006",
-      amount: 700,
+      amount: 669,
       gift_name: "Leo",
       gift_message: "",
       anonymous: 0,
@@ -89,7 +90,7 @@ export default function DemoPaymentsClient({ username }: { username: string }) {
     },
     {
       id: "ep_demo_pay_007",
-      amount: 1800,
+      amount: 1721,
       gift_name: "",
       gift_message: "Proud of you",
       anonymous: 1,
@@ -97,7 +98,7 @@ export default function DemoPaymentsClient({ username }: { username: string }) {
     },
     {
       id: "ep_demo_pay_008",
-      amount: 950,
+      amount: 908,
       gift_name: "Chris",
       gift_message: "Amazing work",
       anonymous: 0,
@@ -230,7 +231,7 @@ export default function DemoPaymentsClient({ username }: { username: string }) {
 
   const exportCSV = () => {
     const rows = [
-      ["date", "supporter", "amount_gbp", "message", "status"],
+      ["date", "supporter", "net_received_gbp", "message", "status"],
       ...filtered.map((p) => [
         new Date(p.created_at).toISOString(),
         p.anonymous ? "Anonymous" : p.gift_name || "Someone",
@@ -263,7 +264,7 @@ export default function DemoPaymentsClient({ username }: { username: string }) {
     <div className="min-h-screen" style={{ backgroundColor: PAGE_BG }}>
       <main className="max-w-7xl mx-auto pt-4 sm:pt-10 px-3 sm:px-6 text-white pb-16 sm:pb-24">
         <h1 className="text-[20px] sm:text-2xl font-semibold mb-5 sm:mb-6">
-          Creator Gifts
+          Gifts Received
         </h1>
 
         <div className={`mb-6 sm:mb-8 ${PANEL} p-4 sm:p-6`}>
@@ -273,7 +274,7 @@ export default function DemoPaymentsClient({ username }: { username: string }) {
                 <p className="text-sm uppercase text-white/60 mb-1">Today</p>
                 <p className="text-4xl font-bold">{formatGBP(todaysTotal)}</p>
                 <p className="text-[11px] text-white/40 mt-1">
-                  Demo preview • fake data
+                  Demo preview • fake data • net after Stripe fees
                 </p>
               </div>
 
@@ -312,7 +313,7 @@ export default function DemoPaymentsClient({ username }: { username: string }) {
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
               <div className="bg-black/20 border border-white/12 rounded-xl p-4">
                 <p className="text-[11px] uppercase text-white/60 mb-1">
-                  Total (range)
+                  Total Received
                 </p>
                 <p className="text-lg font-semibold">{formatGBP(totalRange)}</p>
               </div>
@@ -369,7 +370,7 @@ export default function DemoPaymentsClient({ username }: { username: string }) {
               Showing <span className="text-white font-medium">{filtered.length}</span>{" "}
               gift{filtered.length === 1 ? "" : "s"} •{" "}
               <span className="text-white font-medium">{formatGBP(totalRange)}</span>{" "}
-              in this range
+              received in this range
             </p>
           </div>
         )}
