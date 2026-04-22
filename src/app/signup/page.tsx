@@ -4,6 +4,14 @@ import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 
+function sanitizeUsername(value: string) {
+  return value
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, "")
+    .replace(/[^a-z0-9._-]/g, "");
+}
+
 export default function SignupPage() {
   const router = useRouter();
   const API_URL = process.env.NEXT_PUBLIC_API_URL;
@@ -15,53 +23,46 @@ export default function SignupPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const previewUsername = useMemo(() => {
-    return username
-      .trim()
-      .toLowerCase()
-      .replace(/\s+/g, "")
-      .replace(/[^a-z0-9._-]/g, "");
-  }, [username]);
+  const previewUsername = useMemo(() => sanitizeUsername(username), [username]);
 
-  async function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    if (loading) return;
+
     setError(null);
 
     if (!API_URL) {
-      setError("Missing NEXT_PUBLIC_API_URL");
+      setError("App setup error. Please try again later.");
       return;
     }
 
-    const cleanUsername = username
-      .trim()
-      .toLowerCase()
-      .replace(/\s+/g, "")
-      .replace(/[^a-z0-9._-]/g, "");
-
+    const cleanUsername = sanitizeUsername(username);
     const cleanEmail = email.trim().toLowerCase();
+    const trimmedPassword = password.trim();
+    const trimmedConfirmPassword = confirmPassword.trim();
 
     if (!cleanUsername) {
-      setError("Username is required");
+      setError("Username is required.");
       return;
     }
 
     if (!/^[a-z0-9._-]{3,30}$/.test(cleanUsername)) {
-      setError("Username must be 3–30 chars and use letters/numbers/._- only.");
+      setError("Username must be 3–30 characters and use only letters, numbers, dots, underscores, or hyphens.");
       return;
     }
 
     if (!cleanEmail) {
-      setError("Email is required");
+      setError("Email is required.");
       return;
     }
 
-    if (password.length < 6) {
-      setError("Password must be at least 6 characters");
+    if (trimmedPassword.length < 6) {
+      setError("Password must be at least 6 characters.");
       return;
     }
 
-    if (password !== confirmPassword) {
-      setError("Passwords do not match");
+    if (trimmedPassword !== trimmedConfirmPassword) {
+      setError("Passwords do not match.");
       return;
     }
 
@@ -74,20 +75,24 @@ export default function SignupPage() {
         body: JSON.stringify({
           username: cleanUsername,
           email: cleanEmail,
-          password,
+          password: trimmedPassword,
         }),
       });
 
-      const data = await res.json().catch(() => ({}));
+      const data = await res.json().catch(() => null);
 
       if (!res.ok) {
-        setError(data?.error || "Signup failed");
+        setError(
+          typeof data?.error === "string" && data.error.trim()
+            ? data.error
+            : "Signup failed. Please try again."
+        );
         return;
       }
 
       router.push("/login?created=1");
     } catch {
-      setError("Signup failed");
+      setError("Could not create your account right now. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -114,20 +119,32 @@ export default function SignupPage() {
           </p>
 
           {error && (
-            <div className="mt-5 rounded-2xl border border-red-500/40 bg-red-500/10 px-4 py-3 text-sm text-red-100">
+            <div
+              className="mt-5 rounded-2xl border border-red-500/40 bg-red-500/10 px-4 py-3 text-sm text-red-100"
+              aria-live="polite"
+            >
               {error}
             </div>
           )}
 
-          <form onSubmit={handleSubmit} className="mt-6 space-y-4">
+          <form onSubmit={handleSubmit} className="mt-6 space-y-4" noValidate>
             <div>
-              <label className="mb-1.5 block text-xs text-white/70">Username</label>
+              <label htmlFor="username" className="mb-1.5 block text-xs text-white/70">
+                Username
+              </label>
               <input
+                id="username"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 placeholder="yourname"
                 autoComplete="username"
                 spellCheck={false}
+                autoCapitalize="none"
+                autoCorrect="off"
+                inputMode="text"
+                required
+                minLength={3}
+                maxLength={30}
                 className="w-full rounded-2xl bg-white/85 border border-white/30 px-4 py-3.5 text-base text-black placeholder:text-black/45 outline-none transition focus:border-white/60 focus:bg-white"
               />
               <p className="mt-2 text-xs text-white/55 break-all">
@@ -136,37 +153,55 @@ export default function SignupPage() {
             </div>
 
             <div>
-              <label className="mb-1.5 block text-xs text-white/70">Email</label>
+              <label htmlFor="email" className="mb-1.5 block text-xs text-white/70">
+                Email
+              </label>
               <input
+                id="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="your@email.com"
                 type="email"
                 autoComplete="email"
+                inputMode="email"
+                required
                 className="w-full rounded-2xl bg-white/85 border border-white/30 px-4 py-3.5 text-base text-black placeholder:text-black/45 outline-none transition focus:border-white/60 focus:bg-white"
               />
             </div>
 
             <div>
-              <label className="mb-1.5 block text-xs text-white/70">Password</label>
+              <label htmlFor="password" className="mb-1.5 block text-xs text-white/70">
+                Password
+              </label>
               <input
+                id="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 placeholder="••••••••"
                 type="password"
                 autoComplete="new-password"
+                required
+                minLength={6}
                 className="w-full rounded-2xl bg-white/85 border border-white/30 px-4 py-3.5 text-base text-black placeholder:text-black/45 outline-none transition focus:border-white/60 focus:bg-white"
               />
+              <p className="mt-2 text-xs text-white/50">
+                Minimum 6 characters.
+              </p>
             </div>
 
             <div>
-              <label className="mb-1.5 block text-xs text-white/70">Confirm password</label>
+              <label htmlFor="confirmPassword" className="mb-1.5 block text-xs text-white/70">
+                Confirm password
+              </label>
               <input
+                id="confirmPassword"
                 value={confirmPassword}
                 onChange={(e) => setConfirmPassword(e.target.value)}
                 placeholder="••••••••"
                 type="password"
                 autoComplete="new-password"
+                required
+                minLength={6}
                 className="w-full rounded-2xl bg-white/85 border border-white/30 px-4 py-3.5 text-base text-black placeholder:text-black/45 outline-none transition focus:border-white/60 focus:bg-white"
               />
             </div>
@@ -174,7 +209,8 @@ export default function SignupPage() {
             <button
               type="submit"
               disabled={loading}
-              className="mt-2 w-full rounded-2xl bg-gradient-to-r from-teal-400 to-emerald-500 py-4 text-lg font-bold text-black shadow-[0_0_28px_rgba(45,212,191,0.35)] transition hover:opacity-95 active:scale-[0.99] disabled:opacity-60"
+              aria-busy={loading}
+              className="mt-2 w-full rounded-2xl bg-gradient-to-r from-teal-400 to-emerald-500 py-4 text-lg font-bold text-black shadow-[0_0_28px_rgba(45,212,191,0.35)] transition hover:opacity-95 active:scale-[0.99] disabled:opacity-60 disabled:cursor-not-allowed"
             >
               {loading ? "Creating account..." : "Create Account"}
             </button>
