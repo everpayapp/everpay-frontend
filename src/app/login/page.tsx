@@ -2,33 +2,52 @@
 
 import Link from "next/link";
 import { signIn } from "next-auth/react";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 
 export default function LoginPage() {
+  const router = useRouter();
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
-  async function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    if (loading) return;
+
     setLoading(true);
     setError("");
 
-    const res = await signIn("credentials", {
-      email,
-      password,
-      redirect: false,
-    });
+    try {
+      const cleanEmail = email.trim().toLowerCase();
+      const cleanPassword = password;
 
-    setLoading(false);
+      if (!cleanEmail || !cleanPassword) {
+        setError("Email and password are required.");
+        setLoading(false);
+        return;
+      }
 
-    if (res?.error) {
-      setError("Invalid email or password");
-      return;
+      const res = await signIn("credentials", {
+        email: cleanEmail,
+        password: cleanPassword,
+        redirect: false,
+      });
+
+      if (res?.error) {
+        setError("Invalid email or password.");
+        setLoading(false);
+        return;
+      }
+
+      router.replace("/creator/dashboard");
+      router.refresh();
+    } catch {
+      setError("Could not log you in right now. Please try again.");
+      setLoading(false);
     }
-
-    window.location.href = "/creator/dashboard";
   }
 
   return (
@@ -51,6 +70,7 @@ export default function LoginPage() {
 
         <form
           onSubmit={handleSubmit}
+          noValidate
           className="w-full bg-black/45 border border-white/40 rounded-3xl p-6 sm:p-8 space-y-5 backdrop-blur-xl shadow-[0_18px_60px_rgba(0,0,0,0.45),0_0_0_1.5px_rgba(255,255,255,0.25)]"
         >
           <div className="text-center space-y-2">
@@ -63,9 +83,12 @@ export default function LoginPage() {
           </div>
 
           {error && (
-            <p className="text-red-400 text-sm text-center">
+            <div
+              className="rounded-2xl border border-red-500/40 bg-red-500/10 px-4 py-3 text-sm text-red-100 text-center"
+              aria-live="polite"
+            >
               {error}
-            </p>
+            </div>
           )}
 
           <input
@@ -73,8 +96,12 @@ export default function LoginPage() {
             placeholder="Email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            className="w-full p-3 rounded-xl bg-white/90 text-black placeholder:text-black/40 outline-none"
+            autoComplete="email"
+            inputMode="email"
+            autoCapitalize="none"
+            autoCorrect="off"
             required
+            className="w-full p-3 rounded-xl bg-white/90 text-black placeholder:text-black/40 outline-none"
           />
 
           <input
@@ -82,23 +109,25 @@ export default function LoginPage() {
             placeholder="Password"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
-            className="w-full p-3 rounded-xl bg-white/90 text-black placeholder:text-black/40 outline-none"
+            autoComplete="current-password"
             required
+            className="w-full p-3 rounded-xl bg-white/90 text-black placeholder:text-black/40 outline-none"
           />
 
           <div className="text-right mt-2 mb-4">
-            <a
+            <Link
               href="/forgot-password"
               className="text-xs text-white/70 hover:text-white transition"
             >
               Forgot password?
-            </a>
+            </Link>
           </div>
 
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-3 rounded-xl bg-gradient-to-r from-teal-400 to-emerald-500 text-black font-semibold hover:opacity-95 transition disabled:opacity-70 shadow-[0_10px_30px_rgba(46,228,165,0.25)]"
+            aria-busy={loading}
+            className="w-full py-3 rounded-xl bg-gradient-to-r from-teal-400 to-emerald-500 text-black font-semibold hover:opacity-95 transition disabled:opacity-70 disabled:cursor-not-allowed shadow-[0_10px_30px_rgba(46,228,165,0.25)]"
           >
             {loading ? "Logging in…" : "Log In"}
           </button>
