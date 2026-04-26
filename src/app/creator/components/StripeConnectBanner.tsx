@@ -112,12 +112,11 @@ export default function StripeConnectBanner() {
           </div>
 
           <h3 className="mt-3 text-base sm:text-lg font-semibold text-white">
-            Connect Stripe to receive gifts
+            ⚠️ You’re not live yet — connect Stripe to receive gifts
           </h3>
 
           <p className="mt-1 text-sm leading-relaxed text-white/70 max-w-2xl">
-            Your page is live, but payouts are not enabled yet. Connect Stripe
-            before sharing your page and receiving gifts.
+            People can view your page, but you can’t receive any gifts until Stripe is connected. Takes 2 minutes to go live.
           </p>
         </div>
 
