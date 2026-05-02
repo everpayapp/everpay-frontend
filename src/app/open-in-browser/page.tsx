@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useEffect, useMemo } from "react";
+import { Suspense, useMemo } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 
 function OpenInBrowserContent() {
@@ -16,15 +16,6 @@ function OpenInBrowserContent() {
 
     return to;
   }, [searchParams]);
-
-  useEffect(() => {
-    const ua = navigator.userAgent || "";
-    const isTikTok = /tiktok/i.test(ua);
-
-    if (!isTikTok) {
-      router.replace(destination);
-    }
-  }, [router, destination]);
 
   return (
     <main className="min-h-screen bg-[#0B0D12] text-white px-4 py-6 flex items-center justify-center">
@@ -43,8 +34,8 @@ function OpenInBrowserContent() {
           </h1>
 
           <p className="mt-3 text-sm leading-6 text-white/70">
-            TikTok blocks payments inside the app. To continue safely, open this
-            page in your browser first.
+            TikTok may block payments inside the app. To continue safely, open
+            this page in your browser first.
           </p>
         </div>
 
@@ -64,9 +55,9 @@ function OpenInBrowserContent() {
           </div>
 
           <div className="rounded-2xl border border-white/15 bg-black/25 p-4">
-            <p className="text-sm font-semibold">3. Send your gift securely</p>
+            <p className="text-sm font-semibold">3. Come back and continue</p>
             <p className="mt-1 text-sm text-white/60">
-              Pay safely by bank — no card details needed.
+              Then tap the button below to send your gift securely.
             </p>
           </div>
         </div>
@@ -76,7 +67,7 @@ function OpenInBrowserContent() {
             Secure payments powered by Stripe
           </p>
           <p className="mt-1 text-xs text-white/60">
-            EverPay never asks for your card details.
+            Pay safely by bank — no card details needed.
           </p>
         </div>
 
@@ -88,7 +79,7 @@ function OpenInBrowserContent() {
         </button>
 
         <p className="mt-4 text-center text-xs leading-5 text-white/45">
-          If the button does not work, tap the 3 dots in TikTok and choose “Open
+          If payment does not continue, tap the 3 dots in TikTok and choose “Open
           in browser”.
         </p>
       </section>
