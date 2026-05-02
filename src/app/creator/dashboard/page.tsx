@@ -64,8 +64,10 @@ export default function CreatorDashboard() {
   const PANEL =
     "bg-black/25 rounded-3xl border border-white/18 shadow-[0_18px_60px_rgba(0,0,0,0.55)] ring-1 ring-white/10";
 
-  const SUBPANEL =
-    "bg-black/20 rounded-2xl border border-white/12";
+  const SUBPANEL = "bg-black/20 rounded-2xl border border-white/12";
+
+  const BUTTON =
+    "min-h-[50px] sm:min-h-0 py-2 sm:py-3 px-3 rounded-xl bg-gradient-to-r from-teal-400 to-emerald-500 text-black font-semibold text-[13px] sm:text-base leading-snug";
 
   const [payments, setPayments] = useState<Payment[]>([]);
   const [profile, setProfile] = useState<CreatorProfile | null>(null);
@@ -73,11 +75,17 @@ export default function CreatorDashboard() {
   const [showQRModal, setShowQRModal] = useState(false);
 
   const [copied, setCopied] = useState(false);
+  const [copiedTikTok, setCopiedTikTok] = useState(false);
+
   const copiedTimer = useRef<number | null>(null);
+  const copiedTikTokTimer = useRef<number | null>(null);
 
   useEffect(() => {
     return () => {
       if (copiedTimer.current) window.clearTimeout(copiedTimer.current);
+      if (copiedTikTokTimer.current) {
+        window.clearTimeout(copiedTikTokTimer.current);
+      }
     };
   }, []);
 
@@ -150,32 +158,30 @@ export default function CreatorDashboard() {
   const totalEarned =
     payments.reduce((sum, p) => sum + getNetPence(p), 0) / 100;
 
-  const formattedTotal =
-    totalEarned.toLocaleString("en-GB", {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    });
+  const formattedTotal = totalEarned.toLocaleString("en-GB", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
 
-  const pageUrl =
-    username
-      ? `${baseUrl}/creator/${encodeURIComponent(username)}`
-      : `${baseUrl}/creator/`;
+  const pageUrl = username
+    ? `${baseUrl}/creator/${encodeURIComponent(username)}`
+    : `${baseUrl}/creator/`;
+
+  const tiktokUrl = username
+    ? `${baseUrl}/open-in-browser?to=/creator/${encodeURIComponent(username)}`
+    : `${baseUrl}/open-in-browser`;
 
   const milestoneEnabled =
     profile &&
-    (profile.milestone_enabled === 1 ||
-      profile.milestone_enabled === true) &&
+    (profile.milestone_enabled === 1 || profile.milestone_enabled === true) &&
     (profile.milestone_amount || 0) > 0;
 
   const milestoneTarget = profile?.milestone_amount || 0;
 
   const progress =
-    milestoneTarget > 0
-      ? Math.min(1, totalEarned / milestoneTarget)
-      : 0;
+    milestoneTarget > 0 ? Math.min(1, totalEarned / milestoneTarget) : 0;
 
-  const progressPercent =
-    Math.round(progress * 100);
+  const progressPercent = Math.round(progress * 100);
 
   const handleCopy = async () => {
     if (!username) return;
@@ -187,8 +193,23 @@ export default function CreatorDashboard() {
       window.clearTimeout(copiedTimer.current);
     }
 
-    copiedTimer.current =
-      window.setTimeout(() => setCopied(false), 1600);
+    copiedTimer.current = window.setTimeout(() => setCopied(false), 1600);
+  };
+
+  const handleCopyTikTok = async () => {
+    if (!username) return;
+
+    await navigator.clipboard.writeText(tiktokUrl);
+    setCopiedTikTok(true);
+
+    if (copiedTikTokTimer.current) {
+      window.clearTimeout(copiedTikTokTimer.current);
+    }
+
+    copiedTikTokTimer.current = window.setTimeout(
+      () => setCopiedTikTok(false),
+      1600
+    );
   };
 
   const handleOpenMyPage = () => {
@@ -220,11 +241,9 @@ export default function CreatorDashboard() {
       <CreatorGiftToast />
 
       <div className="max-w-7xl mx-auto px-3 sm:px-6 text-white pt-4 sm:pt-10 pb-16 sm:pb-32">
-
-         <StripeConnectBanner />
+        <StripeConnectBanner />
 
         <div className="grid grid-cols-1 lg:grid-cols-[58%_42%] gap-5 sm:gap-8">
-
           {profile && (
             <div
               className={`lg:col-span-2 ${PANEL} px-4 py-4 sm:p-9 flex items-center gap-4 sm:gap-7`}
@@ -251,7 +270,6 @@ export default function CreatorDashboard() {
           )}
 
           <div className="space-y-5 sm:space-y-8">
-
             {milestoneEnabled && (
               <div className={`${PANEL} px-5 py-5 sm:px-7 sm:py-6`}>
                 <p className="text-[11px] sm:text-xs uppercase text-white/70 mb-1">
@@ -262,7 +280,8 @@ export default function CreatorDashboard() {
                   £{formattedTotal} of £
                   {milestoneTarget.toLocaleString("en-GB", {
                     minimumFractionDigits: 2,
-                  })} raised
+                  })}{" "}
+                  raised
                 </p>
 
                 <div className="w-full h-2.5 rounded-full bg-white/10 overflow-hidden">
@@ -275,9 +294,7 @@ export default function CreatorDashboard() {
             )}
 
             <div className={`${PANEL} px-5 py-5 sm:p-7`}>
-              <p className="text-sm uppercase text-white/60">
-                Total Received
-              </p>
+              <p className="text-sm uppercase text-white/60">Total Received</p>
 
               <p className="text-[44px] leading-none sm:text-5xl font-bold mt-2 sm:mt-0">
                 £{formattedTotal}
@@ -285,9 +302,7 @@ export default function CreatorDashboard() {
             </div>
 
             <div className={`${PANEL} px-5 py-5 sm:p-7 space-y-4 sm:space-y-5`}>
-              <p className="text-sm text-center">
-                Share your gift page 🌍
-              </p>
+              <p className="text-sm text-center">Share your gift page 🌍</p>
 
               <div
                 className={`${SUBPANEL} rounded-xl px-4 py-2.5 text-[13px] sm:text-sm text-white/70 break-all leading-snug`}
@@ -295,35 +310,32 @@ export default function CreatorDashboard() {
                 {pageUrl}
               </div>
 
+              <button onClick={handleOpenMyPage} className={`w-full ${BUTTON}`}>
+                View Page
+              </button>
+
               <div className="grid grid-cols-2 gap-3 sm:gap-4">
-                <button
-                  onClick={handleCopy}
-                  className="min-h-[50px] sm:min-h-0 py-2 sm:py-3 px-3 rounded-xl bg-gradient-to-r from-teal-400 to-emerald-500 text-black font-semibold text-[13px] sm:text-base leading-snug"
-                >
+                <button onClick={handleCopy} className={BUTTON}>
                   {copied ? "Copied ✓" : "Copy Link"}
                 </button>
 
-                <button
-                  onClick={handleOpenMyPage}
-                  className="min-h-[50px] sm:min-h-0 py-2 sm:py-3 px-3 rounded-xl bg-gradient-to-r from-teal-400 to-emerald-500 text-black font-semibold text-[13px] sm:text-base leading-snug"
-                >
-                  View Page
+                <button onClick={handleCopyTikTok} className={BUTTON}>
+                  {copiedTikTok ? "Copied ✓" : "TikTok Link"}
                 </button>
 
-                <button
-                  onClick={() => setShowQRModal(true)}
-                  className="min-h-[50px] sm:min-h-0 py-2 sm:py-3 px-3 rounded-xl bg-gradient-to-r from-teal-400 to-emerald-500 text-black font-semibold text-[13px] sm:text-base leading-snug"
-                >
+                <button onClick={() => setShowQRModal(true)} className={BUTTON}>
                   Show QR
                 </button>
 
-                <button
-                  onClick={handleShare}
-                  className="min-h-[50px] sm:min-h-0 py-2 sm:py-3 px-3 rounded-xl bg-gradient-to-r from-teal-400 to-emerald-500 text-black font-semibold text-[13px] sm:text-base leading-snug"
-                >
+                <button onClick={handleShare} className={BUTTON}>
                   Share Page
                 </button>
               </div>
+
+              <p className="text-center text-[11px] leading-5 text-white/45">
+                Use TikTok Link for TikTok bio. Use Copy Link for everywhere
+                else.
+              </p>
             </div>
           </div>
 
@@ -339,9 +351,7 @@ export default function CreatorDashboard() {
               >
                 <div className="min-w-0">
                   <p className="text-sm truncate">
-                    {p.anonymous
-                      ? "Anonymous"
-                      : p.gift_name || "Someone"}
+                    {p.anonymous ? "Anonymous" : p.gift_name || "Someone"}
                   </p>
 
                   <p className="font-semibold text-[15px] sm:text-base mt-1">
@@ -358,7 +368,6 @@ export default function CreatorDashboard() {
               </div>
             ))}
           </div>
-
         </div>
 
         {showQRModal && (
@@ -379,7 +388,6 @@ export default function CreatorDashboard() {
             </div>
           </div>
         )}
-
       </div>
     </div>
   );
