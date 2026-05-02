@@ -320,7 +320,7 @@ export default function CreatorDashboard() {
                 </button>
 
                 <button onClick={handleCopyTikTok} className={BUTTON}>
-                  {copiedTikTok ? "Copied ✓" : "TikTok Link"}
+                  {copiedTikTok ? "Copied for TikTok ✓" : "TikTok Bio Link"}
                 </button>
 
                 <button onClick={() => setShowQRModal(true)} className={BUTTON}>
@@ -333,8 +333,7 @@ export default function CreatorDashboard() {
               </div>
 
               <p className="text-center text-[11px] leading-5 text-white/45">
-                Use TikTok Link for TikTok bio. Use Copy Link for everywhere
-                else.
+                Use TikTok Bio Link for your TikTok bio.
               </p>
             </div>
           </div>
