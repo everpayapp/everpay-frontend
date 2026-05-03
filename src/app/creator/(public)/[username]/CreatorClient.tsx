@@ -275,31 +275,42 @@ export default function CreatorClient({ username: propUsername }: { username?: s
   }, [apiUrl, username]);
 
   useEffect(() => {
-    const success = searchParams.get("success");
-    if (success !== "true") return;
-    if (typeof window === "undefined") return;
+  const success = searchParams.get("success");
+  if (success !== "true") return;
 
+  let nameFromLatestPayment = "";
+
+  if (Array.isArray(payments) && payments.length > 0) {
+    const latest = payments[0];
+    if (latest && !latest.anonymous) {
+      nameFromLatestPayment = (latest.gift_name || "").trim();
+    }
+  }
+
+  let storedName = "";
+
+  if (typeof window !== "undefined") {
     const pendingKey = `everpay_pending_gift_${username}`;
     const pendingNameKey = `everpay_pending_gift_name_${username}`;
 
-    const hadPendingGift = window.localStorage.getItem(pendingKey) === "1";
-    const storedName = (window.localStorage.getItem(pendingNameKey) || "").trim();
-
-    setSuccessToastName(hadPendingGift ? storedName : "");
-    setSuccessToast(true);
+    storedName = (window.localStorage.getItem(pendingNameKey) || "").trim();
 
     window.localStorage.removeItem(pendingKey);
     window.localStorage.removeItem(pendingNameKey);
+  }
 
+  setSuccessToastName(nameFromLatestPayment || storedName);
+  setSuccessToast(true);
+
+  if (successToastTimeoutRef.current) clearTimeout(successToastTimeoutRef.current);
+  successToastTimeoutRef.current = setTimeout(() => {
+    setSuccessToast(false);
+  }, 4000);
+
+  return () => {
     if (successToastTimeoutRef.current) clearTimeout(successToastTimeoutRef.current);
-    successToastTimeoutRef.current = setTimeout(() => {
-      setSuccessToast(false);
-    }, 4000);
-
-    return () => {
-      if (successToastTimeoutRef.current) clearTimeout(successToastTimeoutRef.current);
-    };
-  }, [searchParams, username]);
+  };
+}, [searchParams, username, payments]);
 
   async function handlePay() {
     if (!apiUrl) {
@@ -445,7 +456,7 @@ export default function CreatorClient({ username: propUsername }: { username?: s
   const rowClass = "bg-black/20 border-2 border-white/65 rounded-xl";
   const supporterCardClass = "bg-black/20 border-[2.5px] border-white/70 rounded-2xl";
 
-  const successNameLabel = successToastName || "there";
+  const successNameLabel = successToastName || "";
 
   return (
     <div
@@ -457,7 +468,7 @@ export default function CreatorClient({ username: propUsername }: { username?: s
           <div className="fixed inset-0 z-[121] flex items-center justify-center px-4 pointer-events-none sm:inset-auto sm:bottom-6 sm:right-6 sm:block sm:px-0">
             <div className="px-4 py-3 rounded-2xl border-2 border-white/70 bg-black/78 backdrop-blur-xl shadow-2xl text-white min-w-[240px] max-w-[90vw] animate-[fadeInUp_.25s_ease]">
               <p className="text-sm sm:text-[15px] font-semibold">
-                🎁 Thank you {successNameLabel} — your gift to {creatorFirstName} was sent
+               🎁 Thank you{successNameLabel ? ` ${successNameLabel}` : ""} — your gift to {creatorFirstName} was sent
               </p>
               <p className="text-[11px] sm:text-xs text-white/65 mt-1">Added to Recent Gifts</p>
             </div>
