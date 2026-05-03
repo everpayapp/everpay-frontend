@@ -140,10 +140,10 @@ export default function CreatorClient({ username: propUsername }: { username?: s
 
   const [successToast, setSuccessToast] = useState(false);
   const [successToastName, setSuccessToastName] = useState("");
-  const hasShownSuccessToastRef = useRef(false);
 
   const latestSeenPaymentIdRef = useRef<string | null>(null);
   const successToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const hasShownSuccessToastRef = useRef(false);
 
   const presetAmounts = [5, 10, 20, 50, 100];
 
@@ -276,45 +276,51 @@ export default function CreatorClient({ username: propUsername }: { username?: s
   }, [apiUrl, username]);
 
   useEffect(() => {
-  const success = searchParams.get("success");
-  if (success !== "true") return;
+    const success = searchParams.get("success");
+    if (success !== "true") return;
+    if (hasShownSuccessToastRef.current) return;
 
-  if (hasShownSuccessToastRef.current) return;
-  hasShownSuccessToastRef.current = true;
+    let storedName = "";
+    let hadPendingGift = false;
 
-  let nameFromLatestPayment = "";
+    if (typeof window !== "undefined") {
+      const pendingKey = `everpay_pending_gift_${username}`;
+      const pendingNameKey = `everpay_pending_gift_name_${username}`;
 
-  if (Array.isArray(payments) && payments.length > 0) {
-    const latest = payments[0];
-    if (latest && !latest.anonymous) {
-      nameFromLatestPayment = (latest.gift_name || "").trim();
+      hadPendingGift = window.localStorage.getItem(pendingKey) === "1";
+      storedName = (window.localStorage.getItem(pendingNameKey) || "").trim();
+
+      window.localStorage.removeItem(pendingKey);
+      window.localStorage.removeItem(pendingNameKey);
     }
-  }
 
-  let storedName = "";
+    let latestPaymentName = "";
 
-  if (typeof window !== "undefined") {
-    const pendingKey = `everpay_pending_gift_${username}`;
-    const pendingNameKey = `everpay_pending_gift_name_${username}`;
+    if (Array.isArray(payments) && payments.length > 0) {
+      const latest = payments[0];
 
-    storedName = (window.localStorage.getItem(pendingNameKey) || "").trim();
+      if (latest && !latest.anonymous) {
+        latestPaymentName = (latest.gift_name || "").trim();
+      }
+    }
 
-    window.localStorage.removeItem(pendingKey);
-    window.localStorage.removeItem(pendingNameKey);
-  }
+    if (!hadPendingGift && !latestPaymentName && loadingPayments) {
+      return;
+    }
 
-  setSuccessToastName(nameFromLatestPayment || storedName);
-  setSuccessToast(true);
+    hasShownSuccessToastRef.current = true;
 
-  if (successToastTimeoutRef.current) clearTimeout(successToastTimeoutRef.current);
-  successToastTimeoutRef.current = setTimeout(() => {
-    setSuccessToast(false);
-  }, 4000);
+    setSuccessToastName(storedName || latestPaymentName);
+    setSuccessToast(true);
 
-  return () => {
-    if (successToastTimeoutRef.current) clearTimeout(successToastTimeoutRef.current);
-  };
-}, [searchParams, username, payments]);
+    if (successToastTimeoutRef.current) {
+      clearTimeout(successToastTimeoutRef.current);
+    }
+
+    successToastTimeoutRef.current = setTimeout(() => {
+      setSuccessToast(false);
+    }, 4000);
+  }, [searchParams, username, payments, loadingPayments]);
 
   async function handlePay() {
     if (!apiUrl) {
@@ -472,7 +478,7 @@ export default function CreatorClient({ username: propUsername }: { username?: s
           <div className="fixed inset-0 z-[121] flex items-center justify-center px-4 pointer-events-none sm:inset-auto sm:bottom-6 sm:right-6 sm:block sm:px-0">
             <div className="px-4 py-3 rounded-2xl border-2 border-white/70 bg-black/78 backdrop-blur-xl shadow-2xl text-white min-w-[240px] max-w-[90vw] animate-[fadeInUp_.25s_ease]">
               <p className="text-sm sm:text-[15px] font-semibold">
-               🎁 Thank you{successNameLabel ? ` ${successNameLabel}` : ""} — your gift to {creatorFirstName} was sent
+                🎁 Thank you{successNameLabel ? ` ${successNameLabel}` : ""} — your gift to {creatorFirstName} was sent
               </p>
               <p className="text-[11px] sm:text-xs text-white/65 mt-1">Added to Recent Gifts</p>
             </div>
