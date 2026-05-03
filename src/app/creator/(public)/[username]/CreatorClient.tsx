@@ -283,11 +283,9 @@ export default function CreatorClient({ username: propUsername }: { username?: s
     const pendingNameKey = `everpay_pending_gift_name_${username}`;
 
     const hadPendingGift = window.localStorage.getItem(pendingKey) === "1";
-    if (!hadPendingGift) return;
-
     const storedName = (window.localStorage.getItem(pendingNameKey) || "").trim();
 
-    setSuccessToastName(storedName);
+    setSuccessToastName(hadPendingGift ? storedName : "");
     setSuccessToast(true);
 
     window.localStorage.removeItem(pendingKey);
