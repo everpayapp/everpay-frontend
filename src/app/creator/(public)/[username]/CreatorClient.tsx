@@ -140,6 +140,7 @@ export default function CreatorClient({ username: propUsername }: { username?: s
 
   const [successToast, setSuccessToast] = useState(false);
   const [successToastName, setSuccessToastName] = useState("");
+  const hasShownSuccessToastRef = useRef(false);
 
   const latestSeenPaymentIdRef = useRef<string | null>(null);
   const successToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -277,6 +278,9 @@ export default function CreatorClient({ username: propUsername }: { username?: s
   useEffect(() => {
   const success = searchParams.get("success");
   if (success !== "true") return;
+
+  if (hasShownSuccessToastRef.current) return;
+  hasShownSuccessToastRef.current = true;
 
   let nameFromLatestPayment = "";
 
