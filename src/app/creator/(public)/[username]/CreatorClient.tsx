@@ -702,7 +702,9 @@ export default function CreatorClient({ username: propUsername }: { username?: s
                           {displayName} gifted {formatGBP(giftPence)}
                         </p>
                         {p.gift_message && (
-                          <p className="text-[12px] opacity-80 mt-1 italic line-clamp-2">“{p.gift_message}”</p>
+                            <p className="text-[12px] opacity-80 mt-1 italic leading-relaxed line-clamp-3 break-words">
+                         “{p.gift_message}”
+                        </p>
                         )}
                       </div>
 
