@@ -424,13 +424,25 @@ export default function CreatorSettingsPage() {
 
         <form className={`${PANEL} p-6 space-y-6`} onSubmit={handleSubmit}>
           <div>
-            <label className="text-sm font-medium">Profile Name</label>
-            <input
-              className={INPUT}
-              value={profile?.profile_name || ""}
-              onChange={(e) => handleChange("profile_name", e.target.value)}
-            />
-          </div>
+  <div className="flex items-center justify-between">
+    <label className="text-sm font-medium">Profile Name</label>
+    <span className="text-xs text-white/50">
+      {(profile?.profile_name || "").length} / 20
+    </span>
+  </div>
+
+  <input
+    className={INPUT}
+    value={profile?.profile_name || ""}
+    maxLength={20}
+    onChange={(e) => handleChange("profile_name", e.target.value)}
+    placeholder="Your creator name"
+  />
+
+  <p className="mt-1 text-[11px] text-white/50">
+    Maximum 20 characters
+  </p>
+</div>
 
           <section className={`${SUBPANEL} p-4`}>
             <div className="flex items-start justify-between gap-4 flex-col sm:flex-row">

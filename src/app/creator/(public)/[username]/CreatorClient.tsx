@@ -485,85 +485,153 @@ export default function CreatorClient({ username: propUsername }: { username?: s
           </div>
         )}
 
-        <section className={`w-full ${panelClass} px-6 sm:px-9 py-5 sm:py-6 overflow-x-hidden`}>
-          <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 sm:gap-6">
-            <div className="flex items-center gap-5 sm:gap-7 min-w-0 flex-1">
-              <button
-                type="button"
-                onClick={() => profile.avatar_url && setShowAvatar(true)}
-                title="View profile picture"
-                className="w-16 h-16 sm:w-20 sm:h-20 rounded-full border-[4px] border-white/70 bg-white/10 flex items-center justify-center overflow-hidden shadow-xl shrink-0 cursor-pointer hover:opacity-90 transition active:scale-[0.98]"
-              >
-                {profile.avatar_url ? (
-                  <img src={profile.avatar_url} alt="Profile picture" className="w-full h-full object-contain" />
-                ) : (
-                  <span className="text-2xl sm:text-2xl font-bold">{firstChar(profile.profile_name) || firstChar(username)}</span>
-                )}
-              </button>
+<section className={`w-full ${panelClass} px-6 sm:px-9 py-5 sm:py-6 overflow-x-hidden`}>
 
-              <div className="flex flex-col min-w-0 flex-1">
-                <div className="flex flex-wrap items-start gap-2 min-w-0">
-                  <h1 className="text-[28px] sm:text-[32px] font-bold tracking-tight leading-tight whitespace-normal break-words sm:truncate">
-                    {profile.profile_name || username}
-                  </h1>
-                  <div className="pt-1.5">
-                    <VerifiedBadge />
-                  </div>
-                </div>
+  {/* MOBILE */}
+  <div className="sm:hidden">
 
-                {Array.isArray(profile.social_links) && profile.social_links.length > 0 && (
-                  <>
-                    <div className="sm:hidden mt-2 w-full overflow-x-auto whitespace-nowrap">
-                      <div className="inline-flex gap-2 pr-1">
-                        {profile.social_links.map((url) => {
-                          const meta = getSocialMeta(url);
-                          return (
-                            <a
-                              key={url}
-                              href={url}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="shrink-0 inline-flex items-center px-3 py-1 rounded-full bg-white/10 border-2 border-white/65 text-xs text-white/95 hover:bg-white/15 transition"
-                              title={url}
-                            >
-                              <span>{meta.label}</span>
-                            </a>
-                          );
-                        })}
-                      </div>
-                    </div>
+    {/* Creator name gets the full card width */}
+    <h1
+      className={`font-bold tracking-tight leading-tight whitespace-nowrap ${
+        (profile.profile_name || username).length > 17
+          ? "text-[22px]"
+          : (profile.profile_name || username).length > 13
+          ? "text-[25px]"
+          : "text-[28px]"
+      }`}
+    >
+      {profile.profile_name || username}
+    </h1>
 
-                    <div className="hidden sm:flex mt-3 flex-wrap gap-2">
-                      {profile.social_links.map((url) => {
-                        const meta = getSocialMeta(url);
-                        return (
-                          <a
-                            key={url}
-                            href={url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 border-2 border-white/65 text-xs text-white/95 hover:bg-white/15 transition"
-                            title={url}
-                          >
-                            <span>{meta.label}</span>
-                          </a>
-                        );
-                      })}
-                    </div>
-                  </>
-                )}
+    <div className="flex items-start gap-4 mt-4">
 
-                <div className="sm:hidden mt-3 w-full flex justify-center">
-                  <span className="text-[12px] text-white/70 tracking-wide text-center">Powered by EverPay</span>
-                </div>
+      <button
+        type="button"
+        onClick={() => profile.avatar_url && setShowAvatar(true)}
+        title="View profile picture"
+        className="w-16 h-16 rounded-full border-[4px] border-white/70 bg-white/10 flex items-center justify-center overflow-hidden shadow-xl shrink-0 cursor-pointer hover:opacity-90 transition active:scale-[0.98]"
+      >
+        {profile.avatar_url ? (
+          <img
+            src={profile.avatar_url}
+            alt="Profile picture"
+            className="w-full h-full object-contain"
+          />
+        ) : (
+          <span className="text-2xl font-bold">
+            {firstChar(profile.profile_name) || firstChar(username)}
+          </span>
+        )}
+      </button>
+
+      <div className="flex flex-col min-w-0 flex-1">
+
+        <VerifiedBadge />
+
+        {Array.isArray(profile.social_links) &&
+          profile.social_links.length > 0 && (
+            <div className="mt-3 w-full overflow-x-auto whitespace-nowrap">
+              <div className="inline-flex gap-2 pr-1">
+                {profile.social_links.map((url) => {
+                  const meta = getSocialMeta(url);
+
+                  return (
+                    <a
+                      key={url}
+                      href={url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="shrink-0 inline-flex items-center px-3 py-1 rounded-full bg-white/10 border-2 border-white/65 text-xs text-white/95 hover:bg-white/15 transition"
+                      title={url}
+                    >
+                      <span>{meta.label}</span>
+                    </a>
+                  );
+                })}
               </div>
             </div>
+          )}
+      </div>
+    </div>
 
-            <div className="hidden sm:flex items-start justify-end pt-1">
-              <span className="text-[13px] text-white/80 font-medium tracking-wide">Powered by EverPay</span>
-            </div>
+    <div className="mt-4 w-full flex justify-center">
+      <span className="text-[12px] text-white/70 tracking-wide text-center">
+        Powered by EverPay
+      </span>
+    </div>
+  </div>
+
+
+  {/* DESKTOP */}
+  <div className="hidden sm:flex items-start justify-between gap-6">
+
+    <div className="flex items-center gap-7 min-w-0 flex-1">
+
+      <button
+        type="button"
+        onClick={() => profile.avatar_url && setShowAvatar(true)}
+        title="View profile picture"
+        className="w-20 h-20 rounded-full border-[4px] border-white/70 bg-white/10 flex items-center justify-center overflow-hidden shadow-xl shrink-0 cursor-pointer hover:opacity-90 transition active:scale-[0.98]"
+      >
+        {profile.avatar_url ? (
+          <img
+            src={profile.avatar_url}
+            alt="Profile picture"
+            className="w-full h-full object-contain"
+          />
+        ) : (
+          <span className="text-2xl font-bold">
+            {firstChar(profile.profile_name) || firstChar(username)}
+          </span>
+        )}
+      </button>
+
+      <div className="flex flex-col min-w-0 flex-1">
+
+        <div className="flex items-start gap-2 min-w-0">
+
+          <h1 className="text-[32px] font-bold tracking-tight leading-tight whitespace-nowrap">
+            {profile.profile_name || username}
+          </h1>
+
+          <div className="pt-1.5">
+            <VerifiedBadge />
           </div>
-        </section>
+        </div>
+
+        {Array.isArray(profile.social_links) &&
+          profile.social_links.length > 0 && (
+            <div className="mt-3 flex flex-wrap gap-2">
+              {profile.social_links.map((url) => {
+                const meta = getSocialMeta(url);
+
+                return (
+                  <a
+                    key={url}
+                    href={url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 border-2 border-white/65 text-xs text-white/95 hover:bg-white/15 transition"
+                    title={url}
+                  >
+                    <span>{meta.label}</span>
+                  </a>
+                );
+              })}
+            </div>
+          )}
+      </div>
+    </div>
+
+    <div className="flex items-start justify-end pt-1">
+      <span className="text-[13px] text-white/80 font-medium tracking-wide">
+        Powered by EverPay
+      </span>
+    </div>
+
+  </div>
+
+</section>
 
         {milestoneEnabled && (
           <section className={`${panelClass} px-6 sm:px-9 py-5 overflow-x-hidden`}>
