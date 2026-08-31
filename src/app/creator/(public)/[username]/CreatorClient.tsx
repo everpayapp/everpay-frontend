@@ -283,6 +283,7 @@ export default function CreatorClient({ username: propUsername }: { username?: s
     const success = searchParams.get("success");
     if (success !== "true") return;
     if (hasShownSuccessToastRef.current) return;
+    if (!profile) return;
 
     let storedName = "";
     let hadPendingGift = false;
