@@ -29,6 +29,7 @@ type CreatorProfile = {
   milestone_enabled?: number | boolean;
   milestone_amount?: number;
   milestone_text?: string;
+  thank_you_video?: string;
 };
 
 function getSocialMeta(url: string) {
@@ -140,10 +141,12 @@ export default function CreatorClient({ username: propUsername }: { username?: s
 
   const [successToast, setSuccessToast] = useState(false);
   const [successToastName, setSuccessToastName] = useState("");
+  const [thankYouVideoPlaying, setThankYouVideoPlaying] = useState(false);
 
   const latestSeenPaymentIdRef = useRef<string | null>(null);
   const successToastTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const hasShownSuccessToastRef = useRef(false);
+  const thankYouVideoRef = useRef<HTMLVideoElement | null>(null);
 
   const presetAmounts = [5, 10, 20, 50, 100];
 
@@ -177,6 +180,7 @@ export default function CreatorClient({ username: propUsername }: { username?: s
           milestone_enabled: data.milestone_enabled,
           milestone_amount: Number(data.milestone_amount) || 0,
           milestone_text: data.milestone_text || "",
+          thank_you_video: data.thank_you_video || "",
         });
       } catch {
         setProfile(null);
@@ -317,10 +321,12 @@ export default function CreatorClient({ username: propUsername }: { username?: s
       clearTimeout(successToastTimeoutRef.current);
     }
 
-    successToastTimeoutRef.current = setTimeout(() => {
-      setSuccessToast(false);
-    }, 4000);
-  }, [searchParams, username, payments, loadingPayments]);
+    if (!profile?.thank_you_video) {
+      successToastTimeoutRef.current = setTimeout(() => {
+       setSuccessToast(false);
+     }, 4000);
+   }
+  }, [searchParams, username, payments, loadingPayments, profile?.thank_you_video]);
 
   async function handlePay() {
     if (!apiUrl) {
@@ -475,12 +481,70 @@ export default function CreatorClient({ username: propUsername }: { username?: s
     >
       <div className="w-full max-w-[1500px] space-y-5 sm:space-y-6 px-1 sm:px-0 overflow-x-hidden">
         {successToast && (
-          <div className="fixed inset-0 z-[121] flex items-center justify-center px-4 pointer-events-none sm:inset-auto sm:bottom-6 sm:right-6 sm:block sm:px-0">
-            <div className="px-4 py-3 rounded-2xl border-2 border-white/70 bg-black/78 backdrop-blur-xl shadow-2xl text-white min-w-[240px] max-w-[90vw] animate-[fadeInUp_.25s_ease]">
-              <p className="text-sm sm:text-[15px] font-semibold">
-                🎁 Thank you{successNameLabel ? ` ${successNameLabel}` : ""} — your gift to {creatorFirstName} was sent
-              </p>
-              <p className="text-[11px] sm:text-xs text-white/65 mt-1">Added to Recent Gifts</p>
+          <div className="fixed inset-0 z-[121] flex items-center justify-center p-4 sm:p-6 bg-black/70">
+            <div className="w-full max-w-[420px] max-h-[90vh] overflow-y-auto p-5 sm:p-6 rounded-[24px] border border-white/25 bg-[#0d1119] shadow-2xl text-white animate-[fadeInUp_.25s_ease]">
+              <div className="text-center">
+  <div className="mx-auto mb-3 flex h-14 w-14 items-center justify-center rounded-full border border-white/15 bg-white/5 text-3xl shadow-lg">
+    🎁
+  </div>
+
+  <p className="text-lg sm:text-xl font-bold">
+    Thank you{successNameLabel ? ` ${successNameLabel}` : ""}
+  </p>
+
+  <p className="mt-1 text-sm sm:text-base text-white/80">
+    Your gift to {creatorFirstName} was sent 🎁
+ </p>
+ </div>
+
+{profile?.thank_you_video && (
+  <div className="mt-3">
+    <div className="relative">
+      <video
+        ref={thankYouVideoRef}
+        src={profile.thank_you_video}
+        playsInline
+        onEnded={() => {
+          setTimeout(() => {
+           setSuccessToast(false);
+          }, 1500);
+       }}
+        className="w-full max-w-sm rounded-2xl border border-white/15 bg-black"
+      />
+
+      {!thankYouVideoPlaying && (
+        <button
+          type="button"
+          onClick={() => {
+            const video = thankYouVideoRef.current;
+            if (!video) return;
+
+            video.currentTime = 0;
+            video.muted = false;
+
+            void video.play().then(() => {
+              setThankYouVideoPlaying(true);
+            });
+          }}
+          className="absolute inset-0 flex items-center justify-center rounded-2xl bg-black/45"
+        >
+          <span className="rounded-full bg-white px-5 py-3 text-sm font-bold text-black shadow-xl">
+            ▶ Watch your personal thank-you
+          </span>
+        </button>
+      )}
+    </div>
+  </div>
+)}
+              <div className="mt-4 text-center">
+  <p className="text-sm sm:text-base font-medium text-white">
+    {creatorFirstName} has a personal thank-you just for you 
+  </p>
+
+  <p className="text-xs sm:text-sm text-white/55 mt-2">
+    Added to Recent Gifts
+  </p>
+</div>
             </div>
           </div>
         )}

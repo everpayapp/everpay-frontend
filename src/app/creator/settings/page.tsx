@@ -17,6 +17,7 @@ type CreatorProfile = {
   milestone_enabled?: number;
   milestone_amount?: number;
   milestone_text?: string;
+  thank_you_video?: string;
 };
 
 const API_URL = process.env.NEXT_PUBLIC_API_URL!;
@@ -50,6 +51,11 @@ export default function CreatorSettingsPage() {
   const [uploadingAvatar, setUploadingAvatar] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
 
+  const videoFileRef = useRef<HTMLInputElement | null>(null);
+  const [thankYouVideoFile, setThankYouVideoFile] = useState<File | null>(null);
+  const [uploadingThankYouVideo, setUploadingThankYouVideo] = useState(false);
+  const [thankYouVideoError, setThankYouVideoError] = useState<string | null>(null);
+  
   const [connectLoading, setConnectLoading] = useState(false);
   const [connectError, setConnectError] = useState<string | null>(null);
   const [connectStatus, setConnectStatus] = useState<{
@@ -104,6 +110,7 @@ export default function CreatorSettingsPage() {
           milestone_enabled: data.milestone_enabled ?? 0,
           milestone_amount: data.milestone_amount ?? 0,
           milestone_text: data.milestone_text ?? "",
+          thank_you_video: data.thank_you_video ?? "",
         };
 
         setProfile(loadedProfile);
@@ -203,6 +210,110 @@ export default function CreatorSettingsPage() {
       setUploadingAvatar(false);
     }
   };
+
+
+const handleThankYouVideoUpload = async () => {
+  if (!username) {
+    setThankYouVideoError("Missing username in session.");
+    return;
+  }
+
+  if (!thankYouVideoFile) {
+    setThankYouVideoError("Please choose a video first.");
+    return;
+  }
+
+  setUploadingThankYouVideo(true);
+  setThankYouVideoError(null);
+  setSuccess(null);
+  setError(null);
+
+  try {
+    const form = new FormData();
+    form.append("username", username);
+    form.append("file", thankYouVideoFile);
+
+    const res = await fetch(`${API_URL}/api/creator/thank-you-video`, {
+      method: "POST",
+      body: form,
+    });
+
+    const data = await res.json().catch(() => ({} as any));
+
+    if (!res.ok) {
+      throw new Error(data?.error || "Thank-you video upload failed");
+    }
+
+    const newUrl = data?.thank_you_video as string | undefined;
+
+    if (!newUrl) {
+      throw new Error("Upload succeeded but no thank_you_video URL was returned.");
+    }
+
+    setProfile((p) =>
+      p ? { ...p, thank_you_video: newUrl } : p
+    );
+
+    setThankYouVideoFile(null);
+
+    if (videoFileRef.current) {
+      videoFileRef.current.value = "";
+    }
+
+    setSuccess("Thank-you video uploaded successfully ✅");
+  } catch (err: any) {
+    setThankYouVideoError(
+      err?.message || "Thank-you video upload failed"
+    );
+  } finally {
+    setUploadingThankYouVideo(false);
+  }
+};
+
+
+const handleThankYouVideoDelete = async () => {
+  if (!username) {
+    setThankYouVideoError("Missing username in session.");
+    return;
+  }
+
+  setUploadingThankYouVideo(true);
+  setThankYouVideoError(null);
+  setSuccess(null);
+  setError(null);
+
+  try {
+    const res = await fetch(`${API_URL}/api/creator/thank-you-video`, {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ username }),
+    });
+
+    const data = await res.json().catch(() => ({} as any));
+
+    if (!res.ok) {
+      throw new Error(data?.error || "Failed to delete thank-you video");
+    }
+
+    setProfile((p) =>
+      p ? { ...p, thank_you_video: "" } : p
+    );
+
+    setThankYouVideoFile(null);
+
+    if (videoFileRef.current) {
+      videoFileRef.current.value = "";
+    }
+
+    setSuccess("Thank-you video removed ✅");
+  } catch (err: any) {
+    setThankYouVideoError(
+      err?.message || "Failed to delete thank-you video"
+    );
+  } finally {
+    setUploadingThankYouVideo(false);
+  }
+};
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -490,6 +601,64 @@ export default function CreatorSettingsPage() {
                 <p className="mt-1 text-[11px] text-white/40">System-managed. Auto-filled after upload.</p>
               </div>
             </details>
+          </section>
+
+          <section className={`${SUBPANEL} p-4`}>
+            <div className="flex items-start justify-between gap-4 flex-col sm:flex-row">
+              <div className="space-y-1">
+                <div className="text-sm font-medium">Thank-You Video</div>
+                <div className="text-xs text-white/60">
+                  Upload a short video supporters can see after sending you a gift.
+                </div>
+              </div>
+
+              <div className="w-full sm:w-auto flex items-center gap-2">
+                <input
+                  ref={videoFileRef}
+                  type="file"
+                  accept="video/*"
+                  onChange={(e) =>
+                    setThankYouVideoFile(e.target.files?.[0] || null)
+                  }
+                  className="w-full sm:w-auto text-xs text-white/80"
+                />
+
+                <button
+                  type="button"
+                  onClick={handleThankYouVideoUpload}
+                  disabled={uploadingThankYouVideo || !thankYouVideoFile}
+                  className="px-4 py-2 rounded-xl bg-white text-black text-sm font-semibold disabled:opacity-50"
+                >
+                  {uploadingThankYouVideo ? "Uploading…" : "Upload"}
+                </button>
+              </div>
+            </div>
+
+            {thankYouVideoError && (
+              <p className="mt-3 text-red-400 bg-red-950/40 p-2 rounded-lg text-sm">
+                {thankYouVideoError}
+              </p>
+            )}
+
+            {profile?.thank_you_video && (
+              <div className="mt-4 space-y-3">
+                <video
+                  src={profile.thank_you_video}
+                  controls
+                  playsInline
+                  className="w-full max-w-md rounded-2xl border border-white/15 bg-black"
+                />
+
+                <button
+                  type="button"
+                  onClick={handleThankYouVideoDelete}
+                  disabled={uploadingThankYouVideo}
+                  className="px-4 py-2 rounded-xl bg-red-500/15 border border-red-500/30 text-red-200 text-sm font-medium hover:bg-red-500/20 disabled:opacity-50"
+                >
+                  {uploadingThankYouVideo ? "Please wait…" : "Delete video"}
+                </button>
+              </div>
+            )}
           </section>
 
           <div>
