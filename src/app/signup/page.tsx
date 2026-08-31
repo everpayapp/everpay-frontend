@@ -2,6 +2,7 @@
 
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
+import { signIn } from "next-auth/react";
 import Link from "next/link";
 
 function sanitizeUsername(value: string) {
@@ -90,7 +91,19 @@ export default function SignupPage() {
         return;
       }
 
-      router.push("/login?created=1");
+      const loginResult = await signIn("credentials", {
+  email: cleanEmail,
+  password: trimmedPassword,
+  redirect: false,
+});
+
+if (loginResult?.error) {
+  router.push("/login?created=1");
+  return;
+}
+
+router.replace("/creator/dashboard");
+router.refresh();
     } catch {
       setError("Could not create your account right now. Please try again.");
     } finally {
