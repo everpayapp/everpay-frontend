@@ -317,6 +317,11 @@ export default function CreatorClient({ username: propUsername }: { username?: s
     setSuccessToastName(storedName || latestPaymentName);
     setSuccessToast(true);
 
+    if (typeof window !== "undefined") {
+    const cleanUrl = `${window.location.pathname}${window.location.hash}`;
+    window.history.replaceState({}, "", cleanUrl);
+    }
+
     if (successToastTimeoutRef.current) {
       clearTimeout(successToastTimeoutRef.current);
     }
@@ -509,7 +514,7 @@ export default function CreatorClient({ username: propUsername }: { username?: s
            setSuccessToast(false);
           }, 1500);
        }}
-        className="w-full max-w-sm rounded-2xl border border-white/15 bg-black"
+        className="w-full max-w-sm max-h-[52vh] sm:max-h-[60vh] object-contain rounded-2xl border border-white/15 bg-black"
       />
 
       {!thankYouVideoPlaying && (
