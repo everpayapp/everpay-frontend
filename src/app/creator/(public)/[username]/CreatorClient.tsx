@@ -275,7 +275,6 @@ export default function CreatorClient({ username: propUsername }: { username?: s
 
     return () => {
       clearInterval(interval);
-      if (successToastTimeoutRef.current) clearTimeout(successToastTimeoutRef.current);
     };
   }, [apiUrl, username]);
 
@@ -538,9 +537,11 @@ export default function CreatorClient({ username: propUsername }: { username?: s
   </div>
 )}
               <div className="mt-4 text-center">
-  <p className="text-sm sm:text-base font-medium text-white">
-    {creatorFirstName} has a personal thank-you just for you 
-  </p>
+  {profile?.thank_you_video && (
+    <p className="text-sm sm:text-base font-medium text-white">
+      {creatorFirstName} has a personal thank-you just for you
+    </p>
+  )}
 
   <p className="text-xs sm:text-sm text-white/55 mt-2">
     Added to Recent Gifts
