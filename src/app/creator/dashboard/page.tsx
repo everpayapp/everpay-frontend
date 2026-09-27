@@ -5,7 +5,6 @@ import { useEffect, useRef, useState } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import QRCode from "react-qr-code";
-import StripeConnectBanner from "../components/StripeConnectBanner";
 import CreatorGiftToast from "../components/CreatorGiftToast";
 
 type Payment = {
@@ -298,7 +297,6 @@ useEffect(() => {
       <CreatorGiftToast />
 
       <div className="max-w-7xl mx-auto px-3 sm:px-6 text-white pt-4 sm:pt-10 pb-16 sm:pb-32">
-        <StripeConnectBanner />
 
 {profile && connectStatus && !setupComplete && (
   <div className={`${PANEL} mb-6 px-5 py-5 sm:px-7 sm:py-6`}>
