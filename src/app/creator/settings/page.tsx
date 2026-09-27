@@ -531,6 +531,15 @@ const handleThankYouVideoDelete = async () => {
           </p>
         </div>
 
+<div className={`${SUBPANEL} px-4 py-3`}>
+  <p className="text-sm text-white/75">
+    <span className="font-semibold text-white">Setting up your profile?</span>{" "}
+    Complete your details below, then remember to press{" "}
+    <span className="font-semibold text-emerald-300">Save Changes</span> at the
+    bottom of the page.
+  </p>
+</div>
+
         <StripeConnectBanner />
 
         <form className={`${PANEL} p-6 space-y-6`} onSubmit={handleSubmit}>
@@ -547,7 +556,7 @@ const handleThankYouVideoDelete = async () => {
     value={profile?.profile_name || ""}
     maxLength={20}
     onChange={(e) => handleChange("profile_name", e.target.value)}
-    placeholder="Your creator name"
+    placeholder={username || "Your creator name"}
   />
 
   <p className="mt-1 text-[11px] text-white/50">

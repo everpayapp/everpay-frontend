@@ -27,6 +27,8 @@ type CreatorProfile = {
   profile_name: string;
   avatar_url: string;
   bio: string;
+  social_links?: Record<string, string>;
+  thank_you_video?: string;
   milestone_enabled?: number | boolean;
   milestone_amount?: number;
   milestone_text?: string;
@@ -73,6 +75,11 @@ export default function CreatorDashboard() {
   const [profile, setProfile] = useState<CreatorProfile | null>(null);
   const [loadingProfile, setLoadingProfile] = useState(true);
   const [showQRModal, setShowQRModal] = useState(false);
+
+  const [connectStatus, setConnectStatus] = useState<{
+  connected: boolean;
+  payoutsEnabled?: boolean;
+  } | null>(null);
 
   const [copied, setCopied] = useState(false);
   const [copiedTikTok, setCopiedTikTok] = useState(false);
@@ -137,9 +144,11 @@ export default function CreatorDashboard() {
 
         setProfile({
           username: data.username || safeUsername,
-          profile_name: data.profile_name || safeUsername,
+          profile_name: data.profile_name || "",
           avatar_url: data.avatar_url || "",
           bio: data.bio || "",
+          social_links: data.social_links || {},
+          thank_you_video: data.thank_you_video || "",
           milestone_enabled: data.milestone_enabled,
           milestone_amount: Number(data.milestone_amount) || 0,
           milestone_text: data.milestone_text || "",
@@ -154,6 +163,54 @@ export default function CreatorDashboard() {
 
     loadProfile();
   }, [apiUrl, username, status]);
+
+useEffect(() => {
+  if (status !== "authenticated") return;
+  if (!username) return;
+
+  const safeUsername: string = username;
+
+  async function loadConnectStatus() {
+    try {
+      const res = await fetch(
+        `${apiUrl}/api/stripe/connect/status?username=${encodeURIComponent(
+          safeUsername
+        )}`
+      );
+
+      const data = await res.json().catch(() => ({} as any));
+
+      if (!res.ok) return;
+
+      setConnectStatus({
+        connected: !!data?.connected,
+        payoutsEnabled: !!data?.payoutsEnabled,
+      });
+    } catch (err) {
+      console.error("Failed to load Stripe status", err);
+    }
+  }
+
+  loadConnectStatus();
+}, [apiUrl, username, status]);
+
+  const profileComplete =
+  !!profile?.avatar_url &&
+  !!profile?.profile_name?.trim() &&
+  Object.values(profile?.social_links || {}).some((link) => link?.trim());
+  
+  const videoComplete = !!profile?.thank_you_video;
+
+  const paymentsComplete =
+    !!connectStatus?.connected && !!connectStatus?.payoutsEnabled;
+
+  const setupCompleteCount = [
+    profileComplete,
+    videoComplete,
+    paymentsComplete,
+  ].filter(Boolean).length;
+
+  const setupComplete = setupCompleteCount === 3;
 
   const totalEarned =
     payments.reduce((sum, p) => sum + getNetPence(p), 0) / 100;
@@ -243,6 +300,75 @@ export default function CreatorDashboard() {
       <div className="max-w-7xl mx-auto px-3 sm:px-6 text-white pt-4 sm:pt-10 pb-16 sm:pb-32">
         <StripeConnectBanner />
 
+{profile && connectStatus && !setupComplete && (
+  <div className={`${PANEL} mb-6 px-5 py-5 sm:px-7 sm:py-6`}>
+    <div className="mb-5">
+      <h2 className="text-xl sm:text-2xl font-bold">
+        Get your EverPay page ready 🚀
+      </h2>
+
+      <p className="mt-1 text-sm text-white/65">
+  {setupCompleteCount} of 3 complete · Complete these quick steps before you start sharing your page.
+  </p>
+    </div>
+
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className={`${SUBPANEL} p-4`}>
+        <p className="font-semibold text-white">
+          ① Set up your profile
+        </p>
+
+        <p className="mt-2 text-sm text-white/60">
+          Add your photo, name and at least one social link.
+        </p>
+
+        <button
+          onClick={() => router.push("/creator/settings")}
+          className="mt-4 text-sm font-semibold text-emerald-300 hover:text-emerald-200"
+        >
+          {profileComplete ? "✓ Profile complete" : "Customise my page →"}
+        </button>
+      </div>
+
+      <div className={`${SUBPANEL} p-4`}>
+        <p className="font-semibold text-white">
+          ② Add a thank-you video
+        </p>
+
+        <p className="mt-2 text-sm text-white/60">
+          Give supporters a personal thank-you after every gift.
+        </p>
+
+        <button
+          onClick={() => router.push("/creator/settings")}
+          className="mt-4 text-sm font-semibold text-emerald-300 hover:text-emerald-200"
+        >
+          {profile.thank_you_video ? "✓ Video added" : "Add thank-you video →"}
+        </button>
+      </div>
+
+      <div className={`${SUBPANEL} p-4`}>
+        <p className="font-semibold text-white">
+          ③ Set up payments
+        </p>
+
+        <p className="mt-2 text-sm text-white/60">
+          Complete secure payments setup with Stripe so you can receive gifts.
+        </p>
+
+        <button
+          onClick={() => router.push("/creator/settings")}
+          className="mt-4 text-sm font-semibold text-emerald-300 hover:text-emerald-200"
+        >
+          {connectStatus?.connected && connectStatus?.payoutsEnabled
+            ? "✓ Payments ready"
+            : "Set up payments →"}
+        </button>
+      </div>
+    </div>
+  </div>
+)}
+
         <div className="grid grid-cols-1 lg:grid-cols-[58%_42%] gap-5 sm:gap-8">
           {profile && (
             <div
@@ -260,7 +386,7 @@ export default function CreatorDashboard() {
 
               <div className="min-w-0">
                 <h1 className="text-[18px] leading-[1.05] sm:text-4xl font-bold uppercase break-words">
-                  {profile.profile_name}
+                  {profile.profile_name || username}
                 </h1>
                 <p className="text-xs sm:text-sm text-white/60 mt-1 break-all">
                   @{username}

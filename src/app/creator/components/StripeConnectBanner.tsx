@@ -112,11 +112,11 @@ export default function StripeConnectBanner() {
           </div>
 
           <h3 className="mt-3 text-base sm:text-lg font-semibold text-white">
-            ⚠️ You’re not live yet — connect Stripe to receive gifts
+           You’re not live yet — set up payments to receive gifts
           </h3>
 
           <p className="mt-1 text-sm leading-relaxed text-white/70 max-w-2xl">
-            People can view your page, but you can’t receive any gifts until Stripe is connected. Takes 2 minutes to go live.
+           Complete your secure payment setup with Stripe. It usually takes around 2 minutes.
           </p>
         </div>
 
@@ -126,7 +126,7 @@ export default function StripeConnectBanner() {
             disabled={connecting}
             className="inline-flex w-full sm:w-auto items-center justify-center rounded-2xl bg-gradient-to-r from-emerald-400 to-teal-400 px-5 py-2.5 text-sm font-semibold text-black shadow-[0_10px_30px_rgba(16,185,129,0.28)] transition hover:opacity-95 disabled:cursor-not-allowed disabled:opacity-70"
           >
-            {connecting ? "Connecting..." : "Connect Stripe"}
+           {connecting ? "Setting up..." : "Set up payments →"}
           </button>
         </div>
       </div>
